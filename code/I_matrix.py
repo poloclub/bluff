@@ -6,7 +6,7 @@ import os
 import glob
 import json
 import tqdm
-import time
+from time import time
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -14,8 +14,7 @@ from collections import defaultdict
 import lucid.optvis.render as render
 import lucid.modelzoo.vision_models as models
 from keras.applications.inception_v3 import preprocess_input
-
-
+from data_parser import _parse_function
 
 '''
 Main function
@@ -182,6 +181,12 @@ def parse_args():
     parser.add_argument('--batch', type=int, default=500,
                         help='batch size for loading images')
 
+    parser.add_argument('--num_class', type=int, default=1000,
+                        help='the number of classes')
+
+    parser.add_argument('--k', type=int, default=5,
+                        help='TODO: need better name and explanation on this')
+
     return parser.parse_args()
 
 
@@ -218,22 +223,40 @@ def get_intermediate_layer_tensors(prev_layer, layer):
     return t_a0, t_a1, t_a2
 
 
-# def get_layers(graph_nodes):
-#     '''
-#     Get all layers
-#     * input
-#         - graph_nodes: tensorflow graph nodes
-#     * output
-#         - layers: list of all layers
-#     '''
-#     layers = []
-#     for n in graph_nodes:
-#         node_name = n.name
-#         if node_name[-2:] == '_w':
-#             layer = node_name.split('_')[0]
-#             if layer not in layers:
-#                 layers.append(layer)
-#     return layers
+def get_layers(graph_nodes):
+    '''
+    Get all layers
+    * input
+        - graph_nodes: tensorflow graph nodes
+    * output
+        - layers: list of all layers such as 'conv2d0' or 'mixed3a'
+    '''
+    layers = []
+    for n in graph_nodes:
+        node_name = n.name
+        if node_name[-2:] == '_w':
+            layer = node_name.split('_')[0]
+            if layer not in layers:
+                layers.append(layer)
+    return layers
+
+def init_I_mat(layer, layer_sizes, act_sizes, num_class):
+    '''
+    Initialize I matrix
+    * Input
+        - layer: the name of layer in string (e.g., 'mixed3a')
+        - layer_sizes:
+    '''
+
+    # Check if the layer is mixed layer or intermediate branch layer
+    is_mixed = '_' not in layer
+    branch = None if is_mixed else int(layer.split('_')[-1])
+
+    # Initialize I
+    num_channel = layer_sizes[layer] if is_mixed else act_sizes[layer[:-2]][branch]
+    I_mat_layer = gen_empty_I(num_class, num_channel)
+
+    return I_mat_layer
 
 
 def get_channel_sizes(layer, weight_nodes):
@@ -324,13 +347,25 @@ def get_prev_layer(layers, layer):
     return prev_layer
 
 
-def get_weight_sizes(nodes, all_layers):
+def get_weight_sizes(nodes, layers):
+    '''
+    Get sizes of weight tensors
+    * input
+        - nodes: tensorflow nodes
+        - layers: the list of layers
+    * output
+        - weight_sizes: a dictionary, where
+            - key: a layer (e.g., 'mixed3a')
+            - val: a dictionary, where
+                - key: a weight in the layer (e.g., 'mixed3a_1x1_w')
+                - val: the size of the weight (e.g., [1, 1, 192, 64])
+    '''
 
     weight_sizes = {}
     for n in nodes:
         if '_w' in n.name and 'mixed' in n.name:
             layer = n.name.split('_')[0]
-            if layer in all_layers:
+            if layer in layers:
                 if layer not in weight_sizes:
                     weight_sizes[layer] = {}
                 weight_sizes[layer][n.name] = get_shape_of_node(n)
@@ -371,27 +406,17 @@ def get_act_sizes(weight_sizes, mixed_layers):
 
 
 def get_infs(t_a, t_w):
-
-    ''' old
-    # Get depthwise conv2d tensor
-    # t_intermediate = tf.nn.depthwise_conv2d(t_a, t_w, [1, 3, 3, 1], 'SAME')
-
-    # Apply Relu
-    # t_intermediate = tf.nn.relu(t_intermediate)
-
-    # Get influences
-    # t_inf_c = tf.math.reduce_sum(t_intermediate, [1, 2])
+    '''
+    Get inference scores, which is the reduce max of all depthwise convolution output
+    * Input
+        - t_a: the activation tensor of the previous layer
+        - t_w: the weight tensor between the previous layer and the target layer
+    * output
+        - inf_scores: reduced max of depthwise convolution.
     '''
 
-    ''' new
-    # Get depthwise conv2d tensor
-    # t_intermediate = tf.nn.depthwise_conv2d(t_a, t_w, [1, 3, 3, 1], 'SAME')
-
-    # Get Frobenius norm
-    # t_inf_c = tf.norm(t_intermediate, ord='fro', axis=[1, 2])
-    '''
-
-    return tf.math.reduce_max(tf.nn.depthwise_conv2d(t_a, t_w, [1, 3, 3, 1], 'SAME'), [1, 2])
+    inf_scores = tf.math.reduce_max(tf.nn.depthwise_conv2d(t_a, t_w, [1, 3, 3, 1], 'SAME'), [1, 2])
+    return inf_scores
 
 
 def gen_mask(height, width, num_channel):
@@ -574,6 +599,132 @@ def get_branch(layer, channel, layer_channels):
 
     return branch
 
+def gen_I_matrix(layer, k, googlenet, batch, input_dir_path, mixed_layers, layer_sizes, act_sizes, layer_fragment_sizes, outlier_nodes, num_class):
+    '''
+    Generate I matrix for the given layer
+    * input
+        - layer: the name of layer (e.g., 'mixed3a', 'mixed3a_1')
+    '''
+
+    # Time checker
+    start_time = time()
+
+    # Get previous layer
+    mixed_layer = layer.split('_')[0]
+    prev_layer = get_prev_layer(mixed_layers, mixed_layer)
+
+    # Outlier neurons in the layer
+    outliers = [int(n.split('-')[1]) for n in outlier_nodes if layer in n]
+
+    # Initiaize I matrix
+    I_layer = init_I_mat(layer, layer_sizes, act_sizes, num_class)
+
+    # Get file paths
+    # file_paths = glob.glob('{}/*'.format(input_dir_path))
+    file_paths = glob.glob('{}/train-00000-of-01024'.format(input_dir_path))
+
+    # Get I-matrix
+    with tf.Graph().as_default():
+
+        # Define parsed dataset tensor
+        dataset = tf.data.TFRecordDataset(file_paths)
+        dataset = dataset.map(_parse_function)
+        dataset = dataset.map(lambda img, lab, syn: (preprocess_input(img), lab, syn))
+        dataset = dataset.batch(batch)
+
+        # Define iterator through the datasets
+        iterator = dataset.make_one_shot_iterator()
+        t_preprocessed_images, t_labels, t_synsets = iterator.get_next()
+
+        # Define actiavtion map render
+        T = render.import_model(googlenet, t_preprocessed_images, None)
+
+        # Get weight tensors
+        t_w0, t_w1, t_w2, t_w3, t_w4, t_w5 = get_weight_tensors(mixed_layer)
+
+        # Get intermediate layers' activation tensors
+        t_a0, t_a1, t_a2 = get_intermediate_layer_tensors(prev_layer, mixed_layer)
+
+        print(layer)
+        print(t_a0.shape, t_w0.shape)
+
+        # Define intermediate depthwise conv output tensors
+        t_inf_0 = get_infs(t_a0, t_w0)
+        t_inf_1 = get_infs(t_a1, t_w2)
+        t_inf_2 = get_infs(t_a2, t_w4)
+        t_inf_3 = get_infs(t_a0, t_w5)
+        t_inf_4 = get_infs(t_a0, t_w1)
+        t_inf_5 = get_infs(t_a0, t_w3)
+
+        # Run with batch
+        progress_counter = 0
+        with tf.Session() as sess:
+
+            try:
+                with tqdm.tqdm(total=1281167, unit='imgs') as pbar:
+
+                    while(True):
+                        progress_counter += 1
+
+                        # Run the session
+                        if is_mixed:
+                            labels, inf_0, inf_1, inf_2, inf_3 = \
+                                sess.run([t_labels, t_inf_0, t_inf_1, t_inf_2, t_inf_3])
+
+                        elif branch == 1:
+                            labels, inf_4 = sess.run([t_labels, t_inf_4])
+
+                        elif branch == 2:
+                            labels, inf_5 = sess.run([t_labels, t_inf_5])
+
+                        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                        no sess.run after this!
+                        python code here on out
+                        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+                        '''
+                        Add up the counts (the number of images that pass through each edge)
+                        '''
+
+                        # If the target layer is mixed_*.
+                        if is_mixed:
+
+                            # Get sizes of each fragment
+                            a_sz = act_sizes[mixed_layer]
+                            f_sz = layer_fragment_sizes[mixed_layer]
+                            frag_sz = [f_sz[0], f_sz[1], f_sz[2], f_sz[3], a_sz[1], a_sz[2]]
+
+                            # Update I matrix
+                            channel = 0
+                            for frag, inf in enumerate([inf_0, inf_1, inf_2, inf_3]):
+                                channel = update_I(layer, inf, channel, I_layer, labels, frag_sz[frag], k, outliers)
+
+                        # If the target layer is branch_1
+                        elif branch == 1:
+                            update_I(layer, inf_4, 0, I_layer, labels, frag_sz[4], k, outliers)
+
+                        # If the target layer is branch_2
+                        elif branch == 2:
+                            update_I(layer, inf_5, 0, I_layer, labels, frag_sz[5], k, outliers)
+
+                        pbar.update(len(labels))
+
+                        # print(inf_0.shape, inf_1.shape, inf_2.shape, inf_3.shape, inf_4.shape, inf_5.shape)
+
+            except tf.errors.OutOfRangeError:
+                pass
+
+            # Save I_layer
+            with open(I_mat_dirpath + 'I_%s.json' % layer, 'w') as f:
+                json.dump(I_layer, f, indent=2)
+
+            end = time.time()
+
+            print(end - start)
+            print(progress_counter)
+            print(progress_counter * batch)
+
+    return I_layer
 
 # def generate_save_chain(pred_class, all_layers, I_mat_dirpath, chain_dirpath, channels, layer_fragment_sizes, chain_k):
 #     '''

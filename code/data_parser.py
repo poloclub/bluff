@@ -7,6 +7,8 @@ Date: Oct 18, 2019
 This code read and parse imagenet tfrecord dataset.
 '''
 
+import tensorflow as tf
+
 def _parse_function(feature_proto, image_size=224):
     '''
     Parse imagenet-tf-records dataset
