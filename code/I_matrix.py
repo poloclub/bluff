@@ -189,6 +189,15 @@ def parse_args():
 def get_weight_tensors(layer):
     '''
     Get weight tensors for given layer
+    * input
+        - layer: the name of the layer in string (e.g., 'mixed3a')
+    * output
+        - t_w0: the tensor of layer_1x1_w:0
+        - t_w1: the tensor of layer_3x3_bottleneck_w:0
+        - t_w2: the tensor of layer_3x3_w:0
+        - t_w3: the tensor of layer_5x5_bottleneck_w:0
+        - t_w4: the tensor of layer_5x5_w:0
+        - t_w5: the tensor of layer_pool_reduce_w:0
     '''
     # Get weight tensors
     t_w0 = tf.get_default_graph().get_tensor_by_name('import/%s_1x1_w:0' % layer)
