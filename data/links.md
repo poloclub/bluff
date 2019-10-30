@@ -1,0 +1,1 @@
+- [GoogLeNet architecture](http://dgschwend.github.io/netscope/#/preset/googlenet)
