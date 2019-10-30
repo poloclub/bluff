@@ -2,9 +2,9 @@
 Massif: Project title
 File name: data_parser.py
 Author: Haekyu Park
-Date: Oct 18, 2019
+Date: Oct 30, 2019
 
-This code read and parse imagenet tfrecord dataset.
+This code reads and parses imagenet tfrecord dataset.
 '''
 
 import tensorflow as tf
@@ -14,7 +14,7 @@ def _parse_function(feature_proto, image_size=224):
     Parse imagenet-tf-records dataset
     * input
         - feature_proto: feature prototype
-        - image_size: the image size
+        - image_size: the image size (width or height)
     * output
         - image: parsed images
         - label: parsed labels of the images
