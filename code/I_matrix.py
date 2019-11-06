@@ -23,48 +23,8 @@ from keras.applications.inception_v3 import preprocess_input
 from data_parser import _parse_function
 
 
-def get_weight_tensors(layer):
-    '''
-    Get weight tensors for the given layer in the inceptionV1 model
-    * input
-        - layer: the name of the layer in string (e.g., 'mixed3a')
-    * output
-        - t_w0: the tensor of {layer}_1x1_w:0
-        - t_w1: the tensor of {layer}_3x3_bottleneck_w:0
-        - t_w2: the tensor of {layer}_3x3_w:0
-        - t_w3: the tensor of {layer}_5x5_bottleneck_w:0
-        - t_w4: the tensor of {layer}_5x5_w:0
-        - t_w5: the tensor of {layer}_pool_reduce_w:0
-    '''
-    
-    # Get weight tensors
-    t_w0 = tf.get_default_graph().get_tensor_by_name('import/%s_1x1_w:0' % layer)
-    t_w1 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck_w:0' % layer)
-    t_w2 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_w:0' % layer)
-    t_w3 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck_w:0' % layer)
-    t_w4 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_w:0' % layer)
-    t_w5 = tf.get_default_graph().get_tensor_by_name('import/%s_pool_reduce_w:0' % layer)
-
-    return t_w0, t_w1, t_w2, t_w3, t_w4, t_w5
 
 
-def get_intermediate_layer_tensors(prev_layer, layer):
-    '''
-    Get intermediate (branched) layer tensors
-    * input
-        - prev_layer: the previous layer given in string (e.g., 'mixed3a')
-        - layer: the current layer given in string (e.g., 'mixed3b')
-    * output
-        - t_a0: the tensor of the previous layer
-        - t_a1: the tensor of the first branch (3x3 bottleneck)
-        - t_a2: the tensor for the second branch (5x5 bottleneck)
-    '''
-    
-    # Get intermediate layer tensors
-    t_a0 = tf.get_default_graph().get_tensor_by_name('import/%s:0' % prev_layer)
-    t_a1 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck:0' % layer)
-    t_a2 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck:0' % layer)
-    return t_a0, t_a1, t_a2
 
 
 def get_layers(graph_nodes):
@@ -75,7 +35,7 @@ def get_layers(graph_nodes):
     * output
         - layers: list of the name of all layers such as 'conv2d0' or 'mixed3a'
     '''
-    
+
     layers = []
     for n in graph_nodes:
         node_name = n.name
@@ -83,7 +43,7 @@ def get_layers(graph_nodes):
             layer = node_name.split('_')[0]
             if layer not in layers:
                 layers.append(layer)
-                
+
     return layers
 
 def init_I_mat(layer, layer_sizes, act_sizes, num_class):
