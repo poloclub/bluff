@@ -80,6 +80,12 @@ def parse_args():
                         help='A dictionary that maps \
                             name of layers and their size')
 
+    parser.add_argument('--img_width', type=int, default=224,
+                        help='Image width')
+
+    parser.add_argument('--img_height', type=int, default=224,
+                        help='Image height')
+
     # Return the parsed argument and constants
     args = parser.parse_args()
 
@@ -130,3 +136,7 @@ class Args:
 
     # Class info
     num_classes = 1000
+
+    # Image info
+    img_width = 224
+    img_height = 224
