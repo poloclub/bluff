@@ -40,6 +40,64 @@ def parse_args():
         'mixed5a': 832,
         'mixed5b': 1024
     }
+    layer_blk_sizes = {
+        # mixed 3b
+        'mixed3b_0': 128,
+        'mixed3b_1': 192,
+        'mixed3b_2': 96,
+        'mixed3b_3': 64,
+        'mixed3b_4': 128,
+        'mixed3b_5': 32,
+        # mixed 4a
+        'mixed4a_0': 192,
+        'mixed4a_1': 208,
+        'mixed4a_2': 48,
+        'mixed4a_3': 64,
+        'mixed4a_4': 96,
+        'mixed4a_5': 16,
+        # mixed 4b
+        'mixed4b_0': 160,
+        'mixed4b_1': 224,
+        'mixed4b_2': 64,
+        'mixed4b_3': 64,
+        'mixed4b_4': 112,
+        'mixed4b_5': 24,
+        # mixed 4c
+        'mixed4c_0': 128,
+        'mixed4c_1': 256,
+        'mixed4c_2': 64,
+        'mixed4c_3': 64,
+        'mixed4c_4': 128,
+        'mixed4c_5': 24,
+        # mixed 4d
+        'mixed4d_0': 112,
+        'mixed4d_1': 288,
+        'mixed4d_2': 64,
+        'mixed4d_3': 64,
+        'mixed4d_4': 144,
+        'mixed4d_5': 32,
+        # mixed 4e
+        'mixed4e_0': 256,
+        'mixed4e_1': 320,
+        'mixed4e_2': 128,
+        'mixed4e_3': 128,
+        'mixed4e_4': 160,
+        'mixed4e_5': 32,
+        # mixed 5a
+        'mixed5a_0': 256,
+        'mixed5a_1': 320,
+        'mixed5a_2': 128,
+        'mixed5a_3': 128,
+        'mixed5a_4': 160,
+        'mixed5a_5': 32,
+        # mixed 5b
+        'mixed5b_0': 384,
+        'mixed5b_1': 384,
+        'mixed5b_2': 128,
+        'mixed5b_3': 128,
+        'mixed5b_4': 192,
+        'mixed5b_5': 48
+    }
     layers = list(layer_sizes.keys())
 
     # Class info
@@ -79,6 +137,10 @@ def parse_args():
     parser.add_argument('--layer_sizes', type=dict, default=layer_sizes,
                         help='A dictionary that maps \
                             name of layers and their size')
+
+    parser.add_argument('--layer_blk_sizes', type=dict, default=layer_sizes,
+                        help='A dictionary that maps \
+                            name of layer blocks and their size')
 
     parser.add_argument('--img_width', type=int, default=224,
                         help='Image width')
@@ -133,6 +195,64 @@ class Args:
         'mixed5b': 1024
     }
     layers = list(layer_sizes.keys())
+    layer_blk_sizes = {
+        # mixed 3b
+        'mixed3b_0': 128,
+        'mixed3b_1': 192,
+        'mixed3b_2': 96,
+        'mixed3b_3': 64,
+        'mixed3b_4': 128,
+        'mixed3b_5': 32,
+        # mixed 4a
+        'mixed4a_0': 192,
+        'mixed4a_1': 208,
+        'mixed4a_2': 48,
+        'mixed4a_3': 64,
+        'mixed4a_4': 96,
+        'mixed4a_5': 16,
+        # mixed 4b
+        'mixed4b_0': 160,
+        'mixed4b_1': 224,
+        'mixed4b_2': 64,
+        'mixed4b_3': 64,
+        'mixed4b_4': 112,
+        'mixed4b_5': 24,
+        # mixed 4c
+        'mixed4c_0': 128,
+        'mixed4c_1': 256,
+        'mixed4c_2': 64,
+        'mixed4c_3': 64,
+        'mixed4c_4': 128,
+        'mixed4c_5': 24,
+        # mixed 4d
+        'mixed4d_0': 112,
+        'mixed4d_1': 288,
+        'mixed4d_2': 64,
+        'mixed4d_3': 64,
+        'mixed4d_4': 144,
+        'mixed4d_5': 32,
+        # mixed 4e
+        'mixed4e_0': 256,
+        'mixed4e_1': 320,
+        'mixed4e_2': 128,
+        'mixed4e_3': 128,
+        'mixed4e_4': 160,
+        'mixed4e_5': 32,
+        # mixed 5a
+        'mixed5a_0': 256,
+        'mixed5a_1': 320,
+        'mixed5a_2': 128,
+        'mixed5a_3': 128,
+        'mixed5a_4': 160,
+        'mixed5a_5': 32,
+        # mixed 5b
+        'mixed5b_0': 384,
+        'mixed5b_1': 384,
+        'mixed5b_2': 128,
+        'mixed5b_3': 128,
+        'mixed5b_4': 192,
+        'mixed5b_5': 48
+    }
 
     # Class info
     num_classes = 1000

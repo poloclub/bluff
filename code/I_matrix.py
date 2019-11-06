@@ -2,7 +2,7 @@
 Massif: Project title
 File name: I_matrix.py
 Author: Haekyu Park
-Date: Oct 30, 2019
+Date: Nov 6, 2019
 
 This code generates I-matrix (the matrix of influences between layers).
 Please see http://dgschwend.github.io/netscope/#/preset/googlenet for GoogLeNet architecture.
@@ -21,11 +21,77 @@ import lucid.optvis.render as render
 import lucid.modelzoo.vision_models as models
 from keras.applications.inception_v3 import preprocess_input
 from data_parser import _parse_function
+import model_helper
 
 
+def gen_I(name, influences, num_neurons):
+    '''
+    name: 'mixed3b_0', 'mixed3b_1', 'mixed3b_2', ...
+    '''
+
+    # Initialize the I matrix
+    num_prev_neurons = int(influences.shape[-1] / num_neurons)
+    I = np.zeros([num_neurons, num_prev_neurons])
+
+    # Fill out the I matrix
+    for neuron in range(num_neurons):
+        # Get indices to extract current neuron's influences
+        influence_indices = [i * num_neurons + neuron for i in range(num_prev_neurons)]
+
+        # Extract influences corresponded to the current neuron
+        influence_of_neuron = influences[influence_indices]
+
+        # Save the influences
+        I[neuron] = influence_of_neuron
+
+    return I
 
 
+def gen_I_matrix(args, Is, imgs, model):
 
+    with tf.Graph().as_default():
+        # Define activation render
+        t_input = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        T = render.import_model(model, t_input, None)
+
+        for i, layer in enumerate(args.layers):
+
+            # Skip the first layer, since it doesn't have connection with previous neurons
+            if layer == 'mixed3a':
+                continue
+
+            # Get layers' size
+            prev_layer = args.layers[i - 1]
+
+            # Get weight tensors
+            t_w0, t_w1, t_w2, t_w3, t_w4, t_w5 = model_helper.get_weight_tensors(layer)
+
+            # Get intermediate layer's activation tensors
+            t_a0, t_a1, t_a2 = model_helper.get_intermediate_layer_tensors(prev_layer, layer)
+
+            # Define intermediate depthwise conv output tensors
+            t_inf_0 = get_infs(t_a0, t_w0)
+            t_inf_1 = get_infs(t_a1, t_w2)
+            t_inf_2 = get_infs(t_a2, t_w4)
+            t_inf_3 = get_infs(t_a0, t_w5)
+            t_inf_4 = get_infs(t_a0, t_w1)
+            t_inf_5 = get_infs(t_a0, t_w3)
+
+            # Open the session
+            with tf.Session() as sess:
+
+                # Get the influence values
+                infs = sess.run(
+                        [t_inf_0, t_inf_1, t_inf_2, t_inf_3, t_inf_4, t_inf_5],
+                        feed_dict={t_input: imgs})
+
+                # Save the influence values
+                for img_th, img in enumerate(imgs):
+                    for blk in range(6):
+                        blk_name = '{}_{}'.format(layer, blk)
+                        I = gen_I(blk_name, infs[blk][img_th], args.layer_blk_sizes[blk_name])
+                        Is[img_th][blk_name] = I
+    return Is
 
 def get_layers(graph_nodes):
     '''
@@ -45,6 +111,7 @@ def get_layers(graph_nodes):
                 layers.append(layer)
 
     return layers
+
 
 def init_I_mat(layer, layer_sizes, act_sizes, num_class):
     '''
@@ -362,7 +429,7 @@ def get_branch(layer, channel, layer_channels):
 
     return branch
 
-def gen_I_matrix(layer, k, googlenet, batch, input_dir_path, mixed_layers, layer_sizes, act_sizes, layer_fragment_sizes, outlier_nodes, num_class):
+def gen_I_matrix_old(layer, k, googlenet, batch, input_dir_path, mixed_layers, layer_sizes, act_sizes, layer_fragment_sizes, outlier_nodes, num_class):
     '''
     Generate I matrix for the given layer
     * input
