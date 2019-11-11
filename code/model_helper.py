@@ -20,7 +20,7 @@ def get_predictions(model, imgs):
 def get_activation_map(model, imgs, layer):
 
     with tf.Graph().as_default(), tf.Session():
-        t_input = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, None)
         act_map = T(layer).eval({t_input: imgs})
 
@@ -31,7 +31,7 @@ def get_all_layers_activation_map(model, imgs, layers):
 
     act_maps = {layer: [] for layer in layers}
     with tf.Graph().as_default(), tf.Session():
-        t_input = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, None)
         for layer in layers:
             act_map = T(layer).eval({t_input: imgs})
