@@ -17,6 +17,19 @@ def get_predictions(model, imgs):
     return np.argmax(output, 1), output
 
 
+def get_depthwise_activation_map(args, model, img, layer, neuron):
+
+    # Get previous layer
+    prev_layer = args.layers[args.layers.index(layer) - 1]
+
+    # Get previous layer's activation map
+    prev_act_map = get_activation_map(model, [img], layer)
+    prev_act_map = prev_act_map[0]
+
+    # Get the filter for the corresponding neuron
+
+
+
 def get_activation_map(model, imgs, layer):
 
     with tf.Graph().as_default(), tf.Session():
@@ -97,3 +110,13 @@ def get_intermediate_layer_tensors(prev_layer, layer):
     t_a1 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck:0' % layer)
     t_a2 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck:0' % layer)
     return t_a0, t_a1, t_a2
+
+
+def get_blk_of_neuron(args, layer, neuron):
+    blk_sizes = args.layer_blk_sizes
+    num_neurons = 0
+    for i in range(4):
+        num_neurons += blk_sizes['{}_{}'.format(layer, i)]
+        if neuron < num_neurons:
+            return i
+    return 4
