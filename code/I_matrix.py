@@ -51,7 +51,7 @@ def gen_I_matrix(args, Is, imgs, model):
 
     with tf.Graph().as_default():
         # Define activation render
-        t_input = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, None)
 
         for i, layer in enumerate(args.layers):
