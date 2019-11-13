@@ -57,7 +57,7 @@ def get_all_layers_activation_score(model, imgs, layers):
 
     act_scores = {layer: [] for layer in layers}
     with tf.Graph().as_default(), tf.Session():
-        t_input = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, t_input)
         for layer in layers:
             t_act_map = T(layer)
