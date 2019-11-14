@@ -89,7 +89,7 @@ def parse_args():
         'mixed5a_2': 128,
         'mixed5a_3': 128,
         'mixed5a_4': 160,
-        'mixed5a_5': 32,
+        'mixed5a_5': 48, # 32? 48?
         # mixed 5b
         'mixed5b_0': 384,
         'mixed5b_1': 384,
@@ -255,7 +255,7 @@ class Args:
         'mixed5a_2': 128,
         'mixed5a_3': 128,
         'mixed5a_4': 160,
-        'mixed5a_5': 32,
+        'mixed5a_5': 48, # 32?
         # mixed 5b
         'mixed5b_0': 384,
         'mixed5b_1': 384,
