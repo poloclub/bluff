@@ -108,7 +108,7 @@ def gen_node_name(layer, neuron):
     return layer + '-' + str(neuron)
 
 
-def full_graph_from_summit_to_massif(args, I_mat_summit_dir_path, correct_class, misclassified_class):
+def I_from_summit_to_massif(args, I_mat_summit_dir_path, correct_class, misclassified_class):
 
     # Initialize Is_correct_class and Is_mis_class
     Is_correct_class = I_matrix.init_I_summit_to_massif(args)
