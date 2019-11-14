@@ -1,0 +1,5 @@
+cleverhans
+lucid
+numpy
+pillow
+tensorflow==1.15
