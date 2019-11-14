@@ -27,8 +27,7 @@ def get_depthwise_activation_map(args, model, img, layer, neuron):
     prev_act_map = prev_act_map[0]
 
     # Get the filter for the corresponding neuron
-
-
+    # ??
 
 def get_activation_map(model, imgs, layer):
 
@@ -120,3 +119,14 @@ def get_blk_of_neuron(args, layer, neuron):
         if neuron < num_neurons:
             return i
     return 4
+
+
+def get_num_neurons_in_prev_blks(args, layer, neuron):
+    blk_sizes = args.layer_blk_sizes
+    num_neurons = 0
+    for i in range(4):
+        num_neurons += blk_sizes['{}_{}'.format(layer, i)]
+        if neuron < num_neurons:
+            break
+    num_neurons -= blk_sizes['{}_{}'.format(layer, i)]
+    return num_neurons

@@ -98,7 +98,18 @@ def parse_args():
         'mixed5b_4': 192,
         'mixed5b_5': 48
     }
-    layers = list(layer_sizes.keys())
+    layers = [
+        'mixed3a',
+        'mixed3b',
+        'mixed4a',
+        'mixed4b',
+        'mixed4c',
+        'mixed4d',
+        'mixed4e',
+        'mixed5a',
+        'mixed5b'
+    ]
+    list(layer_sizes.keys())
 
     # Class info
     num_of_classes = 1000
