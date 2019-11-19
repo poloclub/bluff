@@ -2,4 +2,5 @@ cleverhans
 lucid
 numpy
 pillow
+requests
 tensorflow==1.15

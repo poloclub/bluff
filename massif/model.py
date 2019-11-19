@@ -83,16 +83,13 @@ class InceptionV1Model(CleverhansModel):
         self._model = models.InceptionV1()
         self._model.load_graphdef()
         self._fprop_cache = dict()
-
-    @property
-    def input_image_size(self):
-        return 224, 224
+        self._scope_cache = dict()
 
     def fprop(self, x, **kwargs):
         del kwargs  # unused
 
         if x not in self._fprop_cache:
-            # https://github.com/tensorflow/lucid/blob/67e19f38c315e548034c3e4315dfee6f718df916/lucid/modelzoo/vision_base.py#L189
+            # https://git.io/JeKpg
             graph = x.graph
             scope = graph.unique_name(
                 '%sfprop%d' % (self.SCOPE, len(self._fprop_cache)), False)
@@ -107,9 +104,36 @@ class InceptionV1Model(CleverhansModel):
             logits = softmax2_op.inputs[0]
             logits = logits[:, :1000]
 
+            self._scope_cache[x] = scope
             self._fprop_cache[x] = {'logits': logits}
 
+            for layer in self.LAYERS:
+                self._fprop_cache[x][layer] = \
+                    graph.get_tensor_by_name("%s/%s:0" % (scope, layer))
+
         return self._fprop_cache[x]
+
+    def get_layer_names(self):
+        return self.LAYERS + ['logits']
+
+    def make_input_placeholder(self):
+        return tf.placeholder(
+            tf.float32, (None, self.IMG_SIZE, self.IMG_SIZE, 3))
+
+    def get_weight_tensors(self, x, layer):
+        if x not in self._scope_cache:
+            self.fprop(x)
+
+        graph = x.graph
+        scope = self._scope_cache[x]
+        t = graph.get_tensor_by_name
+        t_w0 = t('%s/%s_1x1_w:0' % (scope, layer))
+        t_w1 = t('%s/%s_3x3_bottleneck_w:0' % (scope, layer))
+        t_w2 = t('%s/%s_3x3_w:0' % (scope, layer))
+        t_w3 = t('%s/%s_5x5_bottleneck_w:0' % (scope, layer))
+        t_w4 = t('%s/%s_5x5_w:0' % (scope, layer))
+        t_w5 = t('%s/%s_pool_reduce_w:0' % (scope, layer))
+        return t_w0, t_w1, t_w2, t_w3, t_w4, t_w5
 
 
 if __name__ == '__main__':
@@ -120,19 +144,19 @@ if __name__ == '__main__':
 
     tf.logging.set_verbosity(tf.logging.ERROR)
 
-    model = InceptionV1Model()
+    g = tf.Graph()
+    with g.as_default():
+        model = InceptionV1Model()
+        x = model.make_input_placeholder()
+        y = model.get_predicted_class(x)
 
     # Get an input image from url
     img_url = 'https://images.fineartamerica.com/images/artworkimages/mediumlarge/1/white-wolf-elaine-mikkelstrup.jpg'
     img_response = requests.get(img_url)
     img = Image.open(BytesIO(img_response.content))
-    img = img.resize(model.input_image_size)
+    img = img.resize([model.IMG_SIZE] * 2)
     img = np.array(img)
 
-    graph = tf.Graph()
-    with tf.Session(graph=graph) as sess:
-        x = tf.placeholder(tf.float32, (None,) + model.input_image_size + (3,))
-        y = model.get_probs(x)
-        y = tf.arg_max(y, 1)
+    with tf.Session(graph=g) as sess:
         y_eval = sess.run(y, feed_dict={x: [img]})
     print('%s should be 102 (white_wolf)' % y_eval)
