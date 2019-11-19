@@ -7,8 +7,10 @@ Date: Nov 13, 2019
 This code generates attribution graph.
 '''
 
+import json
 import networkx as nx
 import model_helper
+import I_matrix
 
 def gen_full_graph(args, A, I):
 
@@ -104,3 +106,90 @@ def gen_full_graph(args, A, I):
 
 def gen_node_name(layer, neuron):
     return layer + '-' + str(neuron)
+
+
+def I_from_summit_to_massif(args, I_mat_summit_dir_path, correct_class, misclassified_class):
+
+    # Initialize Is_correct_class and Is_mis_class
+    Is_correct_class = I_matrix.init_I_summit_to_massif(args)
+    Is_mis_class = I_matrix.init_I_summit_to_massif(args)
+
+    # I_matrix for {layer}_{0, 1, 2, 3}
+    for layer in args.layers:
+
+        # Ignore mixed3a
+        if layer == 'mixed3a':
+            continue
+
+        # Read summit I matrix
+        I_mat_file_path = '{}/I_{}{}.json'.format(I_mat_summit_dir_path, layer, '')
+        with open(I_mat_file_path) as f:
+            I_mat = json.load(f)
+
+        # For blk 0, 1, 2, 3
+        start_neuron = 0
+        for blk in range(4):
+
+            layer_key = '{}_{}'.format(layer, blk)
+            num_neurons_in_this_blk = args.layer_blk_sizes[layer_key]
+
+            for neuron, link in enumerate(I_mat[correct_class][start_neuron: start_neuron + num_neurons_in_this_blk]):
+
+                for prev_neuron in link:
+                    inf = link[prev_neuron]
+                    Is_correct_class[layer_key][neuron, int(prev_neuron)] = inf
+
+            for neuron, link in enumerate(I_mat[misclassified_class][start_neuron: start_neuron + num_neurons_in_this_blk]):
+                for prev_neuron in link:
+                    inf = link[prev_neuron]
+                    Is_mis_class[layer_key][neuron, int(prev_neuron)] = inf
+
+            start_neuron += num_neurons_in_this_blk
+
+    # I_matrix for {layer}_4
+    for layer in args.layers:
+
+        # Ignore mixed3a
+        if layer == 'mixed3a':
+            continue
+
+        layer_key = '{}_{}'.format(layer, 4)
+
+        I_mat_file_path = '{}/I_{}{}.json'.format(I_mat_summit_dir_path, layer, '_1')
+        with open(I_mat_file_path) as f:
+            I_mat = json.load(f)
+
+        for neuron, link in enumerate(I_mat[correct_class]):
+            for prev_neuron in link:
+                inf = link[prev_neuron]
+                Is_correct_class[layer_key][neuron, int(prev_neuron)] = inf
+
+        for neuron, link in enumerate(I_mat[misclassified_class]):
+            for prev_neuron in link:
+                inf = link[prev_neuron]
+                Is_mis_class[layer_key][neuron, int(prev_neuron)] = inf
+
+    # I_matrix for {layer}_5
+    for layer in args.layers:
+
+        # Ignore mixed3a
+        if layer == 'mixed3a':
+            continue
+
+        layer_key = '{}_{}'.format(layer, 5)
+
+        I_mat_file_path = '{}/I_{}{}.json'.format(I_mat_summit_dir_path, layer, '_2')
+        with open(I_mat_file_path) as f:
+            I_mat = json.load(f)
+
+        for neuron, link in enumerate(I_mat[correct_class]):
+            for prev_neuron in link:
+                inf = link[prev_neuron]
+                Is_correct_class[layer_key][neuron, int(prev_neuron)] = inf
+
+        for neuron, link in enumerate(I_mat[misclassified_class]):
+            for prev_neuron in link:
+                inf = link[prev_neuron]
+                Is_mis_class[layer_key][neuron, int(prev_neuron)] = inf
+
+    return Is_correct_class, Is_mis_class

@@ -24,9 +24,59 @@ from data_parser import _parse_function
 import model_helper
 
 
+def init_I(args):
+    I = {}
+    for layer in args.layers:
+        if layer == 'mixed3a':
+            continue
+        for i in range(6):
+            I['{}_{}'.format(layer, i)] = [[]]
+    return I
+
+
+def init_I_summit_to_massif(args):
+    I = {}
+    for layer in args.layers:
+        if layer == 'mixed3a':
+            continue
+
+        prev_layer = args.layers[args.layers.index(layer) - 1]
+
+        # inf-0
+        num_curr_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 0)]
+        num_prev_neurons = args.layer_sizes[prev_layer]
+        I['{}_0'.format(layer)] = np.zeros((num_curr_neurons, num_prev_neurons))
+
+        # inf-1
+        num_curr_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 1)]
+        num_prev_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 4)]
+        I['{}_1'.format(layer)] = np.zeros((num_curr_neurons, num_prev_neurons))
+
+        # inf-2
+        num_curr_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 2)]
+        num_prev_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 5)]
+        I['{}_2'.format(layer)] = np.zeros((num_curr_neurons, num_prev_neurons))
+
+        # inf-3
+        num_curr_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 3)]
+        num_prev_neurons = args.layer_sizes[prev_layer]
+        I['{}_3'.format(layer)] = np.zeros((num_curr_neurons, num_prev_neurons))
+
+        # inf-4
+        num_curr_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 4)]
+        num_prev_neurons = args.layer_sizes[prev_layer]
+        I['{}_4'.format(layer)] = np.zeros((num_curr_neurons, num_prev_neurons))
+
+        # inf-5
+        num_curr_neurons = args.layer_blk_sizes['{}_{}'.format(layer, 5)]
+        num_prev_neurons = args.layer_sizes[prev_layer]
+        I['{}_5'.format(layer)] = np.zeros((num_curr_neurons, num_prev_neurons))
+
+    return I
+
 def gen_I(name, influences, num_neurons):
     '''
-    name: 'mixed3b_0', 'mixed3b_1', 'mixed3b_2', ...
+    name: 'mixed3b_0', 'mixed3b_1', 'mixed3b_2', 'mixed3b_3', ...
     '''
 
     # Initialize the I matrix
