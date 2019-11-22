@@ -2,7 +2,7 @@
 Massif: Project title
 File name: model_helper.py
 Author: Haekyu Park
-Date: Nov 6, 2019
+Date: Nov 22, 2019
 
 This code includes helper functions to use InceptionV1 model.
 '''

@@ -2,13 +2,14 @@
 Massif: Project title
 File name: A_matrix.py
 Author: Haekyu Park
-Date: Oct 18, 2019
+Date: Oct 22, 2019
 
 This code includes helper functions to generate A-matrix.
 '''
 
 import numpy as np
 import tensorflow as tf
+
 
 def gen_reduce_max_tensors(layers, T):
     '''
@@ -38,7 +39,8 @@ def init_A_matrices(args):
     * output
         - As: a dictionary, where
             - key: layer's name in string (e.g., "mixed3a")
-            - val: 0-matrix (np.array(dtype=int)) of shape (#class, #channels)
+            - val: 0-matrix (np.array(dtype=int))
+                   of shape (#class, #neurons in the layer)
     '''
 
     # Get layer information

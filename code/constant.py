@@ -2,7 +2,7 @@
 Massif: Project title
 File name: parse.py
 Author: Haekyu Park
-Date: Nov 5, 2019
+Date: Nov 22, 2019
 
 This code parses arguments and constants.
 '''

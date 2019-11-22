@@ -2,7 +2,7 @@
 Massif: Project title
 File name: I_matrix.py
 Author: Haekyu Park
-Date: Nov 6, 2019
+Date: Nov 22, 2019
 
 This code generates I-matrix (the matrix of influences between layers).
 Please see http://dgschwend.github.io/netscope/#/preset/googlenet for GoogLeNet architecture.
@@ -25,12 +25,53 @@ import model_helper
 
 
 def init_I(args):
+    '''
+    Initialize I matrix
+    * input
+        - args: the parsed hyperparameters and constants
+    * output
+        - I: an initialized I-matrix, whose
+            - key: a block in a layer (e.g., 'mixed3b_concat_0')
+            - val: an empty 2d matrix (i.e., [[]])
+    '''
+
+    blk_headers = ['concat_0', 'concat_1', 'concat_2', 'concat_3']
+    blk_headers += ['3x3', '5x5']
+
     I = {}
     for layer in args.layers:
         if layer == 'mixed3a':
             continue
-        for i in range(6):
-            I['{}_{}'.format(layer, i)] = [[]]
+        for blk_header in blk_headers:
+            I['{}_{}'.format(layer, blk_header)] = [[]]
+    return I
+
+
+def gen_I(influences, num_neurons):
+    '''
+    Generate an I-matrix
+    * input
+        - influences
+        - num_neurons
+    * output
+        - I
+    '''
+
+    # Initialize the I matrix
+    num_prev_neurons = int(influences.shape[-1] / num_neurons)
+    I = np.zeros([num_neurons, num_prev_neurons])
+
+    # Fill out the I matrix
+    for neuron in range(num_neurons):
+        # Get indices to extract current neuron's influences
+        influence_indices = [i * num_neurons + neuron for i in range(num_prev_neurons)]
+
+        # Extract influences corresponded to the current neuron
+        influence_of_neuron = influences[influence_indices]
+
+        # Save the influences
+        I[neuron] = influence_of_neuron
+
     return I
 
 
@@ -74,27 +115,7 @@ def init_I_summit_to_massif(args):
 
     return I
 
-def gen_I(name, influences, num_neurons):
-    '''
-    name: 'mixed3b_0', 'mixed3b_1', 'mixed3b_2', 'mixed3b_3', ...
-    '''
 
-    # Initialize the I matrix
-    num_prev_neurons = int(influences.shape[-1] / num_neurons)
-    I = np.zeros([num_neurons, num_prev_neurons])
-
-    # Fill out the I matrix
-    for neuron in range(num_neurons):
-        # Get indices to extract current neuron's influences
-        influence_indices = [i * num_neurons + neuron for i in range(num_prev_neurons)]
-
-        # Extract influences corresponded to the current neuron
-        influence_of_neuron = influences[influence_indices]
-
-        # Save the influences
-        I[neuron] = influence_of_neuron
-
-    return I
 
 
 def gen_I_matrix(args, Is, imgs, model):

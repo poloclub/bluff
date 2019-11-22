@@ -2,7 +2,7 @@
 Massif: Project title
 File name: A_matrix.py
 Author: Haekyu Park
-Date: Nov 13, 2019
+Date: Nov 22, 2019
 
 This code generates attribution graph.
 '''
@@ -13,7 +13,11 @@ import model_helper
 import I_matrix
 from time import time
 
+
 def gen_full_graph(args, A, I):
+    '''
+    Generate full graph based on A-matrix and I-matrix
+    '''
 
     # Initialize an undirected graph
     G = nx.Graph()
