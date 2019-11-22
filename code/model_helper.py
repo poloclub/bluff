@@ -73,14 +73,14 @@ def get_weight_tensors(layer):
 
 def get_intermediate_layer_tensors(prev_layer, layer):
     '''
-    Get intermediate (branched) layer tensors
+    Get block tensors
     * input
         - prev_layer: the previous layer given in string (e.g., 'mixed3a')
         - layer: the current layer given in string (e.g., 'mixed3b')
     * output
         - t_a_input: the tensor of the previous layer
-        - t_a_3x3: the tensor of the first branch (3x3 bottleneck)
-        - t_a_5x5: the tensor for the second branch (5x5 bottleneck)
+        - t_a_3x3: the tensor of the first branch block (3x3 bottleneck)
+        - t_a_5x5: the tensor for the second branch block (5x5 bottleneck)
     '''
 
     # Get intermediate layer tensors
