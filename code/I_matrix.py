@@ -110,7 +110,7 @@ def gen_I_matrices(args, imgs, model):
 
             # Get layer block tensors
             t_l_input, t_l_3x3, t_l_5x5 \
-                = model_helper.get_block_tensors(prev_layer, layer)
+                = model_helper.get_layer_block_tensors(prev_layer, layer)
 
             # Define influence
             t_inf_concat_0 = get_infs(t_l_input, t_w_1x1)
@@ -134,7 +134,7 @@ def gen_I_matrices(args, imgs, model):
                 for img_th, img in enumerate(imgs):
                     for blk_th, blk_header in enumerate(args.blk_headers):
                         blk = '{}_{}'.format(layer, blk_header)
-                        I = gen_I(blk, infs[blk_th][img_th], args.layer_blk_sizes[blk])
+                        I = gen_I(infs[blk_th][img_th], args.layer_blk_sizes[blk])
                         Is[img_th][blk] = I
 
     return Is
@@ -151,7 +151,7 @@ def get_infs(t_l, t_w):
     '''
 
     inf_scores = tf.math.reduce_max(
-                    tf.nn.depthwise_conv2d(t_a, t_w, [1, 3, 3, 1], 'SAME'),
+                    tf.nn.depthwise_conv2d(t_l, t_w, [1, 3, 3, 1], 'SAME'),
                     [1, 2]
                 )
 
