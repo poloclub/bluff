@@ -109,7 +109,7 @@ def parse_args():
         'mixed5a',
         'mixed5b'
     ]
-    list(layer_sizes.keys())
+    blk_headers = ['concat_0', 'concat_1', 'concat_2', 'concat_3', '3x3', '5x5']
 
     # Class info
     num_of_classes = 1000
@@ -149,9 +149,12 @@ def parse_args():
                         help='A dictionary that maps \
                             name of layers and their size')
 
-    parser.add_argument('--layer_blk_sizes', type=dict, default=layer_sizes,
+    parser.add_argument('--layer_blk_sizes', type=dict, default=layer_blk_sizes,
                         help='A dictionary that maps \
                             name of layer blocks and their size')
+
+    parser.add_argument('--blk_headers', type=list, default=blk_headers,
+                        help='A list of header of layer blocks')
 
     parser.add_argument('--img_width', type=int, default=224,
                         help='Image width')
@@ -264,6 +267,7 @@ class Args:
         'mixed5b_3x3': 192,
         'mixed5b_5x5': 48
     }
+    blk_headers = ['concat_0', 'concat_1', 'concat_2', 'concat_3', '3x3', '5x5']
 
     # Class info
     num_classes = 1000

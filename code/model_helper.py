@@ -62,32 +62,32 @@ def get_weight_tensors(layer):
 
     # Get weight tensors
     t_w_1x1 = tf.get_default_graph().get_tensor_by_name('import/%s_1x1_w:0' % layer)
-    t_w_3x3_b = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck_w:0' % layer)
+    t_w_3x3_btl = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck_w:0' % layer)
     t_w_3x3 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_w:0' % layer)
-    t_w_5x5_b = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck_w:0' % layer)
+    t_w_5x5_btl = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck_w:0' % layer)
     t_w_5x5 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_w:0' % layer)
     t_w_pool_reduce = tf.get_default_graph().get_tensor_by_name('import/%s_pool_reduce_w:0' % layer)
 
-    return t_w_1x1, t_w_3x3_b, t_w_3x3, t_w_5x5_b, t_w_5x5, t_w_pool_reduce
+    return t_w_1x1, t_w_3x3_btl, t_w_3x3, t_w_5x5_btl, t_w_5x5, t_w_pool_reduce
 
 
-def get_intermediate_layer_tensors(prev_layer, layer):
+def get_layer_block_tensors(prev_layer, layer):
     '''
-    Get block tensors
+    Get layer block tensors
     * input
         - prev_layer: the previous layer given in string (e.g., 'mixed3a')
         - layer: the current layer given in string (e.g., 'mixed3b')
     * output
-        - t_a_input: the tensor of the previous layer
-        - t_a_3x3: the tensor of the first branch block (3x3 bottleneck)
-        - t_a_5x5: the tensor for the second branch block (5x5 bottleneck)
+        - t_l_input: the tensor of the previous layer
+        - t_l_3x3: the tensor of the first branch block (3x3 bottleneck)
+        - t_l_5x5: the tensor for the second branch block (5x5 bottleneck)
     '''
 
     # Get intermediate layer tensors
-    t_a_input = tf.get_default_graph().get_tensor_by_name('import/%s:0' % prev_layer)
-    t_a_3x3 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck:0' % layer)
-    t_a_5x5 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck:0' % layer)
-    return t_a_input, t_a_3x3, t_a_5x5
+    t_l_input = tf.get_default_graph().get_tensor_by_name('import/%s:0' % prev_layer)
+    t_l_3x3 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck:0' % layer)
+    t_l_5x5 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck:0' % layer)
+    return t_l_input, t_l_3x3, t_l_5x5
 
 
 def get_depthwise_activation_map(args, model, img, layer, neuron):
