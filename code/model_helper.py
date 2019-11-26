@@ -46,6 +46,38 @@ def get_activation_map(model, imgs, layer):
     return act_map
 
 
+def get_all_layers_activation_score(model, imgs, layers, method='reduce_max'):
+    '''
+    Get all layers' activation score (in R^1) of all neuron.
+    The activation score for a neuron (from R^2 to R^1) is currently
+    defined as the reduce maxe of the activation map of the nueron.
+    * input
+        - model: the classification model
+        - imgs: the input imgs
+        - layers: all layers
+    * output
+        - act_scores: the activation scores of all neurons in all layers.
+            This is a dictionary, where
+                - key: a layer
+                - val: a list of shape (# imgs, # neurons in the layer).
+                       It includes the activation scores of all neurons
+                       in the layer for all input images.
+    '''
+
+    act_scores = {layer: [] for layer in layers}
+    with tf.Graph().as_default(), tf.Session():
+        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
+        T = render.import_model(model, t_input, t_input)
+        for layer in layers:
+            t_act_map = T(layer)
+            if method == 'reduce_max':
+                t_act_score = tf.math.reduce_max(t_act_map, axis=[1, 2])
+            act_score = t_act_score.eval({t_input: imgs})
+            act_scores[layer] = act_score
+
+    return act_scores
+
+
 def get_weight_tensors(layer):
     '''
     Get weight tensors for the given layer in the inceptionV1 model
@@ -116,21 +148,6 @@ def get_all_layers_activation_map(model, imgs, layers):
             act_maps[layer] = act_map
 
     return act_maps
-
-
-def get_all_layers_activation_score(model, imgs, layers):
-
-    act_scores = {layer: [] for layer in layers}
-    with tf.Graph().as_default(), tf.Session():
-        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
-        T = render.import_model(model, t_input, t_input)
-        for layer in layers:
-            t_act_map = T(layer)
-            t_act_score = tf.math.reduce_max(t_act_map, axis=[1, 2])
-            act_score = t_act_score.eval({t_input: imgs})
-            act_scores[layer] = act_score
-
-    return act_scores
 
 
 def get_blk_of_neuron(args, layer, neuron):

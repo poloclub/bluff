@@ -2,7 +2,7 @@
 Massif: Project title
 File name: A_matrix.py
 Author: Haekyu Park
-Date: Oct 22, 2019
+Date: Nov 25, 2019
 
 This code includes helper functions to generate A-matrix.
 '''
@@ -58,9 +58,9 @@ def init_A_matrices(args):
     return As
 
 
-def init_A_matrix_single_image(args):
+def init_A_matrix_single_class(args):
     '''
-    Initialize A matrix for a single input image
+    Initialize A matrix for a single class
     * input:
         - args: parsed arguments
     * output
