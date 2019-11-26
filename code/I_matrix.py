@@ -45,12 +45,12 @@ def init_I(args):
 
 def gen_I(influences, num_neurons):
     '''
-    Generate an I-matrix with influences and num_neuronos
+    Generate an I-matrix with influences and num_neurons
     * input
-        - influences
-        - num_neurons
+        - influences: influence values
+        - num_neurons: number of neurons of current layer
     * output
-        - I
+        - I: I matrix
     '''
 
     # Initialize the I matrix
@@ -71,9 +71,76 @@ def gen_I(influences, num_neurons):
     return I
 
 
-def gen_I_matrices(args, imgs, model):
+def gen_aggregated_I_matrix(args, imgs, model):
     '''
-    Generate I matrix for all layers and all input images
+    Generate I matrix of all layers for all input images.
+    * input
+        - args: the parsed hyperparameters and constants
+        - imgs: input images
+        - model: model
+    * output
+        - Is: I-matrices of all layers for all input images
+    '''
+
+    # Initialize I-matrix for all input images
+    I = init_I(args)
+
+    # Generate I-matrix
+    with tf.Graph().as_default():
+        # Import the model
+        t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
+        model.import_graph(t_input)
+
+        # Gereate I-matrix for each layer
+        for i, layer in enumerate(args.layers):
+
+            # Skip the first layer, since we do dot care
+            #  any connection with the previous neurons
+            if layer == 'mixed3a':
+                continue
+
+            # Get layers' size
+            prev_layer = args.layers[i - 1]
+
+            # Get weight tensors
+            t_w_1x1, t_w_3x3_btl, t_w_3x3, t_w_5x5_btl, t_w_5x5, t_w_pool_reduce \
+                = model_helper.get_weight_tensors(layer)
+
+            # Get layer block tensors
+            t_l_input, t_l_3x3, t_l_5x5 \
+                = model_helper.get_layer_block_tensors(prev_layer, layer)
+
+            # Define influence
+            t_inf_concat_0 = get_infs(t_l_input, t_w_1x1)
+            t_inf_concat_1 = get_infs(t_l_3x3, t_w_3x3)
+            t_inf_concat_2 = get_infs(t_l_5x5, t_w_5x5)
+            t_inf_concat_3 = get_infs(t_l_input, t_w_pool_reduce)
+            t_inf_3x3_btl = get_infs(t_l_input, t_w_3x3_btl)
+            t_inf_5x5_btl = get_infs(t_l_input, t_w_5x5_btl)
+
+            # Open the session
+            with tf.Session() as sess:
+
+                # Get the influence values
+                infs = sess.run(
+                        [t_inf_concat_0, t_inf_concat_1, t_inf_concat_2, \
+                            t_inf_concat_3, t_inf_3x3_btl, t_inf_5x5_btl],
+                        feed_dict={t_input: imgs}
+                    )
+
+                # Save the influence values
+                for img_th, img in enumerate(imgs):
+                    for blk_th, blk_header in enumerate(args.blk_headers):
+                        blk = '{}_{}'.format(layer, blk_header)
+                        median_infs = np.median(infs[blk_th], axis=0)
+                        I[blk] = gen_I(median_infs, args.layer_blk_sizes[blk])
+
+    return I
+
+
+def gen_single_I_matrices(args, imgs, model):
+    '''
+    Generate I-matrices of all layers for each input image
     * input
         - args: the parsed hyperparameters and constants
         - imgs: input images
