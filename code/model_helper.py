@@ -38,7 +38,7 @@ def get_activation_map(model, imgs, layer):
         - act_map: the activagtion maps in the layer for imgs
     '''
 
-    with tf.Graph().as_default(), tf.Session():
+    with tf.Graph().as_default(), tf.compat.v1.Session():
         t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, None)
         act_map = T(layer).eval({t_input: imgs})
@@ -65,7 +65,7 @@ def get_all_layers_activation_score(model, imgs, layers, method='reduce_max'):
     '''
 
     act_scores = {layer: [] for layer in layers}
-    with tf.Graph().as_default(), tf.Session():
+    with tf.Graph().as_default(), tf.compat.v1.Session():
         t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, t_input)
         for layer in layers:
@@ -93,12 +93,12 @@ def get_weight_tensors(layer):
     '''
 
     # Get weight tensors
-    t_w_1x1 = tf.get_default_graph().get_tensor_by_name('import/%s_1x1_w:0' % layer)
-    t_w_3x3_btl = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck_w:0' % layer)
-    t_w_3x3 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_w:0' % layer)
-    t_w_5x5_btl = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck_w:0' % layer)
-    t_w_5x5 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_w:0' % layer)
-    t_w_pool_reduce = tf.get_default_graph().get_tensor_by_name('import/%s_pool_reduce_w:0' % layer)
+    t_w_1x1 = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_1x1_w:0' % layer)
+    t_w_3x3_btl = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck_w:0' % layer)
+    t_w_3x3 = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_3x3_w:0' % layer)
+    t_w_5x5_btl = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck_w:0' % layer)
+    t_w_5x5 = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_5x5_w:0' % layer)
+    t_w_pool_reduce = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_pool_reduce_w:0' % layer)
 
     return t_w_1x1, t_w_3x3_btl, t_w_3x3, t_w_5x5_btl, t_w_5x5, t_w_pool_reduce
 
@@ -116,9 +116,9 @@ def get_layer_block_tensors(prev_layer, layer):
     '''
 
     # Get intermediate layer tensors
-    t_l_input = tf.get_default_graph().get_tensor_by_name('import/%s:0' % prev_layer)
-    t_l_3x3 = tf.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck:0' % layer)
-    t_l_5x5 = tf.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck:0' % layer)
+    t_l_input = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s:0' % prev_layer)
+    t_l_3x3 = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_3x3_bottleneck:0' % layer)
+    t_l_5x5 = tf.compat.v1.get_default_graph().get_tensor_by_name('import/%s_5x5_bottleneck:0' % layer)
     return t_l_input, t_l_3x3, t_l_5x5
 
 
@@ -140,7 +140,7 @@ def get_depthwise_activation_map(args, model, img, layer, neuron):
 def get_all_layers_activation_map(model, imgs, layers):
 
     act_maps = {layer: [] for layer in layers}
-    with tf.Graph().as_default(), tf.Session():
+    with tf.Graph().as_default(), tf.compat.v1.Session():
         t_input = tf.compat.v1.placeholder(tf.float32, [None, 224, 224, 3])
         T = render.import_model(model, t_input, None)
         for layer in layers:
