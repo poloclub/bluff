@@ -5,3 +5,9 @@ _**massif**_: *"a compact group of mountains, especially one that is separate fr
 [Summit][summit] follow-up.
 
 [summit]: http://github.com/fredhohman/summit
+
+
+### Install dependencies
+```bash
+pip install -r requirements.txt
+```

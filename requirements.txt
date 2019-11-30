@@ -1,6 +1,10 @@
+absl-py==0.7.0
 cleverhans
+h5py
+keras
 lucid
 numpy
 pillow
 requests
 tensorflow==1.15
+tqdm
