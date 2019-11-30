@@ -85,6 +85,13 @@ class InceptionV1Model(CleverhansModel):
         self._fprop_cache = dict()
         self._scope_cache = dict()
 
+        self._default_input_placeholder = self.make_input_placeholder()
+        self.fprop(self._default_input_placeholder)
+
+    @property
+    def default_input_placeholder(self):
+        return self._default_input_placeholder
+
     def fprop(self, x, **kwargs):
         del kwargs  # unused
 
@@ -104,23 +111,28 @@ class InceptionV1Model(CleverhansModel):
             logits = softmax2_op.inputs[0]
             logits = logits[:, :1000]
 
-            self._scope_cache[x] = scope
-            self._fprop_cache[x] = {'logits': logits}
+            if graph.get_name_scope() != '':
+                scope = '%s/%s' % (graph.get_name_scope(), scope)
 
+            self._scope_cache[x] = scope
+            self._fprop_cache[x] = dict()
             for layer in self.LAYERS:
                 self._fprop_cache[x][layer] = \
                     graph.get_tensor_by_name("%s/%s:0" % (scope, layer))
+            self._fprop_cache[x][self.O_LOGITS] = logits
 
         return self._fprop_cache[x]
 
     def get_layer_names(self):
-        return self.LAYERS + ['logits']
+        return self.LAYERS + [self.O_LOGITS]
 
     def make_input_placeholder(self):
         return tf.placeholder(
             tf.float32, (None, self.IMG_SIZE, self.IMG_SIZE, 3))
 
-    def get_weight_tensors(self, x, layer):
+    def get_weight_tensors_for_layer(self, layer, x=None):
+        if x is None:
+            x = self.default_input_placeholder
         if x not in self._scope_cache:
             self.fprop(x)
 
@@ -134,6 +146,25 @@ class InceptionV1Model(CleverhansModel):
         t_w4 = t('%s/%s_5x5_w:0' % (scope, layer))
         t_w5 = t('%s/%s_pool_reduce_w:0' % (scope, layer))
         return t_w0, t_w1, t_w2, t_w3, t_w4, t_w5
+
+    def eval_activation_map(self, imgs, layer, sess=None):
+        sess = sess or tf.get_default_session() or tf.Session()
+
+        x = self.default_input_placeholder
+        t_act_map = self.fprop(x)[layer]
+        with sess.as_default():
+            act_map = t_act_map.eval({x: imgs})
+        return act_map
+
+    def eval_activation_score(self, imgs, layer, sess=None):
+        sess = sess or tf.get_default_session() or tf.Session()
+
+        x = self.default_input_placeholder
+        t_act_map = self.fprop(x)[layer]
+        t_act_score = tf.math.reduce_max(t_act_map, axis=[1, 2])
+        with sess.as_default():
+            act_score = t_act_score.eval({x: imgs})
+        return act_score
 
 
 if __name__ == '__main__':
@@ -151,7 +182,9 @@ if __name__ == '__main__':
         y = model.get_predicted_class(x)
 
     # Get an input image from url
-    img_url = 'https://images.fineartamerica.com/images/artworkimages/mediumlarge/1/white-wolf-elaine-mikkelstrup.jpg'
+    img_url = ('https://images.fineartamerica.com'
+               '/images/artworkimages/mediumlarge'
+               '/1/white-wolf-elaine-mikkelstrup.jpg')
     img_response = requests.get(img_url)
     img = Image.open(BytesIO(img_response.content))
     img = img.resize([model.IMG_SIZE] * 2)
