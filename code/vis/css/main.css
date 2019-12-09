@@ -1,3 +1,30 @@
+@import url('https://fonts.googleapis.com/css?family=Oxygen&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Barlow|Oxygen&display=swap');
+
+
+body {
+  margin: 0;
+  font-family: 'Barlow', sans-serif;
+}
+
+#svg-left {
+  width: 80%;
+  height: 1000px;
+  display: inline-block;
+}
+
+#ag-title {
+  transform: translate(100px, 0px);
+  height: 40px;
+  display: inline-block;
+  width: 80%;
+}
+
+#analysis-title {
+  height: 40px;
+  display: inline-block;
+}
+
 .stop-left {
   stop-color: #3f51b5;
 }
@@ -11,7 +38,7 @@
 }
 
 .outlined {
-  fill:   none;
+  fill: none;
   stroke: url(#mainGradient);
   stroke-width: 4;
 }

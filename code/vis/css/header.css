@@ -1,0 +1,23 @@
+#header {
+  height: 70px;
+}
+
+#main-title {
+  font-weight: bolder;
+  display: inline-block;
+  transform: translate(100px, 0px);
+  font-size: 45px;  
+}
+
+#sub-title {
+  display: inline-block;
+  transform: translate(100px, 0px);
+  font-size: 45px;
+}
+
+#header-horizontal-line {
+  width: 5000px;
+  transform: translate(0px, 80px);
+  border-color: lightgray;
+  border-width: 0.5px;
+}
