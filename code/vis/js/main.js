@@ -27,6 +27,7 @@ var svg_ag = svg_left
 
 // Define analysis div
 var analysis_div = document.createElement('div')
-analysis_div.innerText = "HSFHWIAEFAS:ODFJASDFOAS"
+analysis_div.setAttribute('id', 'analysis-txt')
+analysis_div.innerText = "Analysis text"
 document.body.appendChild(analysis_div)
 

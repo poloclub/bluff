@@ -25,6 +25,11 @@ body {
   display: inline-block;
 }
 
+#analysis-txt {
+  transform: translate(0px, -990px);
+  display: inline-block;
+}
+
 .stop-left {
   stop-color: #3f51b5;
 }
