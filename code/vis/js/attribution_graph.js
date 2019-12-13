@@ -33,8 +33,7 @@ Promise.all([
   var fv_filter_defs = svg_ag
     .append('defs')
     .attr('id', 'filter-defs')
-
-
+  gen_hue_filter()
   
   // Default - draw benign
   var topk = 10
@@ -91,10 +90,10 @@ function gen_hue_filter() {
     var r = eps_to_R(eps)
     var g = eps_to_G(eps)
     var b = eps_to_B(eps)
-    var mat = (r + ' ').repeat(5) + '\n'
-    mat += (g + ' ').repeat(5) + '\n' 
-    mat += (b + ' ').repeat(5) + '\n'
-    mat += '1 1 1 1 0'
+    var mat = r + ' 0 0 0 0\n'
+    mat += '0 ' + g + ' 0 0 0\n'
+    mat += '0 0 ' + b + ' 0 0\n'
+    mat += '0 1 0 0 0'
     var filter_eps = d3
       .select('#filter-defs')
       .append('filter')
