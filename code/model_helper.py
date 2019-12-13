@@ -154,7 +154,7 @@ def get_blk_of_neuron(args, layer, neuron):
     blk_sizes = args.layer_blk_sizes
     num_neurons = 0
     for i in range(4):
-        num_neurons += blk_sizes['{}_{}'.format(layer, i)]
+        num_neurons += blk_sizes['{}_concat_{}'.format(layer, i)]
         if neuron < num_neurons:
             return i
     return 4
@@ -164,8 +164,8 @@ def get_num_neurons_in_prev_blks(args, layer, neuron):
     blk_sizes = args.layer_blk_sizes
     num_neurons = 0
     for i in range(4):
-        num_neurons += blk_sizes['{}_{}'.format(layer, i)]
+        num_neurons += blk_sizes['{}_concat_{}'.format(layer, i)]
         if neuron < num_neurons:
             break
-    num_neurons -= blk_sizes['{}_{}'.format(layer, i)]
+    num_neurons -= blk_sizes['{}_concat_{}'.format(layer, i)]
     return num_neurons

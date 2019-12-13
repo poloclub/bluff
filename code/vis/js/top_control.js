@@ -1,3 +1,5 @@
+// TODO: Do not hard code this
+var epss = [0.5, 1, 1.5, 2, 2.5, 3, 3.5]
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -11,15 +13,18 @@ top_control_horizontal_line.setAttribute('noshade', 'true')
 top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
-var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', 'FGM')
+var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', 'FGM', null)
 top_control.appendChild(attack_type_control)
 
 // From class
-var attack_from_class_control = gen_top_dropdown('top-control-from-dropdown', 'Attack from', 'Giant Panda', '#4488EE')
+var from_color = get_css_val('--attack-from-color')
+console.log(from_color)
+var attack_from_class_control = gen_top_dropdown('top-control-from-dropdown', 'Attack from', 'Giant Panda', from_color)
 top_control.appendChild(attack_from_class_control)
 
 // To class
-var attack_to_class_control = gen_top_dropdown('top-control-to-dropdown', 'Attack to', 'Armadillo', '#FF5555')
+var to_color = get_css_val('--attack-to-color')
+var attack_to_class_control = gen_top_dropdown('top-control-to-dropdown', 'Attack to', 'Armadillo', to_color)
 top_control.appendChild(attack_to_class_control)
 
 // Attack strength control bar
@@ -64,7 +69,7 @@ var strength_drag = d3
     this.style.fill = d3.select(this).style('stroke')
   })
   .on('drag', function() {
-    // XXX NEED TO QUANTIZE THE VALUE (only the printed value)
+    // XXX NEED TO QUANTIZE THE VALUE (only the printed value) with epss
     let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
     let new_strength = bar_length_to_strength(mouse_x)
     d3.select('#attack-strength-circle').style('cx', mouse_x)
@@ -115,7 +120,7 @@ function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
   // Define color box representing the title
   control_title_color_box.setAttribute('id', dropdown_id + '-colorbox')
   control_title_color_box.setAttribute('class', 'top-control-dropdown-colorbox')
-  control_title_color_box.style.setProperty('background-color', title_color)
+  control_title_color_box.style.setProperty('background', title_color)
 
   // Define icon
   control_icon.setAttribute('id', dropdown_id + '-icon')
@@ -128,4 +133,8 @@ function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
   control.appendChild(control_title_color_box)
   control.appendChild(control_icon)
   return control
+}
+
+function get_css_val(css_key) {
+  return getComputedStyle(document.body).getPropertyValue(css_key)
 }

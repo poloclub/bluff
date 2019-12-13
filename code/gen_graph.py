@@ -51,7 +51,7 @@ def gen_full_graph(args, A, I):
 
             # Get the block the neuron belongs to
             blk = model_helper.get_blk_of_neuron(args, layer, neuron)
-            layer_key = '{}_{}'.format(layer, blk)
+            layer_key = '{}_concat_{}'.format(layer, blk)
             neuron_th_in_blk = neuron - model_helper.get_num_neurons_in_prev_blks(args, layer, neuron)
 
             # Get the influences for the block
@@ -65,9 +65,9 @@ def gen_full_graph(args, A, I):
 
                 # Get I-matrix between the intermediate layer and prev_layer
                 if blk == 1:
-                    inter_layer_key = '{}_{}'.format(layer, 4)
+                    inter_layer_key = '{}_3x3'.format(layer)
                 elif blk == 2:
-                    inter_layer_key = '{}_{}'.format(layer, 5)
+                    inter_layer_key = '{}_5x5'.format(layer)
                 I_inter = I[inter_layer_key]
 
                 # Get the number of previous neurons

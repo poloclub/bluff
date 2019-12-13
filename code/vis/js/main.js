@@ -31,3 +31,7 @@ analysis_div.setAttribute('id', 'analysis-txt')
 analysis_div.innerText = "Analysis text"
 document.body.appendChild(analysis_div)
 
+function get_css_val(css_key) {
+  return getComputedStyle(document.body).getPropertyValue(css_key)
+}
+

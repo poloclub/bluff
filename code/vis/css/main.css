@@ -1,6 +1,10 @@
 @import url('https://fonts.googleapis.com/css?family=Oxygen&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Barlow|Oxygen&display=swap');
 
+:root {
+  --attack-from-color: rgb(60, 120, 240);
+  --attack-to-color: rgb(240, 60, 60);
+}
 
 body {
   margin: 0;
