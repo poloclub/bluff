@@ -28,71 +28,12 @@ var attack_to_class_control = gen_top_dropdown('top-control-to-dropdown', 'Attac
 top_control.appendChild(attack_to_class_control)
 
 // Attack strength control bar
-var svg_attack_strength_control = d3
-  .select('#top-control')
-  .append('svg')
-  .attr('id', 'svg-attack-strength')
+gen_attack_strength_control_bar(epss)
 
-svg_attack_strength_control
-  .append('text')
-  .attr('id', 'attack-strength-title')
-  .text('Attack strength')
-  .attr('x', 0)
-  .attr('y', 23)
 
-svg_attack_strength_control
-  .append('rect')
-  .attr('id', 'attack-strength-slidebar-background')
-  .attr('class', 'attack-strength-slidebar')
-
-var default_strength = 0.5
-var max_attack_strength = 5
-var strength_bar_length = 180
-var front_bar_length = d3
-  .scaleLinear()
-  .domain([0, max_attack_strength])
-  .range([0, strength_bar_length])
-var bar_length_to_strength = d3
-  .scaleLinear()
-  .domain([0, strength_bar_length])
-  .range([0, max_attack_strength])
-
-svg_attack_strength_control
-  .append('rect')
-  .attr('id', 'attack-strength-slidebar-front')
-  .attr('class', 'attack-strength-slidebar')
-  .style('width', front_bar_length(default_strength))
-
-var strength_drag = d3
-  .drag()
-  .on('start', function() {
-    this.style.fill = d3.select(this).style('stroke')
-  })
-  .on('drag', function() {
-    // XXX NEED TO QUANTIZE THE VALUE (only the printed value) with epss
-    let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
-    let new_strength = bar_length_to_strength(mouse_x)
-    d3.select('#attack-strength-circle').style('cx', mouse_x)
-    d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
-    d3.select('#attack-strength-val').text(new_strength)
-  })
-  .on('end', function() {
-    this.style.fill = 'white'
-  })
-
-svg_attack_strength_control
-  .append('circle')
-  .attr('id', 'attack-strength-circle')
-  .style('cx', front_bar_length(default_strength))
-  .on('mouseover', function() {this.style.cursor = 'pointer'})
-  .call(strength_drag)
-
-svg_attack_strength_control
-  .append('text')
-  .attr('id', 'attack-strength-val')
-  .text(default_strength)
-  .attr('x', 350)
-  .attr('y', 23)
+//////////////////////////////////////////////////////////////////////////////////////////
+// Functions
+//////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate dropdown options
 function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
@@ -135,6 +76,93 @@ function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
   return control
 }
 
+// Generate Attack strength control bar
+function gen_attack_strength_control_bar(epss) {
+  var svg_attack_strength_control = d3
+    .select('#top-control')
+    .append('svg')
+    .attr('id', 'svg-attack-strength')
+
+  svg_attack_strength_control
+    .append('text')
+    .attr('id', 'attack-strength-title')
+    .text('Attack strength')
+    .attr('x', 0)
+    .attr('y', 23)
+
+  svg_attack_strength_control
+    .append('rect')
+    .attr('id', 'attack-strength-slidebar-background')
+    .attr('class', 'attack-strength-slidebar')
+
+  var default_strength = 0.5
+  var max_attack_strength = d3.max(epss)
+  var strength_bar_length = get_css_val('--strength_bar_length')
+  var strength_unit = max_attack_strength / epss.length
+  var bar_length_unit = strength_bar_length / epss.length
+
+  var front_bar_length = d3
+    .scaleLinear()
+    .domain([0, max_attack_strength])
+    .range([0, strength_bar_length])
+  var bar_length_to_strength = d3
+    .scaleLinear()
+    .domain([0, strength_bar_length])
+    .range([0, max_attack_strength])
+
+  svg_attack_strength_control
+    .append('rect')
+    .attr('id', 'attack-strength-slidebar-front')
+    .attr('class', 'attack-strength-slidebar')
+    .style('width', front_bar_length(default_strength))
+
+  var strength_drag = d3
+    .drag()
+    .on('start', function() {
+      this.style.fill = d3.select(this).style('stroke')
+    })
+    .on('drag', function() {
+      // Get the position of the circle and the front bar
+      let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
+      let new_strength = bar_length_to_strength(mouse_x)
+      new_strength = round_unit(new_strength, strength_unit)
+
+      // Position the circle and the front bar
+      d3.select('#attack-strength-circle').style('cx', mouse_x)
+      d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
+      d3.select('#attack-strength-val').text(new_strength)
+    })
+    .on('end', function() {
+      // Sticky movement
+      let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
+      mouse_x = round_unit(mouse_x, bar_length_unit)
+      d3.select('#attack-strength-circle').style('cx', mouse_x)
+      d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
+      this.style.fill = 'white'
+    })
+
+  svg_attack_strength_control
+    .append('circle')
+    .attr('id', 'attack-strength-circle')
+    .style('cx', front_bar_length(default_strength))
+    .on('mouseover', function() {this.style.cursor = 'pointer'})
+    .call(strength_drag)
+
+  svg_attack_strength_control
+    .append('text')
+    .attr('id', 'attack-strength-val')
+    .text(default_strength)
+    .attr('x', 350)
+    .attr('y', 23)
+}
+
+// Get css variable value
 function get_css_val(css_key) {
   return getComputedStyle(document.body).getPropertyValue(css_key)
+}
+
+// Round by a specific unit
+function round_unit(n, unit) {
+  var new_unit = 1 / unit
+  return Math.round(n * new_unit) / new_unit;
 }
