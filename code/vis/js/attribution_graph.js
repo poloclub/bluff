@@ -19,24 +19,95 @@ Promise.all([
   // Get the data
   // TODO: Do not hard code this
   var top_neurons = {}
-  top_neurons['benign'] = parse_top_neurons(data[0])
-  top_neurons['attacked-0.5'] = parse_top_neurons(data[1])
-  top_neurons['attacked-1'] = parse_top_neurons(data[2])
-  top_neurons['attacked-1.5'] = parse_top_neurons(data[3])
-  top_neurons['attacked-2'] = parse_top_neurons(data[4])
-  top_neurons['attacked-2.5'] = parse_top_neurons(data[5])
-  top_neurons['attacked-3'] = parse_top_neurons(data[6])
-  top_neurons['attacked-3.5'] = parse_top_neurons(data[7])
+  var topk = 10
+  top_neurons['benign'] = parse_top_neurons(data[0], topk)
+  top_neurons['attacked-0.5'] = parse_top_neurons(data[1], topk)
+  top_neurons['attacked-1.0'] = parse_top_neurons(data[2], topk)
+  top_neurons['attacked-1.5'] = parse_top_neurons(data[3], topk)
+  top_neurons['attacked-2.0'] = parse_top_neurons(data[4], topk)
+  top_neurons['attacked-2.5'] = parse_top_neurons(data[5], topk)
+  top_neurons['attacked-3.0'] = parse_top_neurons(data[6], topk)
+  top_neurons['attacked-3.5'] = parse_top_neurons(data[7], topk)
 
   // Define filters
-  // TODO: Do not hard code this
   var fv_filter_defs = svg_ag
     .append('defs')
     .attr('id', 'filter-defs')
   gen_hue_filter()
+
+  // Fractionate neurons
+  // TODO: Do not hard code this
+  var fractionated_neuron_infos = {}
+  var layers = Object.keys(top_neurons['benign'])
+  fractionated_neuron_infos['benign-only'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['benign-attacked-both'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-0.5'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-1.0'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-1.5'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-2.0'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-2.5'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-3.0'] = init_fractionated_neuron_infos(layers)
+  fractionated_neuron_infos['attacked-3.5'] = init_fractionated_neuron_infos(layers)
+
+  var fractionation_keys = Object.keys(fractionated_neuron_infos)
+  var top_neurons_keys = Object.keys(top_neurons)
+  
+  // Fractionation of top neurons in benign images
+  var top_benign_neurons = top_neurons['benign']
+  layers.forEach(layer => {
+    for (let benign_neuron_info of top_benign_neurons[layer]) {
+
+      // See if the current benign neuron is in attacked as well
+      var benign_neuron = benign_neuron_info['neuron']
+      var is_both_benign_attacked = false
+
+      for (let top_neuron_key of top_neurons_keys) {
+        if (top_neuron_key != 'benign') {
+          var attacked_top_neurons = extract_neurons_from_neuron_infos(top_neurons[top_neuron_key][layer])
+          if (attacked_top_neurons.includes(benign_neuron)) {
+            is_both_benign_attacked = true
+            break
+          } 
+        }
+      }
+
+      // Fractionation of the top neurons
+      if (is_both_benign_attacked) {
+        fractionated_neuron_infos['benign-attacked-both'][layer].push(benign_neuron_info)
+      } else {
+        fractionated_neuron_infos['benign-only'][layer].push(benign_neuron_info)
+      }
+    }
+  })
+  
+  // Fractionation of top neurons in attacked images
+  fractionation_keys.slice(2).forEach((fractionation_key, fraction_index) => {
+    var target_top_neuron_infos = top_neurons[fractionation_key]
+    
+    layers.forEach(layer => {
+
+      var is_
+      for (let target_neuron_info of target_top_neuron_infos[layer]) {
+        fractionation_keys.slice(2 + fraction_index + 1).forEach(fractionation_other_key => {        
+          var compare_top_neuron_infos = top_neurons[fractionation_other_key]
+          var compare_top_neurons = extract_neurons_from_neuron_infos(compare_top_neuron_infos)
+  
+        })
+      }
+      
+      
+    })
+    
+    
+  })
+
+  console.log(fractionated_neuron_infos)
+    
+  
+
+
   
   // Default - draw benign
-  var topk = 10
   for (const [layer_th, layer] of layers.reverse().entries()) {
     svg_ag.append('text')
       .text(layer)
@@ -64,6 +135,7 @@ function extract_rgb(rgb) {
 }
 
 function gen_hue_filter() {
+  // TODO: Do not hard code this
   // Get color info
   var rgb_from = get_css_val('--attack-from-color').toString().split(',')
   var rgb_from_vals = extract_rgb(rgb_from)
@@ -107,10 +179,10 @@ function gen_hue_filter() {
   })
 }
 
-function parse_top_neurons(top_neurons) {
+function parse_top_neurons(top_neurons, topk) {
   var layers = Object.keys(top_neurons)
   layers.forEach(layer => {
-    top_neurons[layer] = top_neurons[layer].map(function(neuron_info) {
+    top_neurons[layer] = top_neurons[layer].slice(0, topk).map(function(neuron_info) {
       return {
         'neuron': parseInt(neuron_info['neuron']), 
         'weight': parseFloat(neuron_info['weight'])
@@ -118,6 +190,18 @@ function parse_top_neurons(top_neurons) {
     })
   })
   return top_neurons
+}
+
+function extract_neurons_from_neuron_infos(neuron_infos) {
+  return neuron_infos.map(neuron_info => neuron_info['neuron'])
+}
+
+function init_fractionated_neuron_infos(layers) {
+  var fractionated_neuron_infos = {}
+  layers.forEach(layer => {
+    fractionated_neuron_infos[layer] = []
+  })
+  return fractionated_neuron_infos
 }
 
 function vis_filename (dirpath, layer, neuron, type) {

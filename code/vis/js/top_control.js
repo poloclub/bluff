@@ -18,7 +18,6 @@ top_control.appendChild(attack_type_control)
 
 // From class
 var from_color = get_css_val('--attack-from-color')
-console.log(from_color)
 var attack_from_class_control = gen_top_dropdown('top-control-from-dropdown', 'Attack from', 'Giant Panda', from_color)
 top_control.appendChild(attack_from_class_control)
 
