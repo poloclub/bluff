@@ -1,113 +1,29 @@
 // Set data directory
 var feature_vis_dir = '../../../summit/summit-data/data/feature-vis'
 var data_dir = '../../../massif/aggregated/panda-armadillo/top-neurons'
+var file_list = get_file_list(data_dir)
 
 // Main part for drawing the attribution graphs
-Promise.all([
-  // Read the data
-  // TODO: Do not hard code this
-  d3.json(data_dir + '/top-neurons-benign.json'),
-  d3.json(data_dir + '/top-neurons-attacked-0.5.json'),
-  d3.json(data_dir + '/top-neurons-attacked-1.json'),
-  d3.json(data_dir + '/top-neurons-attacked-1.5.json'),
-  d3.json(data_dir + '/top-neurons-attacked-2.json'),
-  d3.json(data_dir + '/top-neurons-attacked-2.5.json'),
-  d3.json(data_dir + '/top-neurons-attacked-3.json'),
-  d3.json(data_dir + '/top-neurons-attacked-3.5.json')
-]).then(function(data) {
+Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
+
+  // Hyperparameters
+  var topk = 15
 
   // Get the data
-  // TODO: Do not hard code this
-  var top_neurons = {}
-  var topk = 15
-  top_neurons['benign'] = parse_top_neurons(data[0], topk)
-  top_neurons['attacked-0.5'] = parse_top_neurons(data[1], topk)
-  top_neurons['attacked-1.0'] = parse_top_neurons(data[2], topk)
-  top_neurons['attacked-1.5'] = parse_top_neurons(data[3], topk)
-  top_neurons['attacked-2.0'] = parse_top_neurons(data[4], topk)
-  top_neurons['attacked-2.5'] = parse_top_neurons(data[5], topk)
-  top_neurons['attacked-3.0'] = parse_top_neurons(data[6], topk)
-  top_neurons['attacked-3.5'] = parse_top_neurons(data[7], topk)
-
+  var top_neurons = parse_top_neurons_all_attack(topk, data)
+  var layers = Object.keys(top_neurons['benign'])
+  
   // Define filters
-  var fv_filter_defs = svg_ag
-    .append('defs')
-    .attr('id', 'filter-defs')
   gen_hue_filter()
 
-  // Fractionate neurons
-  // TODO: Do not hard code this
-  var fractionated_neuron_infos = {}
-  var layers = Object.keys(top_neurons['benign'])
-  fractionated_neuron_infos['benign-only-0.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-only-1.0'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-only-1.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-only-2.0'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-only-2.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-only-3.0'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-only-3.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['benign-attacked-both'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-0.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-1.0'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-1.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-2.0'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-2.5'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-3.0'] = init_fractionated_neuron_infos(layers)
-  fractionated_neuron_infos['attacked-3.5'] = init_fractionated_neuron_infos(layers)
+  // Initialize the fractionated neuron infos
+  var fractionated_neuron_infos = init_fractionated_neuron_infos_all_attack(layers)
 
-  var fractionation_keys = Object.keys(fractionated_neuron_infos)
-  var top_neurons_keys = Object.keys(top_neurons)
-  
   // Fractionation of top neurons in benign images
-  var top_benign_neurons = top_neurons['benign']
-  layers.forEach(layer => {
-    for (let benign_neuron_info of top_benign_neurons[layer]) {
-
-      // A neuron highly activated in benign images
-      var benign_neuron = benign_neuron_info['neuron']
-
-      // See if the neuron should be in benign-attacked-both
-      var is_in_both_benign_all_attacked = true
-
-      // Fractionate the neurons based on the eps
-      epss.forEach((eps, eps_i) => {
-
-        // See if the benign neuron is idle at this strength
-        var got_idle_at_this_strength = true
-        var this_strength_key = 'attacked-' + (eps).toFixed(1)
-        var top_neurons_current_strength = extract_neurons_from_neuron_infos(top_neurons[this_strength_key][layer])
-        if (top_neurons_current_strength.includes(benign_neuron)) {
-          got_idle_at_this_strength = false
-        }
-
-        // See if the benign neuron has never become idle before with weaker attacks
-        if (got_idle_at_this_strength) {
-          fractionation_keys.slice(0, eps_i).forEach(got_idle_key => {
-            var neurons_idle_already = extract_neurons_from_neuron_infos(fractionated_neuron_infos[got_idle_key][layer])
-            if (neurons_idle_already.includes(benign_neuron)) {
-              got_idle_at_this_strength = false
-            }
-          })
-        }
-
-        // Assign the benign neuron
-        if (got_idle_at_this_strength) {
-          var benign_only_key = 'benign-only-' + (eps).toFixed(1)
-          fractionated_neuron_infos[benign_only_key][layer].push(benign_neuron_info)
-          is_in_both_benign_all_attacked = false
-        }
-      })
-
-      // Assign the benign neuuron after looking thorugh all eps
-      if (is_in_both_benign_all_attacked) {
-        var benign_key = 'benign-attacked-both'
-        fractionated_neuron_infos[benign_key][layer].push(benign_neuron_info)
-      }
-
-    }
-  })
+  fractionated_neuron_infos = fractionate_benign_neurons(top_neurons, fractionated_neuron_infos)
   
-  // // Fractionation of top neurons in attacked images
+  // Fractionation of top neurons in attacked images
+  
   // fractionation_keys.slice(2).forEach((fractionation_key, fraction_index) => {
   //   var target_top_neuron_infos = top_neurons[fractionation_key]
     
@@ -127,6 +43,8 @@ Promise.all([
     
     
   // })
+
+  var top_neurons_keys = Object.keys(top_neurons)
 
   console.log(fractionated_neuron_infos)
     
@@ -151,6 +69,42 @@ Promise.all([
   
 })
 
+function get_file_list(data_dir){
+  var file_lst = [data_dir + '/top-neurons-benign.json']
+  epss.forEach(eps => {
+    var file = data_dir + '/top-neurons-attacked-' + eps + '.json'
+    file_lst.push(file)
+  })
+  return file_lst
+}
+
+
+function parse_top_neurons_all_attack(topk, data){
+  var top_neurons = {}
+  top_neurons['benign'] = parse_top_neurons(data[0], topk)
+  epss.forEach((eps, eps_i) => {
+    var eps_1lf = (eps).toFixed(1)
+    top_neurons['attacked-' + eps_1lf] = parse_top_neurons(data[eps_i + 1], topk)
+  })
+  return top_neurons
+}
+  
+function init_fractionated_neuron_infos_all_attack(layers) {
+  var fractionated_neuron_infos = {}
+  epss.forEach(eps => {
+    var eps_1lf = (eps).toFixed(1)
+    fractionated_neuron_infos['benign-only-' + eps_1lf] = init_fractionated_neuron_infos(layers)
+  })
+  fractionated_neuron_infos['benign-attacked-both'] = init_fractionated_neuron_infos(layers)
+  epss.forEach(eps => {
+    var eps_1lf = (eps).toFixed(1)
+    fractionated_neuron_infos['attacked-' + eps_1lf] = init_fractionated_neuron_infos(layers)
+  })
+  console.log(fractionated_neuron_infos)
+  return fractionated_neuron_infos
+}
+  
+
 function extract_rgb(rgb) {  
   var regex = /[+-]?\d+(?:\.\d+)?/g;
   var rgb_vals = []
@@ -162,7 +116,11 @@ function extract_rgb(rgb) {
 }
 
 function gen_hue_filter() {
-  // TODO: Do not hard code this
+  // Define filter
+  var fv_filter_defs = svg_ag
+    .append('defs')
+    .attr('id', 'filter-defs')
+
   // Get color info
   var rgb_from = get_css_val('--attack-from-color').toString().split(',')
   var rgb_from_vals = extract_rgb(rgb_from)
@@ -170,17 +128,18 @@ function gen_hue_filter() {
   var rgb_to_vals = extract_rgb(rgb_to)
 
   // Define the color hue
+  var max_eps = d3.max(epss)
   var eps_to_R = d3
     .scaleLinear()
-    .domain([0, 3.5])
+    .domain([0, max_eps])
     .range([rgb_from_vals[0] / 255, rgb_to_vals[0] / 255])
   var eps_to_G = d3
     .scaleLinear()
-    .domain([0, 3.5])
+    .domain([0, max_eps])
     .range([rgb_from_vals[1] / 255, rgb_to_vals[1] / 255])
   var eps_to_B = d3
     .scaleLinear()
-    .domain([0, 3.5])
+    .domain([0, max_eps])
     .range([rgb_from_vals[2] / 255, rgb_to_vals[2] / 255])
   
   var epss_with_benign = [0].concat(epss)
@@ -228,6 +187,60 @@ function init_fractionated_neuron_infos(layers) {
   layers.forEach(layer => {
     fractionated_neuron_infos[layer] = []
   })
+  return fractionated_neuron_infos
+}
+
+function fractionate_benign_neurons(top_neurons, fractionated_neuron_infos) {
+
+  var fractionation_keys = Object.keys(fractionated_neuron_infos)
+  var top_benign_neurons = top_neurons['benign']
+
+  layers.forEach(layer => {
+    for (let benign_neuron_info of top_benign_neurons[layer]) {
+
+      // A neuron highly activated in benign images
+      var benign_neuron = benign_neuron_info['neuron']
+
+      // See if the neuron should be in benign-attacked-both
+      var is_in_both_benign_all_attacked = true
+
+      // Fractionate the neurons based on the eps
+      epss.forEach((eps, eps_i) => {
+
+        // See if the benign neuron is idle at this strength
+        var got_idle_at_this_strength = true
+        var this_strength_key = 'attacked-' + (eps).toFixed(1)
+        var top_neurons_current_strength = extract_neurons_from_neuron_infos(top_neurons[this_strength_key][layer])
+        if (top_neurons_current_strength.includes(benign_neuron)) {
+          got_idle_at_this_strength = false
+        }
+
+        // See if the benign neuron has never become idle before with weaker attacks
+        if (got_idle_at_this_strength) {
+          fractionation_keys.slice(0, eps_i).forEach(got_idle_key => {
+            var neurons_idle_already = extract_neurons_from_neuron_infos(fractionated_neuron_infos[got_idle_key][layer])
+            if (neurons_idle_already.includes(benign_neuron)) {
+              got_idle_at_this_strength = false
+            }
+          })
+        }
+
+        // Assign the benign neuron
+        if (got_idle_at_this_strength) {
+          var benign_only_key = 'benign-only-' + (eps).toFixed(1)
+          fractionated_neuron_infos[benign_only_key][layer].push(benign_neuron_info)
+          is_in_both_benign_all_attacked = false
+        }
+      })
+
+      // Assign the benign neuuron after looking thorugh all eps
+      if (is_in_both_benign_all_attacked) {
+        var benign_key = 'benign-attacked-both'
+        fractionated_neuron_infos[benign_key][layer].push(benign_neuron_info)
+      }
+    }
+  })
+
   return fractionated_neuron_infos
 }
 
