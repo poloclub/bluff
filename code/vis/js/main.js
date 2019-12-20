@@ -19,12 +19,22 @@ var svg_left = d3
   .select('body')
   .append('svg')
   .attr('id', 'svg-left')
-
+  .call(
+    d3.zoom()
+      .on("zoom", function () {
+        d3.select('#g-ag').attr("transform", d3.event.transform)
+      })
+  )
+  
+  
 // Define svg for attribution graph
 var svg_ag = svg_left
   .append('svg')
   .attr('id', 'svg-ag')
-
+  .append('g')
+  .attr('id', 'g-ag')
+  
+  
 // Define analysis div
 var analysis_div = document.createElement('div')
 analysis_div.setAttribute('id', 'analysis-txt')

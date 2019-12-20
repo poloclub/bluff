@@ -10,8 +10,8 @@ var file_list = get_file_list(data_dir)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variable
 ////////////////////////////////////////////////////////////////////////////////////////////////
-var svg_center_x = parseInt(d3.select('#svg-ag').style('width').split('px')[0]) / 2
-var svg_center_y = parseInt(d3.select('#svg-ag').style('height').split('px')[0]) / 2
+var svg_center_x = parseInt(d3.select('#g-ag').style('width').split('px')[0]) / 2
+var svg_center_y = parseInt(d3.select('#g-ag').style('height').split('px')[0]) / 2
 var neuron_img_width = parseInt(get_css_val('--neuron_img_width'))
 var neuron_img_height = parseInt(get_css_val('--neuron_img_height'))
 var neuron_img_padding = {'lr': parseInt(get_css_val('--neuron_img_lr')), 'tb': parseInt(get_css_val('--neuron_img_tb'))}
@@ -118,7 +118,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
     var x_base = neuron_groups_x_base['both'][layer]
     benign_attacked_neurons[layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
-      d3.select('#svg-ag')
+      d3.select('#g-ag')
         .append('image')
         .attr('id', 'fv-' + [layer, neuron].join('-'))
         .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
@@ -139,7 +139,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
       var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
       fractionated_neuron_infos['benign-only-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
         var neuron = neuron_info['neuron']
-        d3.select('#svg-ag')
+        d3.select('#g-ag')
           .append('image')
           .attr('id', 'fv-' + [layer, neuron].join('-'))
           .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
@@ -160,7 +160,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
     // console.log(x_base)
     fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
-      d3.select('#svg-ag')
+      d3.select('#g-ag')
         .append('image')
         .attr('id', 'fv-' + [layer, neuron].join('-'))
         .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
