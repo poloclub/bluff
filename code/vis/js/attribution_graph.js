@@ -14,8 +14,20 @@ var svg_center_x = parseInt(d3.select('#g-ag').style('width').split('px')[0]) / 
 var svg_center_y = parseInt(d3.select('#g-ag').style('height').split('px')[0]) / 2
 var neuron_img_width = parseInt(get_css_val('--neuron_img_width'))
 var neuron_img_height = parseInt(get_css_val('--neuron_img_height'))
-var neuron_img_padding = {'lr': parseInt(get_css_val('--neuron_img_lr')), 'tb': parseInt(get_css_val('--neuron_img_tb'))}
+var neuron_img_padding = {
+  'lr': parseInt(get_css_val('--neuron_img_lr')), 
+  'tb': parseInt(get_css_val('--neuron_img_tb')),
+  'ex-box': parseInt(get_css_val('--neuron_ex_box_padding'))
+}
 var neuron_group_lr_padding = parseInt(get_css_val('--neuron_group_lr'))
+var ex_img_width = parseInt(get_css_val('--ex_img_width'))
+var ex_img_height = parseInt(get_css_val('--ex_img_height'))
+var ex_img_padding = {
+  'lr': parseInt(get_css_val('--ex_img_lr')),
+  'tb': parseInt(get_css_val('--ex_img_tb')),
+  'ex-start-x': parseInt(get_css_val('--ex_start_x')),
+  'ex-start-y': parseInt(get_css_val('--ex_start_y'))
+}
 var ag_start_y = parseInt(get_css_val('--ag_start_y'))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,14 +123,15 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
       var neuron = neuron_info['neuron']
       d3.select('#g-ag')
         .append('image')
-        .attr('id', 'fv-' + [layer, neuron].join('-'))
+        .attr('id', ['fv', layer, neuron].join('-'))
         .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
         .attr('width', neuron_img_width)
         .attr('height', neuron_img_height)
         .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
         .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
         .attr('filter', 'url(#filter-' + 1.5 + ')')
-        .on('click', function() {click_neuron(svg, layer, neuron)})
+        .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+        .on('mouseout', function() {mouseout_neuron(layer, neuron)})
     })
     
   })
@@ -139,7 +152,8 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
           .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
           .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
           .attr('filter', 'url(#filter-' + eps + ')')
-          .on('click', function() {click_neuron(svg, layer, neuron)})
+          .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+          .on('mouseout', function() {mouseout_neuron(layer, neuron)})
       })
     })
   })
@@ -160,24 +174,11 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
           .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
           .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
           .attr('filter', 'url(#filter-' + 3.5 + ')')
-          .on('click', function() {click_neuron(svg, layer, neuron)})
+          .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+          .on('mouseout', function() {mouseout_neuron(layer, neuron)})
       })
     })
   })
-
-  // Default - draw benign
-  // for (const [layer_th, layer] of layers.reverse().entries()) {
-  //   svg_ag.append('text')
-  //     .text(layer)
-  //     .attr('x', 30)
-  //     .attr('y', 30 + (neuron_img_padding['top-bottom'] + neuron_img_height) * layer_th)
-  // }
-  
-  // for (const [layer_th, layer] of layers.entries()) {
-  //   x_base = 100
-  //   draw_feature_vis(svg_ag, layer, layer_th, x_base, top_neurons['benign'][layer], 'channel', 0, topk)
-  // }
-
   
 })
 
@@ -190,6 +191,14 @@ function get_file_list(data_dir){
   return file_lst
 }
 
+function does_exist(element_id) {
+  var element = document.getElementById(element_id)
+  if (element) {
+    return true
+  } else {
+    return false
+  }
+}
 
 function parse_top_neurons_all_attack(topk, data){
   var top_neurons = {}
@@ -216,7 +225,6 @@ function init_fractionated_neuron_infos_all_attack(layers) {
   return fractionated_neuron_infos
 }
   
-
 function extract_rgb(rgb) {  
   var regex = /[+-]?\d+(?:\.\d+)?/g;
   var rgb_vals = []
@@ -408,7 +416,7 @@ function vis_filename (dirpath, layer, neuron, type) {
     filename += 'channel/'
     filename += [layer, neuron, type].join('-')
     filename += '.jpg'
-  } else if (type.includes('example')) {
+  } else if (type.includes('ex')) {
     var ex = type.split('-')[1]
     filename += 'dataset-p/'
     filename += [layer, neuron, 'dataset', 'p', ex].join('-')
@@ -434,40 +442,66 @@ function display_onoff(element_id, option) {
   
 }
 
-function draw_feature_vis(svg, layer, layer_th, x_base, neuron_lst, vis_type, eps, topk=-1) {
-  // If topk is -1, then draw all neurons
-  if (topk != -1) {
-    var neurons = neuron_lst.slice(0, topk)
+function mouseover_neuron(layer, neuron) {
+  // Mouse cursor
+  var fv_id = ['fv', layer, neuron].join('-')
+  d3.select('#' + fv_id).style('cursor', 'pointer')
+
+  // Generate or display the example box
+  var example_box_class = ['ex-box', layer, neuron].join('-')
+  var example_box_rect_id = ['ex-rect', layer, neuron].join('-')
+  if (does_exist(example_box_rect_id)) {
+    d3.selectAll('.' + example_box_class)
+      .style('display', 'block')
   } else {
-    var neurons = neuron_lst
-  }
+    // Generate example box rectangle
+    d3.select('#g-ag')
+      .append('rect')
+      .attr('id', example_box_rect_id)
+      .attr('class', ['ex-box', example_box_class].join(' '))
 
-  // Draw top neurons' feature vis
-  for (const [neuron_th, neuron_info] of neurons.entries()) {
-    neuron = neuron_info['neuron']
-    // svg.append('rect')
-    //   .attr('id', 'fv-bg-' + [layer, neuron].join('-'))
-    //   .attr('width', neuron_img_width)
-    //   .attr('height', neuron_img_height)
-    //   .style('fill', 'red')
-    //   .attr('x', x_base + (neuron_img_padding['left-right'] + neuron_img_width) * neuron_th)
-    //   .attr('y', (neuron_img_padding['top-bottom'] + neuron_img_height) * layer_th)
-    //   // .on('click', function() {
-    //   //   click_neuron(svg, layer, neuron)
-    //   // })
+    // Get the feature vis' x and y
+    var fv_x = parseInt(d3.select('#' + fv_id).attr('x'))
+    var fv_y = parseInt(d3.select('#' + fv_id).attr('y'))
 
-    svg.append('image')
-      .attr('id', 'fv-' + [layer, neuron].join('-'))
-      .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, vis_type))
-      .attr('width', neuron_img_width)
-      .attr('height', neuron_img_height)
-      .attr('x', x_base + (neuron_img_padding['left-right'] + neuron_img_width) * neuron_th)
-      .attr('y', (neuron_img_padding['top-bottom'] + neuron_img_height) * layer_th)
-      .attr('filter', 'url(#filter-' + eps + ')')
-      .on('click', function() {
-        click_neuron(svg, layer, neuron)
-      })
+    // Get the example rectangle's x and y
+    var ex_box_x = fv_x + neuron_img_width + neuron_img_padding['ex-box']
+    var ex_box_h = parseInt(d3.select('#' + example_box_rect_id).style('height'))
+    var ex_box_y = fv_y + (neuron_img_height / 2) - (ex_box_h / 2)
+
+    // Set the example rectangle's x and y
+    d3.select('#' + example_box_rect_id)
+      .attr('x', ex_box_x)
+      .attr('y', ex_box_y)
+
+    // Draw the text
+    d3.select('#g-ag')
+      .append('text')
+      .attr('class', [example_box_class, 'ex-box-title'].join(' '))
+      .text('Example patches')
+      .attr('x', ex_box_x + ex_img_padding['ex-start-x'])
+      .attr('y', ex_box_y + ex_img_padding['ex-start-y'] - 6)
+
+    // Draw the examples 
+    for(var i = 0; i < 10; i++) {
+      d3.select('#g-ag')
+        .append('image')
+        .attr('id', 'ex-' + [layer, neuron].join('-'))
+        .attr('class', example_box_class)
+        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'ex-' + i))
+        .attr('width', ex_img_width)
+        .attr('height', ex_img_height)
+        .attr('x', ex_box_x + ex_img_padding['ex-start-x'] + (ex_img_width + ex_img_padding['lr']) * (i % 5))
+        .attr('y', ex_box_y + ex_img_padding['ex-start-y'] + (ex_img_height + ex_img_padding['tb']) * parseInt(i / 5))
+    }
+    
   }
+}
+
+function mouseout_neuron(layer, neuron) {
+  var example_box_class = ['ex-box', layer, neuron].join('-')
+  d3.selectAll('.' + example_box_class)
+    .style('display', 'none')
 }
 
 function click_neuron(svg, layer, neuron) {

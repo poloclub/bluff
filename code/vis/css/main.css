@@ -7,8 +7,15 @@
   --strength_bar_length: 180;
   --neuron_img_width: 50px;
   --neuron_img_height: 50px;
+  --neuron_ex_box_padding: 20px;
   --neuron_img_lr: 10px;
   --neuron_img_tb: 40px;
+  --ex_img_width: 40px;
+  --ex_img_height: 40px;
+  --ex_img_lr: 4px;
+  --ex_img_tb: 4px;
+  --ex_start_x: 7px;
+  --ex_start_y: 22px;
   --neuron_group_lr: 40px;
   --ag_start_y: 50px;
 }
