@@ -30,7 +30,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   var top_neurons = parse_top_neurons_all_attack(topk, data)
   var layers = Object.keys(top_neurons['benign'])
   var reversed_layers = layers.slice().reverse()
-  console.log(top_neurons)
+  console.log('top_neurons', top_neurons)
   
   // Define filters
   gen_hue_filter()
@@ -43,19 +43,12 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   
   // Fractionation of top neurons in attacked images
   fractionated_neuron_infos = fractionate_attacked_neurons(top_neurons, fractionated_neuron_infos)
-  console.log(fractionated_neuron_infos)
 
-  // Draw the dummy center
-  d3.select('#svg-ag')
-    .append('circle')
-    .attr('cx', svg_center_x)
-    .attr('cy', svg_center_y)
-    .attr('r', 3)
+  console.log('fractionated_neuron_infos', fractionated_neuron_infos)
 
   // Get the center -- benign-attacked-both neuron group
   var benign_attacked_neurons = init_fractionated_neuron_infos(layers)
   var curr_eps_idx = epss.indexOf(curr_eps)
-
   layers.forEach(layer => {
     benign_attacked_neurons[layer] = benign_attacked_neurons[layer].concat(fractionated_neuron_infos['benign-attacked-both'][layer])
     epss.slice(curr_eps_idx + 1).forEach(other_eps => {
@@ -92,8 +85,6 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
       neuron_groups_x_base['benign-' + (eps).toFixed(1)][layer] = prev_x_base - neuron_group_lr_padding - (num_neurons * neuron_x_unit_len)
     })
   })
-
-  console.log(neuron_groups_x_base)
   
   // Get the start x position of the neuron groups for attacked
   epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
@@ -133,7 +124,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   })
   
   // Draw left neurons -- benign-only
-  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
     var eps_str = (eps).toFixed(1)
     reversed_layers.forEach((layer, layer_th) => {
       var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
@@ -154,22 +145,23 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   })
 
   // Draw right neurons -- attacked
-  reversed_layers.forEach((layer, layer_th) => {
-    var eps_str = 0.5
-    var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
-    // console.log(x_base)
-    fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
-      var neuron = neuron_info['neuron']
-      d3.select('#g-ag')
-        .append('image')
-        .attr('id', 'fv-' + [layer, neuron].join('-'))
-        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
-        .attr('width', neuron_img_width)
-        .attr('height', neuron_img_height)
-        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
-        .attr('filter', 'url(#filter-' + 3.5 + ')')
-        .on('click', function() {click_neuron(svg, layer, neuron)})
+  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+    var eps_str = (eps).toFixed(1)
+    reversed_layers.forEach((layer, layer_th) => {
+      var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
+      fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
+        var neuron = neuron_info['neuron']
+        d3.select('#g-ag')
+          .append('image')
+          .attr('id', 'fv-' + [layer, neuron].join('-'))
+          .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+          .attr('width', neuron_img_width)
+          .attr('height', neuron_img_height)
+          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+          .attr('filter', 'url(#filter-' + 3.5 + ')')
+          .on('click', function() {click_neuron(svg, layer, neuron)})
+      })
     })
   })
 
@@ -387,15 +379,16 @@ function fractionate_attacked_neurons(top_neurons, fractionated_neuron_infos) {
         }
 
         // See if the neuron is activated in stronger attacks
-        if (is_stucked_this_curr) {
-          epss.slice(eps_i + 1).forEach(stronger_eps => {
-            var stronger_eps_1lf = (eps).toFixed(1)
+        epss.slice(eps_i + 1).forEach(stronger_eps => {
+          if (is_stucked_this_curr) { 
+            var stronger_eps_1lf = (stronger_eps).toFixed(1)
             var top_neurons_in_stronger_strength = top_neurons['attacked-' + stronger_eps_1lf][layer]
-            if (top_neurons_in_stronger_strength.includes(curr_neuron)) {
+            var stronger_neurons = extract_neurons_from_neuron_infos(top_neurons_in_stronger_strength)
+            if (stronger_neurons.includes(curr_neuron)) {
               is_stucked_this_curr = false
             }
-          })
-        }
+          }
+        })
 
         // Assign the neuron info
         if (is_stucked_this_curr) {
