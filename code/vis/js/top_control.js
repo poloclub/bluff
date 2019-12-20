@@ -1,5 +1,7 @@
 // TODO: Do not hard code this
 var epss = [0.5, 1, 1.5, 2, 2.5, 3, 3.5]
+var default_strength = 1.5
+var curr_eps = default_strength
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -94,7 +96,6 @@ function gen_attack_strength_control_bar(epss) {
     .attr('id', 'attack-strength-slidebar-background')
     .attr('class', 'attack-strength-slidebar')
 
-  var default_strength = 0.5
   var max_attack_strength = d3.max(epss)
   var strength_bar_length = get_css_val('--strength_bar_length')
   var strength_unit = max_attack_strength / epss.length
@@ -135,9 +136,9 @@ function gen_attack_strength_control_bar(epss) {
       // Sticky movement
       let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
       mouse_x = round_unit(mouse_x, bar_length_unit)
-      d3.select('#attack-strength-circle').style('cx', mouse_x)
+      d3.select('#attack-strength-circle').style('cx', mouse_x).style('fill', 'white')
       d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
-      this.style.fill = 'white'
+      curr_eps = new_strength
     })
 
   svg_attack_strength_control

@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Set data directory
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6,6 +7,16 @@ var data_dir = '../../../massif/aggregated/panda-armadillo/top-neurons'
 var file_list = get_file_list(data_dir)
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Global variable
+////////////////////////////////////////////////////////////////////////////////////////////////
+var svg_center_x = parseInt(d3.select('#svg-ag').style('width').split('px')[0]) / 2
+var svg_center_y = parseInt(d3.select('#svg-ag').style('height').split('px')[0]) / 2
+var neuron_img_width = parseInt(get_css_val('--neuron_img_width'))
+var neuron_img_height = parseInt(get_css_val('--neuron_img_height'))
+var neuron_img_padding = {'lr': parseInt(get_css_val('--neuron_img_lr')), 'tb': parseInt(get_css_val('--neuron_img_tb'))}
+var neuron_group_lr_padding = parseInt(get_css_val('--neuron_group_lr'))
+var ag_start_y = parseInt(get_css_val('--ag_start_y'))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
@@ -13,11 +24,12 @@ var file_list = get_file_list(data_dir)
 Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 
   // Hyperparameters
-  var topk = 25
+  var topk = 10
 
   // Get the data
   var top_neurons = parse_top_neurons_all_attack(topk, data)
   var layers = Object.keys(top_neurons['benign'])
+  var reversed_layers = layers.slice().reverse()
   console.log(top_neurons)
   
   // Define filters
@@ -31,26 +43,148 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   
   // Fractionation of top neurons in attacked images
   fractionated_neuron_infos = fractionate_attacked_neurons(top_neurons, fractionated_neuron_infos)
-
   console.log(fractionated_neuron_infos)
+
+  // Draw the dummy center
+  d3.select('#svg-ag')
+    .append('circle')
+    .attr('cx', svg_center_x)
+    .attr('cy', svg_center_y)
+    .attr('r', 3)
+
+  // Get the center -- benign-attacked-both neuron group
+  var benign_attacked_neurons = init_fractionated_neuron_infos(layers)
+  var curr_eps_idx = epss.indexOf(curr_eps)
+
+  layers.forEach(layer => {
+    benign_attacked_neurons[layer] = benign_attacked_neurons[layer].concat(fractionated_neuron_infos['benign-attacked-both'][layer])
+    epss.slice(curr_eps_idx + 1).forEach(other_eps => {
+      var other_benign_neurons = fractionated_neuron_infos['benign-only-' + (other_eps).toFixed(1)]
+      benign_attacked_neurons[layer] = benign_attacked_neurons[layer].concat(other_benign_neurons[layer])
+    })
+  })
+
+  // Initialize the position for the neuron groups
+  var neuron_groups_x_base = {}
+  neuron_groups_x_base['both'] = {}
+  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+    neuron_groups_x_base['benign-' + (eps).toFixed(1)] = {}
+    neuron_groups_x_base['attacked-' + (eps).toFixed(1)] = {}
+  })
+
+  // Get the start x position of the neuron groups for benign-attacked-both
+  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
+  layers.forEach(layer => {
+    var num_neurons = benign_attacked_neurons[layer].length
+    neuron_groups_x_base['both'][layer] = svg_center_x - (num_neurons / 2) * neuron_x_unit_len
+  })
+
+  // Get the start x position of the neuron groups for benign-only
+  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+    layers.forEach(layer => {
+      var prev_x_base = NaN
+      if (eps_th == 0) {
+        prev_x_base = neuron_groups_x_base['both'][layer]
+      } else {
+        prev_x_base = neuron_groups_x_base['benign-' + (epss[eps_th - 1]).toFixed(1)][layer]
+      }
+      var num_neurons = fractionated_neuron_infos['benign-only-' + (eps).toFixed(1)][layer].length
+      neuron_groups_x_base['benign-' + (eps).toFixed(1)][layer] = prev_x_base - neuron_group_lr_padding - (num_neurons * neuron_x_unit_len)
+    })
+  })
+
+  console.log(neuron_groups_x_base)
+  
+  // Get the start x position of the neuron groups for attacked
+  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+    layers.forEach(layer => {
+      var prev_x_base = NaN
+      var prev_num_neurons = NaN
+      if (eps_th == 0) {
+        prev_x_base = neuron_groups_x_base['both'][layer]
+        prev_num_neurons = benign_attacked_neurons[layer].length
+      } else {
+        prev_x_base = neuron_groups_x_base['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer]
+        prev_num_neurons = fractionated_neuron_infos['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer].length
+      }
+      
+      neuron_groups_x_base['attacked-' + (eps).toFixed(1)][layer] = prev_x_base + (prev_num_neurons * neuron_x_unit_len) + neuron_group_lr_padding
+    })
+  })
+  
+
+  // Draw the center -- benign-attacked-both
+  reversed_layers.forEach((layer, layer_th) => {
+    var x_base = neuron_groups_x_base['both'][layer]
+    benign_attacked_neurons[layer].forEach((neuron_info, neuron_th) => {
+      var neuron = neuron_info['neuron']
+      d3.select('#svg-ag')
+        .append('image')
+        .attr('id', 'fv-' + [layer, neuron].join('-'))
+        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+        .attr('width', neuron_img_width)
+        .attr('height', neuron_img_height)
+        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('filter', 'url(#filter-' + 1.5 + ')')
+        .on('click', function() {click_neuron(svg, layer, neuron)})
+    })
     
+  })
   
+  // Draw left neurons -- benign-only
+  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+    var eps_str = (eps).toFixed(1)
+    reversed_layers.forEach((layer, layer_th) => {
+      var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
+      fractionated_neuron_infos['benign-only-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
+        var neuron = neuron_info['neuron']
+        d3.select('#svg-ag')
+          .append('image')
+          .attr('id', 'fv-' + [layer, neuron].join('-'))
+          .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+          .attr('width', neuron_img_width)
+          .attr('height', neuron_img_height)
+          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+          .attr('filter', 'url(#filter-' + eps + ')')
+          .on('click', function() {click_neuron(svg, layer, neuron)})
+      })
+    })
+  })
 
+  // Draw right neurons -- attacked
+  reversed_layers.forEach((layer, layer_th) => {
+    var eps_str = 0.5
+    var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
+    // console.log(x_base)
+    fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
+      var neuron = neuron_info['neuron']
+      d3.select('#svg-ag')
+        .append('image')
+        .attr('id', 'fv-' + [layer, neuron].join('-'))
+        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+        .attr('width', neuron_img_width)
+        .attr('height', neuron_img_height)
+        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('filter', 'url(#filter-' + 3.5 + ')')
+        .on('click', function() {click_neuron(svg, layer, neuron)})
+    })
+  })
 
-  
   // Default - draw benign
-  for (const [layer_th, layer] of layers.reverse().entries()) {
-    svg_ag.append('text')
-      .text(layer)
-      .attr('x', 30)
-      .attr('y', 30 + (neuron_img_padding['top-bottom'] + neuron_img_height) * layer_th)
-  }
+  // for (const [layer_th, layer] of layers.reverse().entries()) {
+  //   svg_ag.append('text')
+  //     .text(layer)
+  //     .attr('x', 30)
+  //     .attr('y', 30 + (neuron_img_padding['top-bottom'] + neuron_img_height) * layer_th)
+  // }
   
-  for (const [layer_th, layer] of layers.entries()) {
-    // console.log('%d: %s', layer_th, layer)
-    x_base = 100
-    draw_feature_vis(svg_ag, layer, layer_th, x_base, top_neurons['benign'][layer], 'channel', 0, topk)
-  }
+  // for (const [layer_th, layer] of layers.entries()) {
+  //   x_base = 100
+  //   draw_feature_vis(svg_ag, layer, layer_th, x_base, top_neurons['benign'][layer], 'channel', 0, topk)
+  // }
 
   
 })
@@ -336,7 +470,6 @@ function draw_feature_vis(svg, layer, layer_th, x_base, neuron_lst, vis_type, ep
       .attr('height', neuron_img_height)
       .attr('x', x_base + (neuron_img_padding['left-right'] + neuron_img_width) * neuron_th)
       .attr('y', (neuron_img_padding['top-bottom'] + neuron_img_height) * layer_th)
-      // .style('opacity', '0.5')
       .attr('filter', 'url(#filter-' + eps + ')')
       .on('click', function() {
         click_neuron(svg, layer, neuron)
