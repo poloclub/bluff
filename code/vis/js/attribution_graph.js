@@ -36,7 +36,7 @@ var ag_start_y = parseInt(get_css_val('--ag_start_y'))
 Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 
   // Hyperparameters
-  var topk = 10
+  var topk = 5
 
   // Get the data
   var top_neurons = parse_top_neurons_all_attack(topk, data)
@@ -64,37 +64,12 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   // Draw neurons (nodes)
   draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign_attacked_neurons)
   draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
-  draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
+  draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos, top_neurons)
 
   // Draw influences (edges)
-  
-  // Draw benign
-  reversed_layers.slice(0, -1).forEach((layer, layer_idx) => {
-    var prev_layer = reversed_layers[layer_idx + 1]
-
-    for (var neuron in top_graphs['benign'][layer]) {
-      var curr_fv_id = ['fv', layer, neuron].join('-')
-      var curr_neuron_x = parseInt(d3.select('#' + curr_fv_id).attr('x')) + (neuron_img_width / 2)
-      var curr_neuron_y = parseInt(d3.select('#' + curr_fv_id).attr('y')) + neuron_img_height
-
-      top_graphs['benign'][layer][neuron].forEach(edge_info => {
-        var prev_neuron = edge_info['prev_neuron']
-        var weight = edge_info['weight']
-        var prev_fv_id = ['fv', prev_layer, prev_neuron].join('-')
-
-        var prev_neuron_x = parseInt(d3.select('#' + prev_fv_id).attr('x')) + (neuron_img_width / 2)
-        var prev_neuron_y = parseInt(d3.select('#' + prev_fv_id).attr('y'))
-
-        d3.select('#g-ag')
-          .append('path')
-          .attr('d', gen_curve(curr_neuron_x, curr_neuron_y, prev_neuron_x, prev_neuron_y))
-          .attr("stroke", "blue")
-          .attr("stroke-width", 1)
-          .attr("fill", "none")
-      })
-    }
-    // console.log(top_graphs['benign'][layer])
-  })
+  var edge_scale = define_edge_scale(top_graphs)
+  draw_benign_edges(reversed_layers, top_graphs, edge_scale)
+  draw_attacked_edges(reversed_layers, top_graphs, edge_scale)
 
   console.log('top_neurons', top_neurons)
   console.log('top_graphs', top_graphs)
@@ -242,202 +217,6 @@ function get_benign_attacked_neurons(fractionated_neuron_infos) {
   return benign_attacked_neurons
 }
 
-function init_neuron_group_x_position() {
-  var curr_eps_idx = epss.indexOf(curr_eps)
-  var neuron_groups_x_base = {}
-  neuron_groups_x_base['both'] = {}
-  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
-    neuron_groups_x_base['benign-' + (eps).toFixed(1)] = {}
-    neuron_groups_x_base['attacked-' + (eps).toFixed(1)] = {}
-  })
-  return neuron_groups_x_base
-}
-
-function add_neuron_group_x_position_both (neuron_groups_x_base, benign_attacked_neurons) {
-  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
-  layers.forEach(layer => {
-    var num_neurons = benign_attacked_neurons[layer].length
-    neuron_groups_x_base['both'][layer] = svg_center_x - (num_neurons / 2) * neuron_x_unit_len
-  })
-  return neuron_groups_x_base
-}
-
-function add_neuron_group_x_position_benign(neuron_groups_x_base, fractionated_neuron_infos) {
-  var curr_eps_idx = epss.indexOf(curr_eps)
-  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
-  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
-    layers.forEach(layer => {
-      var prev_x_base = NaN
-      if (eps_th == 0) {
-        prev_x_base = neuron_groups_x_base['both'][layer]
-      } else {
-        prev_x_base = neuron_groups_x_base['benign-' + (epss[eps_th - 1]).toFixed(1)][layer]
-      }
-      var num_neurons = fractionated_neuron_infos['benign-only-' + (eps).toFixed(1)][layer].length
-      neuron_groups_x_base['benign-' + (eps).toFixed(1)][layer] = prev_x_base - neuron_group_lr_padding - (num_neurons * neuron_x_unit_len)
-    })
-  })
-  return neuron_groups_x_base
-}
-
-function add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated_neuron_infos, benign_attacked_neurons) {
-  var curr_eps_idx = epss.indexOf(curr_eps)
-  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
-  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
-    layers.forEach(layer => {
-      var prev_x_base = NaN
-      var prev_num_neurons = NaN
-      if (eps_th == 0) {
-        prev_x_base = neuron_groups_x_base['both'][layer]
-        prev_num_neurons = benign_attacked_neurons[layer].length
-      } else {
-        prev_x_base = neuron_groups_x_base['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer]
-        prev_num_neurons = fractionated_neuron_infos['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer].length
-      }
-      
-      neuron_groups_x_base['attacked-' + (eps).toFixed(1)][layer] = prev_x_base + (prev_num_neurons * neuron_x_unit_len) + neuron_group_lr_padding
-    })
-  })
-  return neuron_groups_x_base
-}
-
-function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign_attacked_neurons) {
-  reversed_layers.forEach((layer, layer_th) => {
-    var x_base = neuron_groups_x_base['both'][layer]
-    benign_attacked_neurons[layer].forEach((neuron_info, neuron_th) => {
-      var neuron = neuron_info['neuron']
-      d3.select('#g-ag')
-        .append('image')
-        .attr('id', ['fv', layer, neuron].join('-'))
-        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
-        .attr('width', neuron_img_width)
-        .attr('height', neuron_img_height)
-        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
-        .attr('filter', 'url(#filter-' + 1.5 + ')')
-        .on('mouseover', function() {mouseover_neuron(layer, neuron)})
-        .on('mouseout', function() {mouseout_neuron(layer, neuron)})
-    })
-  })
-}
-
-function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
-  var curr_eps_idx = epss.indexOf(curr_eps)
-  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
-    var eps_str = (eps).toFixed(1)
-    reversed_layers.forEach((layer, layer_th) => {
-      var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
-      fractionated_neuron_infos['benign-only-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
-        var neuron = neuron_info['neuron']
-        d3.select('#g-ag')
-          .append('image')
-          .attr('id', 'fv-' + [layer, neuron].join('-'))
-          .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
-          .attr('width', neuron_img_width)
-          .attr('height', neuron_img_height)
-          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
-          .attr('filter', 'url(#filter-' + eps + ')')
-          .on('mouseover', function() {mouseover_neuron(layer, neuron)})
-          .on('mouseout', function() {mouseout_neuron(layer, neuron)})
-      })
-    })
-  })
-}
-
-function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
-  var curr_eps_idx = epss.indexOf(curr_eps)
-  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
-    var eps_str = (eps).toFixed(1)
-    reversed_layers.forEach((layer, layer_th) => {
-      var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
-      fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
-        var neuron = neuron_info['neuron']
-        d3.select('#g-ag')
-          .append('image')
-          .attr('id', 'fv-' + [layer, neuron].join('-'))
-          .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
-          .attr('width', neuron_img_width)
-          .attr('height', neuron_img_height)
-          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
-          .attr('filter', 'url(#filter-' + 3.5 + ')')
-          .on('mouseover', function() {mouseover_neuron(layer, neuron)})
-          .on('mouseout', function() {mouseout_neuron(layer, neuron)})
-      })
-    })
-  })
-}
-
-function does_exist(element_id) {
-  var element = document.getElementById(element_id)
-  if (element) {
-    return true
-  } else {
-    return false
-  }
-}
-  
-function extract_rgb(rgb) {  
-  var regex = /[+-]?\d+(?:\.\d+)?/g;
-  var rgb_vals = []
-  var match;
-  while (match = regex.exec(rgb)) {
-    rgb_vals.push(parseInt(match[0]));
-  }
-  return rgb_vals
-}
-
-function gen_hue_filter() {
-  // Define filter
-  var fv_filter_defs = svg_ag
-    .append('defs')
-    .attr('id', 'filter-defs')
-
-  // Get color info
-  var rgb_from = get_css_val('--attack-from-color').toString().split(',')
-  var rgb_from_vals = extract_rgb(rgb_from)
-  var rgb_to = get_css_val('--attack-to-color').toString().split(',')
-  var rgb_to_vals = extract_rgb(rgb_to)
-
-  // Define the color hue
-  var max_eps = d3.max(epss)
-  var eps_to_R = d3
-    .scaleLinear()
-    .domain([0, max_eps])
-    .range([rgb_from_vals[0] / 255, rgb_to_vals[0] / 255])
-  var eps_to_G = d3
-    .scaleLinear()
-    .domain([0, max_eps])
-    .range([rgb_from_vals[1] / 255, rgb_to_vals[1] / 255])
-  var eps_to_B = d3
-    .scaleLinear()
-    .domain([0, max_eps])
-    .range([rgb_from_vals[2] / 255, rgb_to_vals[2] / 255])
-  
-  var epss_with_benign = [0].concat(epss)
-
-  epss_with_benign.forEach(eps => {
-    var r = eps_to_R(eps)
-    var g = eps_to_G(eps)
-    var b = eps_to_B(eps)
-    var mat = r + ' 0 0 0 0\n'
-    mat += '0 ' + g + ' 0 0 0\n'
-    mat += '0 0 ' + b + ' 0 0\n'
-    mat += '0 1 0 0 0'
-    var filter_eps = d3
-      .select('#filter-defs')
-      .append('filter')
-      .attr('id', 'filter-' + eps)
-      .attr('color-interpolation-filters', 'sRGB')
-
-    filter_eps
-      .append('feColorMatrix')
-      .attr('type', 'matrix')
-      .attr('values', mat)
-  })
-}
-
 function extract_neurons_from_neuron_infos(neuron_infos) {
   return neuron_infos.map(neuron_info => neuron_info['neuron'])
 }
@@ -550,6 +329,298 @@ function fractionate_attacked_neurons(top_neurons, fractionated_neuron_infos) {
   return fractionated_neuron_infos
 }
 
+function init_neuron_group_x_position() {
+  var curr_eps_idx = epss.indexOf(curr_eps)
+  var neuron_groups_x_base = {}
+  neuron_groups_x_base['both'] = {}
+  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+    neuron_groups_x_base['benign-' + (eps).toFixed(1)] = {}
+    neuron_groups_x_base['attacked-' + (eps).toFixed(1)] = {}
+  })
+  return neuron_groups_x_base
+}
+
+function add_neuron_group_x_position_both (neuron_groups_x_base, benign_attacked_neurons) {
+  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
+  layers.forEach(layer => {
+    var num_neurons = benign_attacked_neurons[layer].length
+    neuron_groups_x_base['both'][layer] = svg_center_x - (num_neurons / 2) * neuron_x_unit_len
+  })
+  return neuron_groups_x_base
+}
+
+function add_neuron_group_x_position_benign(neuron_groups_x_base, fractionated_neuron_infos) {
+  var curr_eps_idx = epss.indexOf(curr_eps)
+  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
+  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+    layers.forEach(layer => {
+      var prev_x_base = NaN
+      if (eps_th == 0) {
+        prev_x_base = neuron_groups_x_base['both'][layer]
+      } else {
+        prev_x_base = neuron_groups_x_base['benign-' + (epss[eps_th - 1]).toFixed(1)][layer]
+      }
+      var num_neurons = fractionated_neuron_infos['benign-only-' + (eps).toFixed(1)][layer].length
+      neuron_groups_x_base['benign-' + (eps).toFixed(1)][layer] = prev_x_base - neuron_group_lr_padding - (num_neurons * neuron_x_unit_len)
+    })
+  })
+  return neuron_groups_x_base
+}
+
+function add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated_neuron_infos, benign_attacked_neurons) {
+  var curr_eps_idx = epss.indexOf(curr_eps)
+  var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
+  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+    layers.forEach(layer => {
+      var prev_x_base = NaN
+      var prev_num_neurons = NaN
+      if (eps_th == 0) {
+        prev_x_base = neuron_groups_x_base['both'][layer]
+        prev_num_neurons = benign_attacked_neurons[layer].length
+      } else {
+        prev_x_base = neuron_groups_x_base['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer]
+        prev_num_neurons = fractionated_neuron_infos['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer].length
+      }
+      
+      neuron_groups_x_base['attacked-' + (eps).toFixed(1)][layer] = prev_x_base + (prev_num_neurons * neuron_x_unit_len) + neuron_group_lr_padding
+    })
+  })
+  return neuron_groups_x_base
+}
+
+function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign_attacked_neurons) {
+  reversed_layers.forEach((layer, layer_th) => {
+    var x_base = neuron_groups_x_base['both'][layer]
+    benign_attacked_neurons[layer].forEach((neuron_info, neuron_th) => {
+      var neuron = neuron_info['neuron']
+      d3.select('#g-ag')
+        .append('image')
+        .attr('id', ['fv', layer, neuron].join('-'))
+        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+        .attr('width', neuron_img_width)
+        .attr('height', neuron_img_height)
+        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('filter', 'url(#filter-' + 1.5 + ')')
+        .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+        .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+    })
+  })
+}
+
+function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
+  var curr_eps_idx = epss.indexOf(curr_eps)
+  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+    var eps_str = (eps).toFixed(1)
+    reversed_layers.forEach((layer, layer_th) => {
+      var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
+      fractionated_neuron_infos['benign-only-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
+        var neuron = neuron_info['neuron']
+        d3.select('#g-ag')
+          .append('image')
+          .attr('id', 'fv-' + [layer, neuron].join('-'))
+          .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+          .attr('width', neuron_img_width)
+          .attr('height', neuron_img_height)
+          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+          .attr('filter', 'url(#filter-' + eps + ')')
+          .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+          .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+      })
+    })
+  })
+}
+
+function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos, top_neurons) {
+  var curr_eps_idx = epss.indexOf(curr_eps)
+
+  // Draw neurons stucked at lower level of attack
+  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+    var eps_str = (eps).toFixed(1)
+    reversed_layers.forEach((layer, layer_th) => {
+      var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
+      fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
+        var neuron = neuron_info['neuron']
+        d3.select('#g-ag')
+          .append('image')
+          .attr('id', 'fv-' + [layer, neuron].join('-'))
+          .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+          .attr('width', neuron_img_width)
+          .attr('height', neuron_img_height)
+          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+          .attr('filter', 'url(#filter-' + 3.5 + ')')
+          .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+          .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+      })
+    })
+  })
+
+  // Draw neurons of higher level of attack
+  var eps_str = (curr_eps).toFixed(1)
+  var attacked_key = 'attacked-' + eps_str
+  reversed_layers.forEach((layer, layer_th) => {
+    var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
+    top_neurons[attacked_key][layer].forEach((neuron_info, neuron_th) => {
+      var neuron = neuron_info['neuron']
+      d3.select('#g-ag')
+        .append('image')
+        .attr('id', 'fv-' + [layer, neuron].join('-'))
+        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+        .attr('width', neuron_img_width)
+        .attr('height', neuron_img_height)
+        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('filter', 'url(#filter-' + 3.5 + ')')
+        .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+        .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+    })
+  })
+  
+  
+}
+
+function draw_benign_edges(reversed_layers, top_graphs, edge_scale) {
+  reversed_layers.slice(0, -1).forEach((layer, layer_idx) => {
+    var prev_layer = reversed_layers[layer_idx + 1]
+
+    for (var neuron in top_graphs['benign'][layer]) {
+      var curr_fv_id = ['fv', layer, neuron].join('-')
+      var curr_neuron_x = parseInt(d3.select('#' + curr_fv_id).attr('x')) + (neuron_img_width / 2)
+      var curr_neuron_y = parseInt(d3.select('#' + curr_fv_id).attr('y')) + neuron_img_height
+
+      top_graphs['benign'][layer][neuron].forEach(edge_info => {
+        var prev_neuron = edge_info['prev_neuron']
+        var weight = edge_info['weight']
+        var prev_fv_id = ['fv', prev_layer, prev_neuron].join('-')
+
+        var prev_neuron_x = parseInt(d3.select('#' + prev_fv_id).attr('x')) + (neuron_img_width / 2)
+        var prev_neuron_y = parseInt(d3.select('#' + prev_fv_id).attr('y'))
+
+        d3.select('#g-ag')
+          .append('path')
+          .attr('d', gen_curve(curr_neuron_x, curr_neuron_y, prev_neuron_x, prev_neuron_y))
+          .attr('stroke', 'gray')
+          .attr('stroke-width', edge_scale(weight))
+          .attr('stroke', 'blue')
+          .attr('fill', 'none')
+      })
+    }
+  })
+}
+
+function draw_attacked_edges(reversed_layers, top_graphs, edge_scale) {
+  // NEED TO UPDATE
+  epss.forEach(eps => {
+    var eps_edge_color = 'red'
+    var attacked_key = 'attacked-' + (eps).toFixed(1)
+    console.log(attacked_key)
+
+    reversed_layers.slice(0, -1).forEach((layer, layer_idx) => {
+      var prev_layer = reversed_layers[layer_idx + 1]
+      
+      for (var neuron in top_graphs[attacked_key][layer]) {
+        var curr_fv_id = ['fv', layer, neuron].join('-')
+        var curr_neuron_x = parseInt(d3.select('#' + curr_fv_id).attr('x')) + (neuron_img_width / 2)
+        var curr_neuron_y = parseInt(d3.select('#' + curr_fv_id).attr('y')) + neuron_img_height
+
+        if (!(does_exist(curr_fv_id))) {
+          continue
+        }
+        
+        top_graphs[attacked_key][layer][neuron].forEach(edge_info => {
+
+          var prev_neuron = edge_info['prev_neuron']
+          var weight = edge_info['weight']
+          var prev_fv_id = ['fv', prev_layer, prev_neuron].join('-')
+  
+          var prev_neuron_x = parseInt(d3.select('#' + prev_fv_id).attr('x')) + (neuron_img_width / 2)
+          var prev_neuron_y = parseInt(d3.select('#' + prev_fv_id).attr('y'))
+  
+          
+          d3.select('#g-ag')
+            .append('path')
+            .attr('d', gen_curve(curr_neuron_x, curr_neuron_y, prev_neuron_x, prev_neuron_y))
+            .attr('stroke-width', edge_scale(weight))
+            .attr('stroke', eps_edge_color)
+            .attr('fill', 'none')
+        })
+      }
+    })
+  })
+  
+}
+
+function does_exist(element_id) {
+  var element = document.getElementById(element_id)
+  if (element) {
+    return true
+  } else {
+    return false
+  }
+}
+  
+function extract_rgb(rgb) {  
+  var regex = /[+-]?\d+(?:\.\d+)?/g;
+  var rgb_vals = []
+  var match;
+  while (match = regex.exec(rgb)) {
+    rgb_vals.push(parseInt(match[0]));
+  }
+  return rgb_vals
+}
+
+function gen_hue_filter() {
+  // Define filter
+  var fv_filter_defs = svg_ag
+    .append('defs')
+    .attr('id', 'filter-defs')
+
+  // Get color info
+  var rgb_from = get_css_val('--attack-from-color').toString().split(',')
+  var rgb_from_vals = extract_rgb(rgb_from)
+  var rgb_to = get_css_val('--attack-to-color').toString().split(',')
+  var rgb_to_vals = extract_rgb(rgb_to)
+
+  // Define the color hue
+  var max_eps = d3.max(epss)
+  var eps_to_R = d3
+    .scaleLinear()
+    .domain([0, max_eps])
+    .range([rgb_from_vals[0] / 255, rgb_to_vals[0] / 255])
+  var eps_to_G = d3
+    .scaleLinear()
+    .domain([0, max_eps])
+    .range([rgb_from_vals[1] / 255, rgb_to_vals[1] / 255])
+  var eps_to_B = d3
+    .scaleLinear()
+    .domain([0, max_eps])
+    .range([rgb_from_vals[2] / 255, rgb_to_vals[2] / 255])
+  
+  var epss_with_benign = [0].concat(epss)
+
+  epss_with_benign.forEach(eps => {
+    var r = eps_to_R(eps)
+    var g = eps_to_G(eps)
+    var b = eps_to_B(eps)
+    var mat = r + ' 0 0 0 0\n'
+    mat += '0 ' + g + ' 0 0 0\n'
+    mat += '0 0 ' + b + ' 0 0\n'
+    mat += '0 1 0 0 0'
+    var filter_eps = d3
+      .select('#filter-defs')
+      .append('filter')
+      .attr('id', 'filter-' + eps)
+      .attr('color-interpolation-filters', 'sRGB')
+
+    filter_eps
+      .append('feColorMatrix')
+      .attr('type', 'matrix')
+      .attr('values', mat)
+  })
+}
+
 function vis_filename (dirpath, layer, neuron, type) {
   var filename = dirpath + '/'
   if (type == 'channel') {
@@ -577,6 +648,29 @@ function gen_curve(x1, y1, x2, y2) {
   path += ' ' + c2_x + ' ' + c2_y + ','
   path += ' ' + x2 + ' ' + y2
   return path
+}
+
+function define_edge_scale(top_graphs) {
+  var min_weight = 10000000
+  var max_weight = -1
+  for (var graph_key in top_graphs) {
+    for (var layer in top_graphs[graph_key]) {
+      for (var neuron in top_graphs[graph_key][layer]) {
+        top_graphs[graph_key][layer][neuron].forEach(prev_neuron_info => {
+          var weight = prev_neuron_info['weight']
+          min_weight = d3.min([min_weight, weight])
+          max_weight = d3.max([max_weight, weight])
+        })
+      }
+    }
+  }
+
+  var edge_scale = d3
+    .scaleLinear()
+    .domain([min_weight, max_weight])
+    .range([0.1, 2])
+  
+  return edge_scale
 }
 
 function display_onoff(element_id, option) {
