@@ -60,7 +60,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   // Draw neurons (nodes)
   draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
   var left_most_x = draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
-  draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
+  var right_most_x = draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
 
   // Compute graphs
   var top_graphs = {}
@@ -73,7 +73,8 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   draw_attacked_edges(reversed_layers, top_graphs, edge_scale, fractionated_neuron_infos)
 
   // Annotation
-  annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x)
+  annotate_layers(reversed_layers, left_most_x)
+  annotate_feature_details(left_most_x, right_most_x, 'mixed5b')
   
 })
 
@@ -565,9 +566,12 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
 }
 
 function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
-  var curr_eps_idx = epss.indexOf(curr_eps)
+  // Right most neuron's x position
+  var right_most_x = {}
+  reversed_layers.forEach(layer => {right_most_x[layer] = 0})
 
   // Draw neurons stucked at lower level of attack
+  var curr_eps_idx = epss.indexOf(curr_eps)
   epss.slice(0, curr_eps_idx).forEach(eps => {
     var eps_str = (eps).toFixed(1)
     reversed_layers.forEach((layer, layer_th) => {
@@ -576,6 +580,7 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
         var neuron = neuron_info['neuron']
         var x = x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr'])
         var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
+        right_most_x[layer] = d3.max([right_most_x[layer], x])
 
         // Draw neuron
         d3.select('#g-ag')
@@ -624,7 +629,8 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
       var neuron = neuron_info['neuron']
       var x = x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr'])
       var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
-      
+      right_most_x[layer] = d3.max([right_most_x[layer], x])
+
       // Draw neuron
       d3.select('#g-ag')
         .append('image')
@@ -648,6 +654,10 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
         .attr('y', y + 13)
     })
   })
+
+  console.log(right_most_x)
+
+  return right_most_x
 }
 
 function draw_benign_edges(reversed_layers, top_graphs, edge_scale) {
@@ -986,8 +996,7 @@ function click_neuron(svg, layer, neuron) {
   console.log(popup)
 }
 
-function annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x) {
-  // Get the position of layer
+function annotate_layers(reversed_layers, left_most_x) {
   reversed_layers.forEach((layer, layer_th) => {
     var x = left_most_x[layer] - 80
     var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']) + 30
@@ -997,6 +1006,84 @@ function annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x) {
       .attr('x', x)
       .attr('y', y)
   })
+}
+
+function annotate_feature_details(left_most_x, right_most_x, last_layer) {
+  var left_x = left_most_x[last_layer] - 80
+  var right_x = right_most_x[last_layer] - 235
+  var text_y = 60
+  var arrow_y = text_y - 8
+  var left_arrow_x = left_x - 50
+  var right_arrow_x = right_most_x[last_layer] + 60
+  var arrow_len = 40
+  var arrow_point_len = 10
+
+  // Left arrow
+  d3.select('#g-ag')
+    .append('line')
+    .attr('class', 'annotation-arrows')
+    .attr('x1', left_arrow_x)
+    .attr('y1', arrow_y)
+    .attr('x2', left_arrow_x + arrow_len)
+    .attr('y2', arrow_y)
+  
+  d3.select('#g-ag')
+    .append('line')
+    .attr('class', 'annotation-arrows')
+    .attr('x1', left_arrow_x)
+    .attr('y1', arrow_y)
+    .attr('x2', left_arrow_x + arrow_point_len)
+    .attr('y2', arrow_y - arrow_point_len)
+  
+  d3.select('#g-ag')
+    .append('line')
+    .attr('class', 'annotation-arrows')
+    .attr('x1', left_arrow_x)
+    .attr('y1', arrow_y)
+    .attr('x2', left_arrow_x + arrow_point_len)
+    .attr('y2', arrow_y + arrow_point_len)
+
+  // Right arrow
+  d3.select('#g-ag')
+    .append('line')
+    .attr('class', 'annotation-arrows')
+    .attr('x1', right_arrow_x)
+    .attr('y1', arrow_y)
+    .attr('x2', right_arrow_x + arrow_len)
+    .attr('y2', arrow_y)
+  
+  d3.select('#g-ag')
+    .append('line')
+    .attr('class', 'annotation-arrows')
+    .attr('x1', right_arrow_x + arrow_len)
+    .attr('y1', arrow_y)
+    .attr('x2', right_arrow_x + arrow_len - arrow_point_len)
+    .attr('y2', arrow_y - arrow_point_len)
+  
+  d3.select('#g-ag')
+    .append('line')
+    .attr('class', 'annotation-arrows')
+    .attr('x1', right_arrow_x + arrow_len)
+    .attr('y1', arrow_y)
+    .attr('x2', right_arrow_x + arrow_len - arrow_point_len)
+    .attr('y2', arrow_y + arrow_point_len)
+
+  // Left text
+  d3.select('#g-ag')
+    .append('text')
+    .text('Features lost by attacks')
+    .attr('class', 'annotation-details')
+    .attr('x', left_x)
+    .attr('y', text_y)
+
+  // Right text
+  d3.select('#g-ag')
+    .append('text')
+    .text('Features added by attacks')
+    .attr('class', 'annotation-details')
+    .attr('x', right_x)
+    .attr('y', text_y)
+  
 }
 
 function get_css_val(css_key) {

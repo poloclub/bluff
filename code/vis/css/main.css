@@ -17,7 +17,7 @@
   --ex_start_x: 7px;
   --ex_start_y: 22px;
   --neuron_group_lr: 40px;
-  --ag_start_y: 50px;
+  --ag_start_y: 100px;
 }
 
 body {
