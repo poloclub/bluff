@@ -447,17 +447,30 @@ function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
     var x_base = neuron_groups_x_base['both'][layer]
     fractionated_neuron_infos['benign-attacked-both'][layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
+      var x = x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+      var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
+
+      // Draw neruon
       d3.select('#g-ag')
         .append('image')
         .attr('id', ['fv', layer, neuron].join('-'))
         .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
         .attr('width', neuron_img_width)
         .attr('height', neuron_img_height)
-        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('x', x)
+        .attr('y', y)
         .attr('filter', 'url(#filter-' + 2.0 + ')')
         .on('mouseover', function() {mouseover_neuron(layer, neuron)})
         .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+
+      // Add neuron number
+      d3.select('#g-ag')
+        .append('text')
+        .attr('id', ['neuron', layer, neuron].join('-'))
+        .attr('class', 'neuron-number')
+        .text(neuron)
+        .attr('x', x + 2)
+        .attr('y', y + 13)
     })
   })
 }
@@ -476,7 +489,10 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
       fractionated_neuron_infos['benign-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
         var neuron = neuron_info['neuron']
         var x = x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+        var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
         left_most_x[layer] = d3.min([x, left_most_x[layer]])
+
+        // Draw neuron
         d3.select('#g-ag')
           .append('image')
           .attr('id', 'fv-' + [layer, neuron].join('-'))
@@ -484,10 +500,19 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
           .attr('width', neuron_img_width)
           .attr('height', neuron_img_height)
           .attr('x', x)
-          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+          .attr('y', y)
           .attr('filter', 'url(#filter-' + 0 + ')')
           .on('mouseover', function() {mouseover_neuron(layer, neuron)})
           .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+
+        // Add annotation - neuron number
+        d3.select('#g-ag')
+          .append('text')
+          .attr('id', ['neuron', layer, neuron].join('-'))
+          .attr('class', 'neuron-number')
+          .text(neuron)
+          .attr('x', x + 2)
+          .attr('y', y + 13)
       })
     })
   })
@@ -510,7 +535,10 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
     aggregated_benign_neurons[layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
       var x = x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+      var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
       left_most_x[layer] = d3.min([x, left_most_x[layer]])
+
+      // Draw neuron
       d3.select('#g-ag')
         .append('image')
         .attr('id', 'fv-' + [layer, neuron].join('-'))
@@ -518,10 +546,19 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
         .attr('width', neuron_img_width)
         .attr('height', neuron_img_height)
         .attr('x', x)
-        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('y', y)
         .attr('filter', 'url(#filter-' + 0 + ')')
         .on('mouseover', function() {mouseover_neuron(layer, neuron)})
         .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+
+      // Add annotation - neuron number
+      d3.select('#g-ag')
+        .append('text')
+        .attr('id', ['neuron', layer, neuron].join('-'))
+        .attr('class', 'neuron-number')
+        .text(neuron)
+        .attr('x', x + 2)
+        .attr('y', y + 13)
     })
   })
   return left_most_x
@@ -537,17 +574,30 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
       var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
       fractionated_neuron_infos['attacked-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
         var neuron = neuron_info['neuron']
+        var x = x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+        var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
+
+        // Draw neuron
         d3.select('#g-ag')
           .append('image')
           .attr('id', 'fv-' + [layer, neuron].join('-'))
           .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
           .attr('width', neuron_img_width)
           .attr('height', neuron_img_height)
-          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-          .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+          .attr('x', x)
+          .attr('y', y)
           .attr('filter', 'url(#filter-' + 3.5 + ')')
           .on('mouseover', function() {mouseover_neuron(layer, neuron)})
           .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+
+        // Add annotation - neuron number
+        d3.select('#g-ag')
+          .append('text')
+          .attr('id', ['neuron', layer, neuron].join('-'))
+          .attr('class', 'neuron-number')
+          .text(neuron)
+          .attr('x', x + 2)
+          .attr('y', y + 13)
       })
     })
   })
@@ -572,17 +622,30 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
     var x_base = neuron_groups_x_base[attacked_key][layer]
     aggregated_fractionated_neurons_attack[layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
+      var x = x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+      var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb'])
+      
+      // Draw neuron
       d3.select('#g-ag')
         .append('image')
         .attr('id', 'fv-' + [layer, neuron].join('-'))
         .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
         .attr('width', neuron_img_width)
         .attr('height', neuron_img_height)
-        .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
-        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('x', x)
+        .attr('y', y)
         .attr('filter', 'url(#filter-' + 3.5 + ')')
         .on('mouseover', function() {mouseover_neuron(layer, neuron)})
         .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+
+      // Add annotation - neuron number
+      d3.select('#g-ag')
+        .append('text')
+        .attr('id', ['neuron', layer, neuron].join('-'))
+        .attr('class', 'neuron-number')
+        .text(neuron)
+        .attr('x', x + 2)
+        .attr('y', y + 13)
     })
   })
 }
@@ -925,8 +988,6 @@ function click_neuron(svg, layer, neuron) {
 
 function annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x) {
   // Get the position of layer
-  console.log(neuron_groups_x_base)
-  console.log(left_most_x)
   reversed_layers.forEach((layer, layer_th) => {
     var x = left_most_x[layer] - 80
     var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']) + 30
@@ -936,7 +997,6 @@ function annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x) {
       .attr('x', x)
       .attr('y', y)
   })
-  
 }
 
 function get_css_val(css_key) {

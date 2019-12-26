@@ -16,3 +16,7 @@
   font-weight: bold;
   fill: rgb(100, 100, 100);
 }
+
+.neuron-number {
+  font-size: 13px;
+}
