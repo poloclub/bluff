@@ -40,7 +40,6 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 
   // Get the data
   var top_neurons = parse_top_neurons_all_attack(topk, data)
-  var top_graphs = parse_top_graphs_all_attack(top_neurons, data)
   var layers = Object.keys(top_neurons['benign'])
   var reversed_layers = layers.slice().reverse()
   
@@ -52,24 +51,26 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   fractionated_neuron_infos = fractionate_benign_neurons(top_neurons, fractionated_neuron_infos)
   fractionated_neuron_infos = fractionate_attacked_neurons(top_neurons, fractionated_neuron_infos)
 
-  // Get the center -- benign-attacked-both neuron group
-  var benign_attacked_neurons = get_benign_attacked_neurons(fractionated_neuron_infos)
-  
   // Compute the x position of the neuron groups
   var neuron_groups_x_base = init_neuron_group_x_position()
-  neuron_groups_x_base = add_neuron_group_x_position_both (neuron_groups_x_base, benign_attacked_neurons)
+  neuron_groups_x_base = add_neuron_group_x_position_both(neuron_groups_x_base, fractionated_neuron_infos)
   neuron_groups_x_base = add_neuron_group_x_position_benign(neuron_groups_x_base, fractionated_neuron_infos)
-  neuron_groups_x_base = add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated_neuron_infos, benign_attacked_neurons)
+  neuron_groups_x_base = add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated_neuron_infos)
 
   // Draw neurons (nodes)
-  draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign_attacked_neurons)
+  draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
   draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
-  draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos, top_neurons)
+  draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
+
+  // Compute graphs
+  var top_graphs = {}
+  top_graphs = parse_top_graphs_benign(data, top_graphs, fractionated_neuron_infos)
+  top_graphs = parse_top_graphs_attacked(fractionated_neuron_infos, data, top_graphs)
 
   // Draw influences (edges)
   var edge_scale = define_edge_scale(top_graphs)
   draw_benign_edges(reversed_layers, top_graphs, edge_scale)
-  draw_attacked_edges(reversed_layers, top_graphs, edge_scale)
+  draw_attacked_edges(reversed_layers, top_graphs, edge_scale, fractionated_neuron_infos)
 
   console.log('top_neurons', top_neurons)
   console.log('top_graphs', top_graphs)
@@ -120,12 +121,12 @@ function parse_top_neurons_all_attack(topk, data) {
   return top_neurons
 }
 
-function parse_top_graph(top_neurons_one_eps, top_graph) {
+function parse_top_graph(neuron_infos, top_graph) {
   // Get top neurons in graph
-  var layers = Object.keys(top_neurons_one_eps)
+  var layers = Object.keys(neuron_infos)
   var top_neurons_in_graph = []
   layers.forEach(layer => {
-    top_neurons_one_eps[layer].forEach(neuron_info => {
+    neuron_infos[layer].forEach(neuron_info => {
       var neuron = neuron_info['neuron']
       top_neurons_in_graph.push(layer + '-' + neuron)
     })
@@ -170,15 +171,61 @@ function parse_top_graph(top_neurons_one_eps, top_graph) {
   return top_top_graph
 }
 
-function parse_top_graphs_all_attack(top_neurons, data) {
-  var top_graphs = {}
-  var top_graph_idx = 8
-  top_graphs['benign'] = parse_top_graph(top_neurons['benign'], data[top_graph_idx])
-  epss.forEach((eps, eps_idx) => {
-    var attacked_key = 'attacked-' + (eps).toFixed(1)
-    top_graphs[attacked_key] = parse_top_graph(top_neurons[attacked_key], data[top_graph_idx + eps_idx])
+function parse_top_graphs_benign(data, top_graphs, fractionated_neuron_infos) {
+  // Get keys of benign neurons
+  var keys = ['benign-attacked-both']
+  epss.forEach(eps => {
+    var benign_key = 'benign-' + (eps).toFixed(1)
+    keys.push(benign_key)
   })
 
+  // Aggregate benign neurons
+  var aggregated_benign_neurons = {}
+  keys.forEach(benign_key => {
+    for (var layer in fractionated_neuron_infos[benign_key]) {
+      if (!(layer in aggregated_benign_neurons)) {
+        aggregated_benign_neurons[layer] = []
+      }
+      for (var neuron_info of fractionated_neuron_infos[benign_key][layer]) {
+        aggregated_benign_neurons[layer].push(neuron_info)
+      }
+    }
+  })
+
+  // Parse the top graphs
+  var top_graph_idx = 8
+  top_graphs['benign'] = parse_top_graph(aggregated_benign_neurons, data[top_graph_idx])
+
+  return top_graphs
+}
+
+function parse_top_graphs_attacked(fractionated_neuron_infos, data, top_graphs) {
+  // Get keys of attacked neurons
+  var keys = ['benign-attacked-both']
+  epss.forEach(eps => {
+    var attacked_key = 'attacked-' + (eps).toFixed(1)
+    keys.push(attacked_key)
+  })
+
+  // Aggregate attacked neurons
+  var aggregated_attacked_neurons = {}
+  keys.forEach(attacked_key => {
+    for (var layer in fractionated_neuron_infos[attacked_key]) {
+      if (!(layer in aggregated_attacked_neurons)) {
+        aggregated_attacked_neurons[layer] = []
+      }
+      for (var neuron_info of fractionated_neuron_infos[attacked_key][layer]) {
+        aggregated_attacked_neurons[layer].push(neuron_info)
+      }
+    }
+  })
+
+  // Parse the top graphs
+  var top_graph_idx = 8
+  epss.forEach((eps, eps_idx) => {
+    var attacked_key = 'attacked-' + (eps).toFixed(1)
+    top_graphs[attacked_key] = parse_top_graph(aggregated_attacked_neurons, data[top_graph_idx + eps_idx])
+  })
   return top_graphs
 }
 
@@ -193,7 +240,7 @@ function init_fractionated_neuron_infos_all_attack(layers) {
   var fractionated_neuron_infos = {}
   epss.forEach(eps => {
     var eps_1lf = (eps).toFixed(1)
-    fractionated_neuron_infos['benign-only-' + eps_1lf] = init_fractionated_neuron_infos(layers)
+    fractionated_neuron_infos['benign-' + eps_1lf] = init_fractionated_neuron_infos(layers)
   })
   fractionated_neuron_infos['benign-attacked-both'] = init_fractionated_neuron_infos(layers)
   epss.forEach(eps => {
@@ -210,7 +257,7 @@ function get_benign_attacked_neurons(fractionated_neuron_infos) {
   layers.forEach(layer => {
     benign_attacked_neurons[layer] = benign_attacked_neurons[layer].concat(fractionated_neuron_infos['benign-attacked-both'][layer])
     epss.slice(curr_eps_idx + 1).forEach(other_eps => {
-      var other_benign_neurons = fractionated_neuron_infos['benign-only-' + (other_eps).toFixed(1)]
+      var other_benign_neurons = fractionated_neuron_infos['benign-' + (other_eps).toFixed(1)]
       benign_attacked_neurons[layer] = benign_attacked_neurons[layer].concat(other_benign_neurons[layer])
     })
   })
@@ -231,7 +278,6 @@ function init_fractionated_neuron_infos(layers) {
 
 function fractionate_benign_neurons(top_neurons, fractionated_neuron_infos) {
 
-  var fractionation_keys = Object.keys(fractionated_neuron_infos)
   var top_benign_neurons = top_neurons['benign']
 
   layers.forEach(layer => {
@@ -247,27 +293,27 @@ function fractionate_benign_neurons(top_neurons, fractionated_neuron_infos) {
       epss.forEach((eps, eps_i) => {
 
         // See if the benign neuron is idle at this strength
-        var got_idle_at_this_strength = true
+        var become_idle_at_this_strength = true
         var this_strength_key = 'attacked-' + (eps).toFixed(1)
         var top_neurons_current_strength = extract_neurons_from_neuron_infos(top_neurons[this_strength_key][layer])
         if (top_neurons_current_strength.includes(benign_neuron)) {
-          got_idle_at_this_strength = false
+          become_idle_at_this_strength = false
         }
 
-        // See if the benign neuron has never become idle before with weaker attacks
-        if (got_idle_at_this_strength) {
+        // See if the benign neuron has never become idle under weaker attacks
+        if (become_idle_at_this_strength) {
           epss.slice(0, eps_i).forEach(weak_eps => {
-            var got_idle_key = 'benign-only-' + (weak_eps).toFixed(1)
+            var got_idle_key = 'benign-' + (weak_eps).toFixed(1)
             var neurons_idle_already = extract_neurons_from_neuron_infos(fractionated_neuron_infos[got_idle_key][layer])
             if (neurons_idle_already.includes(benign_neuron)) {
-              got_idle_at_this_strength = false
+              become_idle_at_this_strength = false
             }
           })
         }
 
         // Assign the benign neuron
-        if (got_idle_at_this_strength) {
-          var benign_only_key = 'benign-only-' + (eps).toFixed(1)
+        if (become_idle_at_this_strength) {
+          var benign_only_key = 'benign-' + (eps).toFixed(1)
           fractionated_neuron_infos[benign_only_key][layer].push(benign_neuron_info)
           is_in_both_benign_all_attacked = false
         }
@@ -330,44 +376,45 @@ function fractionate_attacked_neurons(top_neurons, fractionated_neuron_infos) {
 }
 
 function init_neuron_group_x_position() {
-  var curr_eps_idx = epss.indexOf(curr_eps)
   var neuron_groups_x_base = {}
   neuron_groups_x_base['both'] = {}
-  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+  epss.forEach(eps => {
     neuron_groups_x_base['benign-' + (eps).toFixed(1)] = {}
     neuron_groups_x_base['attacked-' + (eps).toFixed(1)] = {}
   })
   return neuron_groups_x_base
 }
 
-function add_neuron_group_x_position_both (neuron_groups_x_base, benign_attacked_neurons) {
+function add_neuron_group_x_position_both (neuron_groups_x_base, fractionated_neuron_infos) {
   var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
   layers.forEach(layer => {
-    var num_neurons = benign_attacked_neurons[layer].length
-    neuron_groups_x_base['both'][layer] = svg_center_x - (num_neurons / 2) * neuron_x_unit_len
+    var num_neurons = fractionated_neuron_infos['benign-attacked-both'][layer].length
+    neuron_groups_x_base['both'][layer] = svg_center_x - (num_neurons / 2) * neuron_x_unit_len + neuron_img_padding['lr']
   })
   return neuron_groups_x_base
 }
 
 function add_neuron_group_x_position_benign(neuron_groups_x_base, fractionated_neuron_infos) {
-  var curr_eps_idx = epss.indexOf(curr_eps)
   var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
-  epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
+  epss.forEach((eps, eps_th) => {
+    var eps_str = (eps).toFixed(1)
+
     layers.forEach(layer => {
-      var prev_x_base = NaN
       if (eps_th == 0) {
-        prev_x_base = neuron_groups_x_base['both'][layer]
+        var prev_x_base = neuron_groups_x_base['both'][layer]
+        neuron_groups_x_base['benign-' + eps_str][layer] = prev_x_base - neuron_group_lr_padding
       } else {
-        prev_x_base = neuron_groups_x_base['benign-' + (epss[eps_th - 1]).toFixed(1)][layer]
+        var prev_eps_str = (epss[eps_th - 1]).toFixed(1)
+        var prev_x_base = neuron_groups_x_base['benign-' + prev_eps_str][layer]
+        var num_prev_neurons = fractionated_neuron_infos['benign-' + prev_eps_str][layer].length
+        neuron_groups_x_base['benign-' + eps_str][layer] = prev_x_base - (num_prev_neurons * neuron_x_unit_len) - neuron_group_lr_padding
       }
-      var num_neurons = fractionated_neuron_infos['benign-only-' + (eps).toFixed(1)][layer].length
-      neuron_groups_x_base['benign-' + (eps).toFixed(1)][layer] = prev_x_base - neuron_group_lr_padding - (num_neurons * neuron_x_unit_len)
     })
   })
   return neuron_groups_x_base
 }
 
-function add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated_neuron_infos, benign_attacked_neurons) {
+function add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated_neuron_infos) {
   var curr_eps_idx = epss.indexOf(curr_eps)
   var neuron_x_unit_len = neuron_img_width + neuron_img_padding['lr']
   epss.slice(0, curr_eps_idx + 1).forEach((eps, eps_th) => {
@@ -376,22 +423,23 @@ function add_neuron_group_x_position_attacked(neuron_groups_x_base, fractionated
       var prev_num_neurons = NaN
       if (eps_th == 0) {
         prev_x_base = neuron_groups_x_base['both'][layer]
-        prev_num_neurons = benign_attacked_neurons[layer].length
+        prev_num_neurons = fractionated_neuron_infos['benign-attacked-both'][layer].length
       } else {
-        prev_x_base = neuron_groups_x_base['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer]
-        prev_num_neurons = fractionated_neuron_infos['attacked-' + (epss[eps_th - 1]).toFixed(1)][layer].length
+        var prev_attacked_key = 'attacked-' + (epss[eps_th - 1]).toFixed(1)
+        prev_x_base = neuron_groups_x_base[prev_attacked_key][layer]
+        prev_num_neurons = fractionated_neuron_infos[prev_attacked_key][layer].length
       }
-      
       neuron_groups_x_base['attacked-' + (eps).toFixed(1)][layer] = prev_x_base + (prev_num_neurons * neuron_x_unit_len) + neuron_group_lr_padding
     })
   })
   return neuron_groups_x_base
 }
 
-function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign_attacked_neurons) {
+function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
+  
   reversed_layers.forEach((layer, layer_th) => {
     var x_base = neuron_groups_x_base['both'][layer]
-    benign_attacked_neurons[layer].forEach((neuron_info, neuron_th) => {
+    fractionated_neuron_infos['benign-attacked-both'][layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
       d3.select('#g-ag')
         .append('image')
@@ -401,7 +449,7 @@ function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign
         .attr('height', neuron_img_height)
         .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
         .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
-        .attr('filter', 'url(#filter-' + 1.5 + ')')
+        .attr('filter', 'url(#filter-' + 2.0 + ')')
         .on('mouseover', function() {mouseover_neuron(layer, neuron)})
         .on('mouseout', function() {mouseout_neuron(layer, neuron)})
     })
@@ -409,12 +457,13 @@ function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, benign
 }
 
 function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
+  // Draw benign neurons become idle under weaker attacks
   var curr_eps_idx = epss.indexOf(curr_eps)
-  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+  epss.slice(0, curr_eps_idx).forEach(eps => {
     var eps_str = (eps).toFixed(1)
     reversed_layers.forEach((layer, layer_th) => {
       var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
-      fractionated_neuron_infos['benign-only-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
+      fractionated_neuron_infos['benign-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
         var neuron = neuron_info['neuron']
         d3.select('#g-ag')
           .append('image')
@@ -422,21 +471,54 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
           .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
           .attr('width', neuron_img_width)
           .attr('height', neuron_img_height)
-          .attr('x', x_base + neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+          .attr('x', x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr']))
           .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
-          .attr('filter', 'url(#filter-' + eps + ')')
+          .attr('filter', 'url(#filter-' + 0 + ')')
           .on('mouseover', function() {mouseover_neuron(layer, neuron)})
           .on('mouseout', function() {mouseout_neuron(layer, neuron)})
       })
     })
   })
+
+  // Aggregate other benign neurons
+  var aggregated_benign_neurons = {}
+  reversed_layers.forEach(layer => {
+    aggregated_benign_neurons[layer] = []
+    epss.slice(curr_eps_idx).forEach(weak_eps => {
+      var weak_eps_str = (weak_eps).toFixed(1)
+      aggregated_benign_neurons[layer] = aggregated_benign_neurons[layer].concat(
+        fractionated_neuron_infos['benign-' + weak_eps_str][layer])
+    })
+  })
+
+  // Draw the aggregated benign neurons
+  var eps_str = (curr_eps).toFixed(1)
+  reversed_layers.forEach((layer, layer_th) => {
+    var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
+    aggregated_benign_neurons[layer].forEach((neuron_info, neuron_th) => {
+      var neuron = neuron_info['neuron']
+      d3.select('#g-ag')
+        .append('image')
+        .attr('id', 'fv-' + [layer, neuron].join('-'))
+        .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
+        .attr('width', neuron_img_width)
+        .attr('height', neuron_img_height)
+        .attr('x', x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+        .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
+        .attr('filter', 'url(#filter-' + 0 + ')')
+        .on('mouseover', function() {mouseover_neuron(layer, neuron)})
+        .on('mouseout', function() {mouseout_neuron(layer, neuron)})
+    })
+  })
+
+  
 }
 
-function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos, top_neurons) {
+function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
   var curr_eps_idx = epss.indexOf(curr_eps)
 
   // Draw neurons stucked at lower level of attack
-  epss.slice(0, curr_eps_idx + 1).forEach(eps => {
+  epss.slice(0, curr_eps_idx).forEach(eps => {
     var eps_str = (eps).toFixed(1)
     reversed_layers.forEach((layer, layer_th) => {
       var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
@@ -457,12 +539,25 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
     })
   })
 
-  // Draw neurons of higher level of attack
-  var eps_str = (curr_eps).toFixed(1)
-  var attacked_key = 'attacked-' + eps_str
+  // Aggregate fractionated neurons of current and higher level of attacks
+  var aggregated_fractionated_neurons_attack = {}
+  reversed_layers.forEach(layer => {
+    aggregated_fractionated_neurons_attack[layer] = []
+  })
+  epss.slice(curr_eps_idx).forEach(eps => {
+    var eps_str = (eps).toFixed(1)
+    reversed_layers.forEach(layer => {
+      fractionated_neuron_infos['attacked-' + eps_str][layer].forEach(neuron_info => {
+        aggregated_fractionated_neurons_attack[layer].push(neuron_info)
+      })
+    })
+  })
+
+  // Draw neurons of current and higher level of attack
+  var attacked_key = 'attacked-' + (curr_eps).toFixed(1)
   reversed_layers.forEach((layer, layer_th) => {
-    var x_base = neuron_groups_x_base['attacked-' + eps_str][layer]
-    top_neurons[attacked_key][layer].forEach((neuron_info, neuron_th) => {
+    var x_base = neuron_groups_x_base[attacked_key][layer]
+    aggregated_fractionated_neurons_attack[layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
       d3.select('#g-ag')
         .append('image')
@@ -477,8 +572,6 @@ function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, frac
         .on('mouseout', function() {mouseout_neuron(layer, neuron)})
     })
   })
-  
-  
 }
 
 function draw_benign_edges(reversed_layers, top_graphs, edge_scale) {
@@ -510,14 +603,15 @@ function draw_benign_edges(reversed_layers, top_graphs, edge_scale) {
   })
 }
 
-function draw_attacked_edges(reversed_layers, top_graphs, edge_scale) {
-  // NEED TO UPDATE
-  epss.forEach(eps => {
+function draw_attacked_edges(reversed_layers, top_graphs, edge_scale, fractionated_neuron_infos) {
+  
+  // epss.forEach(eps => {
+  [1.0].forEach(eps => {
     var eps_edge_color = 'red'
     var attacked_key = 'attacked-' + (eps).toFixed(1)
-    console.log(attacked_key)
 
     reversed_layers.slice(0, -1).forEach((layer, layer_idx) => {
+
       var prev_layer = reversed_layers[layer_idx + 1]
       
       for (var neuron in top_graphs[attacked_key][layer]) {
@@ -525,19 +619,52 @@ function draw_attacked_edges(reversed_layers, top_graphs, edge_scale) {
         var curr_neuron_x = parseInt(d3.select('#' + curr_fv_id).attr('x')) + (neuron_img_width / 2)
         var curr_neuron_y = parseInt(d3.select('#' + curr_fv_id).attr('y')) + neuron_img_height
 
+        // Add edges connecting only displayed neurons
         if (!(does_exist(curr_fv_id))) {
           continue
         }
-        
-        top_graphs[attacked_key][layer][neuron].forEach(edge_info => {
+
+        // Add edges not connected to any of the benign-only neurons
+        var is_in_benign_only = false
+        for (let benign_eps of epss) {
+          var benign_key = 'benign-' + (benign_eps).toFixed(1)
+          var benign_only_neurons = extract_neurons_from_neuron_infos(fractionated_neuron_infos[benign_key][layer])
+          if (benign_only_neurons.includes(neuron)) {
+            is_in_benign_only = true
+            break
+          }
+        }
+        if (is_in_benign_only) {
+          continue
+        }
+
+        for (var edge_info of top_graphs[attacked_key][layer][neuron]) {
 
           var prev_neuron = edge_info['prev_neuron']
           var weight = edge_info['weight']
           var prev_fv_id = ['fv', prev_layer, prev_neuron].join('-')
+
+          // Add edges connecting only displayed neurons
+          if (!(does_exist(prev_fv_id))) {
+            continue
+          }
+
+          // Add edges not connected to any of the benign-only neurons
+          var is_in_benign_only = false
+          for (let benign_eps of epss) {
+            var benign_key = 'benign-' + (benign_eps).toFixed(1)
+            var benign_only_neurons = extract_neurons_from_neuron_infos(fractionated_neuron_infos[benign_key][prev_layer])
+            if (benign_only_neurons.includes(prev_neuron)) {
+              is_in_benign_only = true
+              break
+            }
+          }
+          if (is_in_benign_only) {
+            continue
+          }
   
           var prev_neuron_x = parseInt(d3.select('#' + prev_fv_id).attr('x')) + (neuron_img_width / 2)
           var prev_neuron_y = parseInt(d3.select('#' + prev_fv_id).attr('y'))
-  
           
           d3.select('#g-ag')
             .append('path')
@@ -545,7 +672,7 @@ function draw_attacked_edges(reversed_layers, top_graphs, edge_scale) {
             .attr('stroke-width', edge_scale(weight))
             .attr('stroke', eps_edge_color)
             .attr('fill', 'none')
-        })
+        }
       }
     })
   })
