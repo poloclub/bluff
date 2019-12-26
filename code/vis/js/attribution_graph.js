@@ -36,7 +36,7 @@ var ag_start_y = parseInt(get_css_val('--ag_start_y'))
 Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 
   // Hyperparameters
-  var topk = 5
+  var topk = 4
 
   // Get the data
   var top_neurons = parse_top_neurons_all_attack(topk, data)
@@ -59,7 +59,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 
   // Draw neurons (nodes)
   draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
-  draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
+  var aggregated_benign_neurons = draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
   draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
 
   // Compute graphs
@@ -72,9 +72,8 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   draw_benign_edges(reversed_layers, top_graphs, edge_scale)
   draw_attacked_edges(reversed_layers, top_graphs, edge_scale, fractionated_neuron_infos)
 
-  console.log('top_neurons', top_neurons)
-  console.log('top_graphs', top_graphs)
-  console.log('fractionated_neuron_infos', fractionated_neuron_infos)
+  // Annotation
+  annotate_layers(neuron_groups_x_base, aggregated_benign_neurons)
   
 })
 
@@ -113,7 +112,7 @@ function parse_top_neurons(top_neurons, topk) {
 
 function parse_top_neurons_all_attack(topk, data) {
   var top_neurons = {}
-  top_neurons['benign'] = parse_top_neurons(data[0], topk)
+  top_neurons['benign'] = parse_top_neurons(data[0], topk * 2)
   epss.forEach((eps, eps_i) => {
     var eps_1lf = (eps).toFixed(1)
     top_neurons['attacked-' + eps_1lf] = parse_top_neurons(data[eps_i + 1], topk)
@@ -287,7 +286,20 @@ function fractionate_benign_neurons(top_neurons, fractionated_neuron_infos) {
       var benign_neuron = benign_neuron_info['neuron']
 
       // See if the neuron should be in benign-attacked-both
-      var is_in_both_benign_all_attacked = true
+      var is_in_both_benign_all_attacked = false
+      for (var eps of epss) {
+        var attacked_key = 'attacked-' + (eps).toFixed(1)
+        var attacked_neurons = extract_neurons_from_neuron_infos(top_neurons[attacked_key][layer])
+        if (attacked_neurons.includes(benign_neuron)) {
+          is_in_both_benign_all_attacked = true
+          var benign_key = 'benign-attacked-both'
+          fractionated_neuron_infos[benign_key][layer].push(benign_neuron_info)
+          break
+        }
+      }
+      if (is_in_both_benign_all_attacked) {
+        continue
+      }
 
       // Fractionate the neurons based on the eps
       epss.forEach((eps, eps_i) => {
@@ -318,12 +330,6 @@ function fractionate_benign_neurons(top_neurons, fractionated_neuron_infos) {
           is_in_both_benign_all_attacked = false
         }
       })
-
-      // Assign the benign neuuron after looking thorugh all eps
-      if (is_in_both_benign_all_attacked) {
-        var benign_key = 'benign-attacked-both'
-        fractionated_neuron_infos[benign_key][layer].push(benign_neuron_info)
-      }
     }
   })
 
@@ -511,7 +517,7 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
     })
   })
 
-  
+  return aggregated_benign_neurons
 }
 
 function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
@@ -908,6 +914,12 @@ function click_neuron(svg, layer, neuron) {
       })
   }
   console.log(popup)
+}
+
+function annotate_layers(neuron_groups_x_base, aggregated_benign_neurons) {
+  // Get the position of layer
+  console.log(neuron_groups_x_base)
+  console.log(aggregated_benign_neurons)
 }
 
 function get_css_val(css_key) {
