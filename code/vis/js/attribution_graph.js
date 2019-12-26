@@ -59,7 +59,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 
   // Draw neurons (nodes)
   draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
-  var aggregated_benign_neurons = draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
+  var left_most_x = draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
   draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos)
 
   // Compute graphs
@@ -73,7 +73,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   draw_attacked_edges(reversed_layers, top_graphs, edge_scale, fractionated_neuron_infos)
 
   // Annotation
-  annotate_layers(neuron_groups_x_base, aggregated_benign_neurons)
+  annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x)
   
 })
 
@@ -463,6 +463,10 @@ function draw_center_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
 }
 
 function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
+  // Get the left most neuron's x position
+  var left_most_x = {}
+  reversed_layers.forEach(layer => {left_most_x[layer] = 10000})
+
   // Draw benign neurons become idle under weaker attacks
   var curr_eps_idx = epss.indexOf(curr_eps)
   epss.slice(0, curr_eps_idx).forEach(eps => {
@@ -471,13 +475,15 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
       var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
       fractionated_neuron_infos['benign-' + eps_str][layer].forEach((neuron_info, neuron_th) => {
         var neuron = neuron_info['neuron']
+        var x = x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+        left_most_x[layer] = d3.min([x, left_most_x[layer]])
         d3.select('#g-ag')
           .append('image')
           .attr('id', 'fv-' + [layer, neuron].join('-'))
           .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
           .attr('width', neuron_img_width)
           .attr('height', neuron_img_height)
-          .attr('x', x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+          .attr('x', x)
           .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
           .attr('filter', 'url(#filter-' + 0 + ')')
           .on('mouseover', function() {mouseover_neuron(layer, neuron)})
@@ -503,21 +509,22 @@ function draw_benign_neuron_groups(reversed_layers, neuron_groups_x_base, fracti
     var x_base = neuron_groups_x_base['benign-' + eps_str][layer]
     aggregated_benign_neurons[layer].forEach((neuron_info, neuron_th) => {
       var neuron = neuron_info['neuron']
+      var x = x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr'])
+      left_most_x[layer] = d3.min([x, left_most_x[layer]])
       d3.select('#g-ag')
         .append('image')
         .attr('id', 'fv-' + [layer, neuron].join('-'))
         .attr('xlink:href', vis_filename(feature_vis_dir, layer, neuron, 'channel'))
         .attr('width', neuron_img_width)
         .attr('height', neuron_img_height)
-        .attr('x', x_base - neuron_img_width - neuron_th * (neuron_img_width + neuron_img_padding['lr']))
+        .attr('x', x)
         .attr('y', ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']))
         .attr('filter', 'url(#filter-' + 0 + ')')
         .on('mouseover', function() {mouseover_neuron(layer, neuron)})
         .on('mouseout', function() {mouseout_neuron(layer, neuron)})
     })
   })
-
-  return aggregated_benign_neurons
+  return left_most_x
 }
 
 function draw_attacked_neuron_groups(reversed_layers, neuron_groups_x_base, fractionated_neuron_infos) {
@@ -916,10 +923,20 @@ function click_neuron(svg, layer, neuron) {
   console.log(popup)
 }
 
-function annotate_layers(neuron_groups_x_base, aggregated_benign_neurons) {
+function annotate_layers(reversed_layers, neuron_groups_x_base, left_most_x) {
   // Get the position of layer
   console.log(neuron_groups_x_base)
-  console.log(aggregated_benign_neurons)
+  console.log(left_most_x)
+  reversed_layers.forEach((layer, layer_th) => {
+    var x = left_most_x[layer] - 80
+    var y = ag_start_y + layer_th * (neuron_img_height + neuron_img_padding['tb']) + 30
+    d3.select('#g-ag')
+      .append('text')
+      .text(layer)
+      .attr('x', x)
+      .attr('y', y)
+  })
+  
 }
 
 function get_css_val(css_key) {
