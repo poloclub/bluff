@@ -1,6 +1,6 @@
 // TODO: Do not hard code this
 var epss = [0.5, 1, 1.5, 2, 2.5, 3, 3.5]
-var default_strength = 1.5
+var default_strength = 3.5
 var curr_eps = default_strength
 
 // Define top-control div

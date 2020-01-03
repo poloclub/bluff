@@ -3,7 +3,7 @@
 
 :root {
   --attack-from-color: rgb(60, 120, 240);
-  --attack-to-color: rgb(240, 60, 60);
+  --attack-to-color: rgb(240, 120, 60);
   --strength_bar_length: 180;
   --neuron_img_width: 50px;
   --neuron_img_height: 50px;
@@ -26,7 +26,8 @@ body {
 }
 
 #svg-left {
-  width: 80%;
+  width: 100%; 
+  /* width: 80%; */
   height: 1000px;
   display: inline-block;
 }
