@@ -43,10 +43,15 @@ flags.DEFINE_float(
 flags.DEFINE_boolean(
     'debug', False,
     'Enables debug mode (won\'t save output to disk)')
+flags.DEFINE_string(
+    'tfrecords_dir', TFRECORDS_DIR,
+    'TFRECORDS directory')
+flags.DEFINE_string(
+    'hdf5_data_path', HDF5_DATA_PATH,
+    'HDF5 data path')
 
 flags.mark_flag_as_required('label')
 flags.mark_flag_as_required('target')
-
 
 def main(argv):
     del argv
@@ -57,6 +62,8 @@ def main(argv):
     random.seed(FLAGS.seed)
     np.random.seed(FLAGS.seed)
     tf.set_random_seed(FLAGS.seed)
+    TFRECORDS_DIR = FLAGS.tfrecords_dir
+    HDF5_DATA_PATH = FLAGS.hdf5_data_path
 
     tfrecord_filepaths = glob(os.path.join(TFRECORDS_DIR, '*'))
     tf_dataset = tfutils.make_dataset(tfrecord_filepaths,
