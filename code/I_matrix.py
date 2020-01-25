@@ -7,19 +7,8 @@ Date: Nov 22, 2019
 This code generates I-matrix (the matrix of influences between layers).
 '''
 
-import os
-import glob
-import json
-import tqdm
-from time import time
-import argparse
 import numpy as np
 import tensorflow as tf
-from collections import defaultdict
-import lucid.optvis.render as render
-import lucid.modelzoo.vision_models as models
-from keras.applications.inception_v3 import preprocess_input
-from data_parser import _parse_function
 import model_helper
 
 

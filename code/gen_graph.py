@@ -11,7 +11,6 @@ import json
 import networkx as nx
 import model_helper
 import I_matrix
-from time import time
 
 
 def gen_full_graph(args, A, I):
