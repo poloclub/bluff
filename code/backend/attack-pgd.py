@@ -34,6 +34,9 @@ flags.DEFINE_float(
     'eps', 0.3,
     'Maximum distortion of adversarial example '
     'compared to original input')
+flags.DEFINE_enum(
+    'ord', '2', ['inf', '1', '2'],
+    'L-p norm to be used for perturbation.')
 flags.DEFINE_float(
     'eps_iter', 0.05,
     'Step size for each attack iteration')
@@ -79,6 +82,7 @@ def main(argv):
             hdf5_file, group=hdf5_group,
             attrs={'seed': FLAGS.seed,
                    'eps': FLAGS.eps,
+                   'ord': FLAGS.ord,
                    'eps_iter': FLAGS.eps_iter,
                    'nb_iter': FLAGS.nb_iter,
                    'target': FLAGS.target})
@@ -95,6 +99,7 @@ def main(argv):
             x, eps=FLAGS.eps,
             nb_iter=FLAGS.nb_iter,
             eps_iter=FLAGS.eps_iter,
+            ord=(int(FLAGS.ord) if FLAGS.ord != 'inf' else np.inf),
             y_target=target_one_hot_encoded)
 
         pbar = tqdm(unit='imgs')
