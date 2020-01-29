@@ -7,5 +7,5 @@ data/*
 design/*
 Meeting-Massif.gdoc
 chi-lbw-20-massif.pdf
-backend/gen-graph-different-attack.ipynb
-backend/run_attack_pgd.sh
+code/backend/gen-graph-different-attack.ipynb
+code/backend/run_attack_pgd.sh
