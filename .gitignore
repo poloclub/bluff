@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 data/.DS_Store
 data/*
+data/sample-neurons/both_activated.json
 design/*
 Meeting-Massif.gdoc
 chi-lbw-20-massif.pdf

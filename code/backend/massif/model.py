@@ -3,6 +3,7 @@ import lucid.modelzoo.vision_models as models
 import tensorflow as tf
 
 
+# Define InceptionV1 model wrapper for cleverhans
 class InceptionV1Model(CleverhansModel):
     SCOPE = 'inceptionv1'
     SOFTMAX_OP = 'softmax2'

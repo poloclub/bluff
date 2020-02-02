@@ -1,5 +1,5 @@
 '''
-Massif: Project title
+Massif: Interactive Interpretation of Adversarial Attacks on Deep Learning
 File name: parse.py
 Author: Haekyu Park
 Date: Nov 22, 2019
@@ -8,6 +8,7 @@ This code parses arguments and constants.
 '''
 
 import argparse
+
 
 def parse_args():
     '''
