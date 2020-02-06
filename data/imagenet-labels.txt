@@ -1,4 +1,4 @@
-synset	lucid-label	tfrecord-label	name
+synset	lucid_label	tfrecord_label	name
 n02119789	1	279	kit_fox
 n02100735	2	213	English_setter
 n02110185	3	251	Siberian_husky

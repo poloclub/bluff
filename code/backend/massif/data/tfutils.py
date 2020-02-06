@@ -40,7 +40,7 @@ def make_dataset(filenames,
             lambda image, label: tf.math.equal(label, filter_label))
 
     if batch_size is not None:
-        dataset = dataset.batch(batch_size, drop_remainder=True)
+        dataset = dataset.batch(batch_size, drop_remainder=False)
 
     return dataset
 
