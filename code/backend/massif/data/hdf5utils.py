@@ -1,7 +1,9 @@
 import time
+from typing import List
 import uuid
 
 import h5py
+import numpy as np
 
 
 O_TIMESTAMP = 'timestamp'
@@ -39,6 +41,35 @@ def create_image_dataset(f: h5py.File,
     return dataset
 
 
+def create_activation_scores_datasets(f: h5py.File, model,
+                                     group='/',attrs=None):
+
+    if attrs is None:
+        attrs = dict()
+    if group not in f:
+        f.create_group(group)
+
+    group = f[group]
+    datasets = dict()
+    for layer in model.LAYERS:
+        data_shape = (model.LAYER_SIZES[layer],)
+        dataset_shape = (0,) + data_shape
+        chunk_shape = (1,) + data_shape
+        max_shape = (None,) + data_shape
+
+        dataset = group.create_dataset(
+            layer, shape=dataset_shape,
+            chunks=chunk_shape, maxshape=max_shape)
+
+        attrs[O_TIMESTAMP] = time.time()
+        for k, v in attrs.items():
+            dataset.attrs[k] = v
+
+        datasets[layer] = dataset
+
+    return datasets
+
+
 def update_dataset_attributes(dataset, **attrs):
     for k, v in attrs.items():
         dataset.attrs[k] = v
@@ -64,6 +95,14 @@ def add_images_to_dataset(imgs, dataset):
     for i, img in enumerate(imgs):
         dataset[num_imgs_in_dataset + i] = img
 
+def add_activation_scores_for_image_to_dataset(activation_scores, dataset):
+    num_scores = dataset.shape[0]
+    data_shape = dataset.shape[1:]
+    assert activation_scores.shape == data_shape
+
+    dataset.resize(num_scores + 1, axis=0)
+    dataset[num_scores] = activation_scores
+
 
 def filter_datasets_by_attributes(f: h5py.File, group, **attrs):
     return [item for item in f[group].values()
@@ -84,6 +123,21 @@ def get_latest_dataset_with_attributes(f: h5py.File, group, **attrs):
         '`attrs` does not uniquely identify any dataset'
 
     return dataset
+
+
+def load_image_dataset_from_file(filepath:str, group='/', dataset_name='images'):
+    f = h5py.File(filepath, 'r')
+    group = group.rstrip('/') if group != '/' else ''
+    dataset = f['/'.join([group, dataset_name])]
+    return dataset
+
+
+def load_activation_scores_datasets_from_file(filepath:str, layers:List[str], group='/'):
+    f = h5py.File(filepath, 'r')
+    group = group.rstrip('/') if group != '/' else ''
+    datasets = {layer: np.array(f['/'.join([group, layer])])
+                for layer in layers}
+    return datasets
 
 
 if __name__ == '__main__':
