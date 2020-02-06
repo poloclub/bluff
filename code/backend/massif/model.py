@@ -86,8 +86,13 @@ class InceptionV1Model(CleverhansModel):
         self._fprop_cache = dict()
         self._scope_cache = dict()
 
-        self._default_input_placeholder = self.make_input_placeholder()
-        self.fprop(self._default_input_placeholder)
+        x = self.make_input_placeholder()
+        self._default_input_placeholder = x
+
+        activation_maps = self.fprop(x)
+        self.activation_scores = {
+            layer: tf.math.reduce_max(activation_maps[layer], axis=[1, 2])
+            for layer in self.LAYERS}
 
     @property
     def default_input_placeholder(self):
@@ -148,24 +153,23 @@ class InceptionV1Model(CleverhansModel):
         t_w5 = t('%s/%s_pool_reduce_w:0' % (scope, layer))
         return t_w0, t_w1, t_w2, t_w3, t_w4, t_w5
 
-    def eval_activation_map(self, imgs, layer, sess=None):
+    def eval_activation_maps(self, imgs, layer, sess=None):
         sess = sess or tf.get_default_session() or tf.Session()
 
         x = self.default_input_placeholder
-        t_act_map = self.fprop(x)[layer]
+        t_act_maps = self.fprop(x)[layer]
         with sess.as_default():
-            act_map = t_act_map.eval({x: imgs})
-        return act_map
+            act_maps = t_act_maps.eval({x: imgs})
+        return act_maps
 
-    def eval_activation_score(self, imgs, layer, sess=None):
+    def eval_activation_scores(self, imgs, layer, sess=None):
         sess = sess or tf.get_default_session() or tf.Session()
 
         x = self.default_input_placeholder
-        t_act_map = self.fprop(x)[layer]
-        t_act_score = tf.math.reduce_max(t_act_map, axis=[1, 2])
+        t_act_scores = self.activation_scores[layer]
         with sess.as_default():
-            act_score = t_act_score.eval({x: imgs})
-        return act_score
+            act_scores = t_act_scores.eval({x: imgs})
+        return act_scores
 
 
 if __name__ == '__main__':
