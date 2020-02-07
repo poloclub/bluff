@@ -6,5 +6,6 @@ lucid
 numpy
 pillow
 requests
+scipy
 tensorflow==1.15
 tqdm

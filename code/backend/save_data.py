@@ -2,12 +2,14 @@ import os
 from collections import namedtuple
 import csv
 from glob import glob
+import json
 import random
 
 import h5py
 from cleverhans.attacks import ProjectedGradientDescent
 from keras.applications.inception_v3 import preprocess_input
 import numpy as np
+from scipy.stats import rankdata
 import tensorflow as tf
 from tqdm import tqdm
 
@@ -21,6 +23,14 @@ IMAGENET_LABELS_PATH = '/raid/home/ndas30/massif/data/imagenet-labels.txt'
 TRAIN_TFRECORDS_DIR = '/raid/massif/data/imagenet-tf-records'
 IMAGES_DIR = '/raid/massif/data/massif/images'
 ACTIVATIONS_DIR = '/raid/massif/data/massif/activations'
+NEURON_IMPORTANCES_DATA_PATH_FORMAT = \
+    '/raid/massif/data/massif/neuron_data-{original}-{target}-{attack}.json'
+
+ATTACK_STRENGTHS = [0.5, 1.0,
+                    1.5, 2.0,
+                    2.5, 3.0,
+                    3.5, 4.0,
+                    4.5, 5.0]
 
 
 Label = namedtuple('Label', ['synset',
@@ -173,6 +183,89 @@ def save_activation_scores(image_dataset_filepath:str):
             pbar.update()
 
 
+def save_neuron_importances_to_db(original_label_name:str,
+                                  target_label_name:str,
+                                  attack_name, attack_strengths):
+
+    def _calculate_importances_from_scores(scores):
+        num_images, num_neurons = scores.shape
+        median_activations = np.median(scores, axis=0)
+        median_activation_percentiles = \
+            rankdata(median_activations) / num_neurons
+        return median_activations, median_activation_percentiles
+
+    original_label_name = original_label_name.lower()
+    target_label_name = target_label_name.lower()
+
+    original_activation_scores_filepath = os.path.join(
+        ACTIVATIONS_DIR, 'act-benign-%s.h5' % original_label_name)
+    target_activation_scores_filepath = os.path.join(
+        ACTIVATIONS_DIR, 'act-benign-%s.h5' % target_label_name)
+
+    attacked_activation_scores_filepath = os.path.join(
+        ACTIVATIONS_DIR, 'act-attacked-%s-%s-%s' % (
+            original_label_name, target_label_name, attack_name))
+    attacked_activation_scores_filepath = \
+        attacked_activation_scores_filepath + '-%0.02f.h5'
+
+    data = dict()
+    model_klass = InceptionV1Model
+
+    # Save original neuron importances
+    original_activation_scores = \
+        hdf5utils.load_activation_scores_datasets_from_file(
+            original_activation_scores_filepath, model_klass.LAYERS)
+    for layer in model_klass.LAYERS:
+        data[layer] = dict()
+        median_activations, median_activation_percentiles = \
+            _calculate_importances_from_scores(
+                original_activation_scores[layer])
+        for i in range(model_klass.LAYER_SIZES[layer]):
+            neuron = '%s-%d' % (layer, i)
+            data[layer][neuron] = dict()
+            data[layer][neuron]['original'] = {
+                'median_activation': float(median_activations[i]),
+                'median_activation_percentile': \
+                    float(median_activation_percentiles[i])}
+
+    # Save target neuron importances
+    target_activation_scores = \
+        hdf5utils.load_activation_scores_datasets_from_file(
+            target_activation_scores_filepath, model_klass.LAYERS)
+    for layer in model_klass.LAYERS:
+        median_activations, median_activation_percentiles = \
+            _calculate_importances_from_scores(
+                target_activation_scores[layer])
+        for i in range(model_klass.LAYER_SIZES[layer]):
+            neuron = '%s-%d' % (layer, i)
+            data[layer][neuron]['target'] = {
+                'median_activation': float(median_activations[i]),
+                'median_activation_percentile': \
+                    float(median_activation_percentiles[i])}
+
+    # Save attacked neuron importances
+    for eps in attack_strengths:
+        attacked_activation_scores = \
+            hdf5utils.load_activation_scores_datasets_from_file(
+                attacked_activation_scores_filepath % eps, model_klass.LAYERS)
+        for layer in model_klass.LAYERS:
+            median_activations, median_activation_percentiles = \
+                _calculate_importances_from_scores(
+                    attacked_activation_scores[layer])
+            for i in range(model_klass.LAYER_SIZES[layer]):
+                neuron = '%s-%d' % (layer, i)
+                data[layer][neuron]['attacked-%s-%0.02f' % (attack_name, eps)] = {
+                    'median_activation': float(median_activations[i]),
+                    'median_activation_percentile': \
+                        float(median_activation_percentiles[i])}
+
+    with open(NEURON_IMPORTANCES_DATA_PATH_FORMAT.format(
+            original=original_label_name,
+            target=target_label_name,
+            attack=attack_name), 'w') as f:
+        json.dump(data, f, indent=2)
+
+
 if __name__ == '__main__':
     #  dataset = hdf5utils.load_image_dataset_from_file(
         #  os.path.join(IMAGES_DIR, 'img-benign-giant_panda.h5'))
@@ -187,7 +280,9 @@ if __name__ == '__main__':
     #  for eps in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
         #  save_pgd_attacked_images('giant_panda', 'armadillo', eps)
 
-    for eps in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
-        save_activation_scores(os.path.join(
-            IMAGES_DIR, 'img-attacked-%s-%s-pgd-%0.02f.h5' % (
-                'giant_panda', 'armadillo', eps)))
+    #  for eps in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
+        #  save_activation_scores(os.path.join(
+            #  IMAGES_DIR, 'img-attacked-%s-%s-pgd-%0.02f.h5' % (
+                #  'giant_panda', 'armadillo', eps)))
+
+    save_neuron_importances_to_db('giant_panda', 'armadillo', 'pgd', ATTACK_STRENGTHS)
