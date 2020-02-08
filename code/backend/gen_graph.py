@@ -1,5 +1,5 @@
 '''
-Massif: Project title
+Massif: Interactive Interpretation of Adversarial Attacks on Deep Learning
 File name: A_matrix.py
 Author: Haekyu Park
 Date: Nov 22, 2019

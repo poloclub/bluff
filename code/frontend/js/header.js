@@ -18,7 +18,7 @@ header_title.setAttribute('id', 'header-title')
 main_title.setAttribute('id', 'main-title')
 sub_title.setAttribute('id', 'sub-title')
 main_title.innerText = 'Massif'
-sub_title.innerText = ': Towards Interpretability ofAdversarial Attacks on Deep Learning'
+sub_title.innerText = ': Interactive Interpretation of Adversarial Attacks on Deep Learning'
 header.appendChild(header_title)
 header_title.appendChild(main_title)
 header_title.appendChild(sub_title)

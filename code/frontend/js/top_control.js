@@ -15,7 +15,7 @@ top_control_horizontal_line.setAttribute('noshade', 'true')
 top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
-var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', 'FGM', null)
+var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', 'PGD', null)
 top_control.appendChild(attack_type_control)
 
 // From class

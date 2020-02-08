@@ -1,5 +1,5 @@
 '''
-Massif: Project title
+Massif: Interactive Interpretation of Adversarial Attacks on Deep Learning
 File name: model_helper.py
 Author: Haekyu Park
 Date: Nov 22, 2019
@@ -50,7 +50,7 @@ def get_all_layers_activation_score(model, imgs, layers, method='reduce_max'):
     '''
     Get all layers' activation score (in R^1) of all neuron.
     The activation score for a neuron (from R^2 to R^1) is currently
-    defined as the reduce maxe of the activation map of the nueron.
+    defined as the reduced max of the activation map of the nueron.
     * input
         - model: the classification model
         - imgs: the input imgs

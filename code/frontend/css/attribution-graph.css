@@ -1,9 +1,32 @@
-
-#g-ag {
-  width: 2000px;
-  height: 800px;
+.svg-ag {
+  width: 300px;
+  height: 600px;
   display: inline-block;
 }
+
+.g-ag {
+  width: 300px;
+  height: 600px;
+  display: inline-block;
+}
+
+.div-ag {
+  width: 300px;
+  height: 600px;
+  display: inline;
+}
+
+/* #g-ag-original {
+  transform: translate(10px, 10px);
+}
+
+#g-ag-adversarial {
+  transform: translate(610px, 10px);
+}
+
+#g-ag-target {
+  transform: translate(1210px, 10px);
+} */
 
 .ex-box {
   width: 230px;

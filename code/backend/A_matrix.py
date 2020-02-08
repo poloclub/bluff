@@ -1,5 +1,5 @@
 '''
-Massif: Project title
+Massif: Interactive Interpretation of Adversarial Attacks on Deep Learning
 File name: A_matrix.py
 Author: Haekyu Park
 Date: Nov 25, 2019
@@ -9,6 +9,7 @@ This code includes helper functions to generate A-matrix.
 
 import numpy as np
 import tensorflow as tf
+from model_helper import get_all_layers_activation_score
 
 
 def gen_reduce_max_tensors(layers, T):
@@ -78,5 +79,32 @@ def init_A_matrix_single_class(args):
     for layer in layers:
         num_of_neurons = layer_sizes[layer]
         A[layer] = np.zeros(num_of_neurons)
+
+    return A
+
+
+def gen_A_matrix(args, model, imgs):
+    '''
+    Generate A matrix
+    * input
+        - args: parsed arguments
+        - model: model
+        - imgs: images
+    * output
+        - A: A matrix, where
+            - key: layer
+            - val: median of the activation score of all images
+    '''
+
+    # Initialize A matrix
+    A = init_A_matrix_single_class(args)
+
+    # Get activation scores for all images
+    activation_scores = get_all_layers_activation_score(model, imgs, args.layers)
+
+    # Generate A matrix based on the activation score
+    for layer in args.layers:
+        median_activation_scores = np.median(activation_scores[layer], axis=0)
+        A[layer] = median_activation_scores
 
     return A
