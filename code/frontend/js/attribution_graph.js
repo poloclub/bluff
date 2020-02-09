@@ -1,4 +1,3 @@
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Set data directory
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -8,17 +7,17 @@ var file_list = [node_data_path]
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
 ////////////////////////////////////////////////////////////////////////////////////////////////
-var layers = ['mixed_4b', 'mixed_4a']
+var layers = ['mixed_4d', 'mixed_4c', 'mixed_4b', 'mixed_4a']
 var x_domain_keys = ['median_activation', 'median_activation_percentile']
 var vul_type = 'overall_vulnerability'
 var bucket_colors = {
-  '1': '#5ab4ac',
-  '2': '#af8dc3',
-  '3': '#b2182b',
-  '4': '#c7eae5',
-  '5': '#ffffbf',
-  '6': '#ef8a62',
-  '7': '#d9ef8b'
+  '1': fullColorHex(131, 170, 225),
+  '2': fullColorHex(210, 69, 138),
+  '3': fullColorHex(235, 59, 97),
+  '4': fullColorHex(178, 227, 89),
+  '5': fullColorHex(147, 100, 178),
+  '6': fullColorHex(233, 159, 61),
+  '7': fullColorHex(253, 205, 59),
 }
 
 var x_domain_range = {}
@@ -28,6 +27,9 @@ var y_scale = {}
 var div_width = 300
 var div_height = 600
 var ag_margin = {'top': 50, 'bottom': 50, 'left': 50, 'right': 50}
+
+var node_size_range = [15, 50]
+var node_size_scale = null
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
@@ -42,6 +44,13 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   x_domain_range['original'] = get_x_domain_range('original', node_data)
   x_scale['original'] = gen_x_scale('original')
   y_scale = gen_y_scale()
+
+  // Generate node size scale 
+  // TODO: need to get max, min vulnerability for all neurons
+  node_size_scale = d3
+    .scaleLinear()
+    .domain([0, 90])
+    .range(node_size_range)
   
   // Draw attribution graphs
   draw_neurons('original', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
@@ -63,11 +72,8 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
       .attr('height', function(d) { return node_size(d) })
       .attr('x', function(d) { return x_coord_node(d, layer) })
       .attr('y', y_scale(layer))
-      .attr('rx', function(d) {return 0.3 * node_size(d)})
-      .attr('fill', function(d) {
-        var bucket = String(d['value']['buckets'][attack_type][(eps).toFixed(1)])
-        return bucket_colors[bucket]
-      })
+      .attr('rx', function(d) { return 0.3 * node_size(d) })
+      .attr('fill', function(d) { return node_color(d) })
 
   })
 
@@ -100,7 +106,13 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
 
   // Function for the size of neuron
   function node_size(d) {
-    return 0.4 * d['value'][vul_type][attack_type]
+    return node_size_scale(d['value'][vul_type][attack_type])
+  }
+
+  // Function for node color
+  function node_color(d) {
+    var bucket = String(d['value']['buckets'][attack_type][(eps).toFixed(1)])
+    return bucket_colors[bucket]
   }
 }
 
@@ -183,4 +195,19 @@ function gen_y_scale() {
 
 function get_css_val(css_key) {
   return getComputedStyle(document.body).getPropertyValue(css_key)
+}
+
+function rgbToHex (rgb) { 
+  var hex = Number(rgb).toString(16);
+  if (hex.length < 2) {
+       hex = "0" + hex;
+  }
+  return hex;
+}
+
+function fullColorHex (r,g,b) {   
+  var red = rgbToHex(r);
+  var green = rgbToHex(g);
+  var blue = rgbToHex(b);
+  return '#' + red+green+blue;
 }

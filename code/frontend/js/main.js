@@ -69,17 +69,6 @@ function gen_attribution_graph_view(graph_key) {
     .attr('id', 'g-ag-' + graph_key)
     .attr('class', 'g-ag')
 
-  // .... delete this
-  d3.select('#g-ag-' + graph_key)
-    .append('circle').attr('r', '10px').attr('cy', 300).attr('cx', 150)
-  d3.select('#g-ag-' + graph_key)
-    .append('circle').attr('r', '5px')
-  d3.select('#g-ag-' + graph_key)
-    .append('circle').attr('r', '5px').attr('cx', 300)
-  d3.select('#g-ag-' + graph_key)
-    .append('circle').attr('r', '5px').attr('cy', 600)
-  d3.select('#g-ag-' + graph_key)
-    .append('circle').attr('r', '5px').attr('cy', 600).attr('cx', 300)
 }
 
 function make_graph_view_zoomable(graph_key) {
