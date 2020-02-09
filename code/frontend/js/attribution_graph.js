@@ -67,11 +67,11 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
       .data(filter_nodes(graph_key, layer))
       .enter()
       .append('rect')
-      .attr('id', function(d) { return ['node', d['key']].join('-') })
+      .attr('id', function(d) { return node_id(d) })
       .attr('width', function(d) { return node_size(d) })
       .attr('height', function(d) { return node_size(d) })
       .attr('x', function(d) { return x_coord_node(d, layer) })
-      .attr('y', y_scale(layer))
+      .attr('y', function(d) { return y_coord_node(d, layer) })
       .attr('rx', function(d) { return 0.3 * node_size(d) })
       .attr('fill', function(d) { return node_color(d) })
 
@@ -97,13 +97,25 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
     return false
   }
 
-  // Functions for setting x coordinate of a neuron
+  // Function for generate node id
+  function node_id(d) {
+    return ['node', d['key']].join('-')
+  }
+
+  // Functions for setting x, coordinates of a neuron
   function x_coord_node(d, layer) {
     var x_domain_val = d['value'][graph_key][domain_key]
     var x_coord = x_scale[graph_key][layer][domain_key](x_domain_val)
     return x_coord
   }
 
+  function y_coord_node(d, layer) {
+    var id = node_id(d)
+    var height = parseFloat(d3.select('#' + id).attr('height'))
+    var starting_y = y_scale(layer)
+    return starting_y - height / 2
+  }
+  
   // Function for the size of neuron
   function node_size(d) {
     return node_size_scale(d['value'][vul_type][attack_type])
