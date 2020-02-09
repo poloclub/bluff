@@ -75,7 +75,7 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
     
     d3.select('#g-ag-' + graph_key)
       .selectAll('g')
-      .data(filter_nodes(graph_key, layer, eps))
+      .data(filter_nodes(graph_key, layer, eps, node_data))
       .enter()
       .append('rect')
       .attr('id', function(d) { return node_id(d) })
@@ -87,17 +87,6 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
       .attr('fill', function(d) { return node_color(d) })
 
   })
-
-  // Function for filtering the data by graph_key
-  function filter_nodes(graph_key, layer, eps) {
-    var filtered_nodes = d3
-      .entries(node_data[layer])
-      .filter(function(d) {
-        var bucket = d['value']['buckets'][attack_type][eps.toFixed(1)]
-        return graph_key_to_buckets[graph_key].includes(bucket)
-      })
-    return filtered_nodes
-  }
 
   // Function for generate node id
   function node_id(d) {
@@ -131,6 +120,16 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
   }
 }
 
+function filter_nodes(graph_key, layer, eps, node_data) {
+  var filtered_nodes = d3
+    .entries(node_data[layer])
+    .filter(function(d) {
+      var bucket = d['value']['buckets'][attack_type][eps.toFixed(1)]
+      return graph_key_to_buckets[graph_key].includes(bucket)
+    })
+  return filtered_nodes
+}
+
 function get_value_key(graph_key, attack_type, eps) {
   var value_key = graph_key
   if (graph_key == 'attacked') {
@@ -147,18 +146,18 @@ function get_x_domain_range(graph_key, node_data, attack_type, eps) {
 
   // Get the x_range
   layers.forEach(layer => {
+    var filtered_nodes = filter_nodes(graph_key, layer, eps, node_data)
 
-    // Initialize x_range in the current layer
+    // Initialize x_range in the current layerㅁ
     x_range[layer] = {}
     x_domain_keys.forEach(x_domain_key => {
       x_range[layer][x_domain_key] = [10000, -10000]
     })
 
     // Get x_range in the current layer
-    var neurons = Object.keys(node_data[layer])
-    neurons.forEach(neuron => {
+    filtered_nodes.forEach(filtered_node => {
       x_domain_keys.forEach(x_domain_key => {
-        let curr_x_val = node_data[layer][neuron][value_key][x_domain_key]
+        let curr_x_val = filtered_node['value'][value_key][x_domain_key]
         let prev_x_val_min = x_range[layer][x_domain_key][0]
         let prev_x_val_max = x_range[layer][x_domain_key][1]
 
