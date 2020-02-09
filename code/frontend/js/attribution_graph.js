@@ -19,6 +19,11 @@ var bucket_colors = {
   '6': fullColorHex(233, 159, 61),
   '7': fullColorHex(253, 205, 59),
 }
+var graph_key_to_buckets = {
+  'original': [1, 2, 4, 5],
+  'attacked': [2, 3, 5, 6],
+  'target': [4, 5, 6, 7]
+}
 
 var x_domain_range = {}
 var x_scale = {}
@@ -41,8 +46,13 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   console.log(node_data)
 
   // Generate x, y scale
-  x_domain_range['original'] = get_x_domain_range('original', node_data)
-  x_scale['original'] = gen_x_scale('original')
+  x_domain_range['original'] = get_x_domain_range('original', node_data, attack_type, curr_eps)
+  x_scale['original'] = gen_x_scale('original', attack_type, curr_eps)
+  epss.forEach(eps => {
+    var value_key = get_value_key('attacked', attack_type, eps)
+    x_domain_range[value_key] = get_x_domain_range('attacked', node_data, attack_type, eps)
+    x_scale[value_key] = gen_x_scale('attacked', attack_type, eps)
+  })
   y_scale = gen_y_scale()
 
   // Generate node size scale 
@@ -54,6 +64,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   
   // Draw attribution graphs
   draw_neurons('original', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
+  draw_neurons('attacked', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
   
 })
 
@@ -64,7 +75,7 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
     
     d3.select('#g-ag-' + graph_key)
       .selectAll('g')
-      .data(filter_nodes(graph_key, layer))
+      .data(filter_nodes(graph_key, layer, eps))
       .enter()
       .append('rect')
       .attr('id', function(d) { return node_id(d) })
@@ -77,24 +88,15 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
 
   })
 
-  // Functions for filtering the data
-  function filter_nodes(graph_key, layer) {
+  // Function for filtering the data by graph_key
+  function filter_nodes(graph_key, layer, eps) {
     var filtered_nodes = d3
       .entries(node_data[layer])
       .filter(function(d) {
-        if (graph_key == 'original') {
-          return is_original(d)
-        }
+        var bucket = d['value']['buckets'][attack_type][eps.toFixed(1)]
+        return graph_key_to_buckets[graph_key].includes(bucket)
       })
     return filtered_nodes
-  }
-
-  function is_original(d) {
-    var bucket = d['value']['buckets'][attack_type]['0.0']
-    if ([1, 2, 4, 5].includes(bucket)) {
-      return true
-    } 
-    return false
   }
 
   // Function for generate node id
@@ -104,8 +106,9 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
 
   // Functions for setting x, coordinates of a neuron
   function x_coord_node(d, layer) {
-    var x_domain_val = d['value'][graph_key][domain_key]
-    var x_coord = x_scale[graph_key][layer][domain_key](x_domain_val)
+    var value_key = get_value_key(graph_key, attack_type, eps)
+    var x_domain_val = d['value'][value_key][domain_key]
+    var x_coord = x_scale[value_key][layer][domain_key](x_domain_val)
     return x_coord
   }
 
@@ -128,7 +131,17 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
   }
 }
 
-function get_x_domain_range(graph_key, node_data) {
+function get_value_key(graph_key, attack_type, eps) {
+  var value_key = graph_key
+  if (graph_key == 'attacked') {
+    value_key = [graph_key, attack_type, eps.toFixed(2)].join('-')
+  }
+  return value_key
+}
+
+function get_x_domain_range(graph_key, node_data, attack_type, eps) {
+  var value_key = get_value_key(graph_key, attack_type, eps)
+  
   // Initialize x_range
   var x_range = {}
 
@@ -142,12 +155,10 @@ function get_x_domain_range(graph_key, node_data) {
     })
 
     // Get x_range in the current layer
-    console.log(node_data, layer)
-    console.log(node_data[layer])
     var neurons = Object.keys(node_data[layer])
     neurons.forEach(neuron => {
       x_domain_keys.forEach(x_domain_key => {
-        let curr_x_val = node_data[layer][neuron][graph_key][x_domain_key]
+        let curr_x_val = node_data[layer][neuron][value_key][x_domain_key]
         let prev_x_val_min = x_range[layer][x_domain_key][0]
         let prev_x_val_max = x_range[layer][x_domain_key][1]
 
@@ -166,7 +177,10 @@ function get_x_domain_range(graph_key, node_data) {
   return x_range
 }
 
-function gen_x_scale(graph_key) {
+function gen_x_scale(graph_key, attack_type, eps) {
+  // Get the value_key
+  var value_key = get_value_key(graph_key, attack_type, eps)
+  
   // Initialize x_scale for the given graph_key
   var x_scale_graph = {}
 
@@ -176,7 +190,7 @@ function gen_x_scale(graph_key) {
     x_domain_keys.forEach(x_domain_key => {
       x_scale_graph[layer][x_domain_key] = d3
         .scaleLinear()
-        .domain(x_domain_range[graph_key][layer][x_domain_key])
+        .domain(x_domain_range[value_key][layer][x_domain_key])
         .range([ag_margin['left'], div_width - ag_margin['right']])
     })
   })

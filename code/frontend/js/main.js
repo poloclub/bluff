@@ -3,12 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 var g_coords = {
   'original': {'x': 50, 'y': 50},
-  'adversarial': {'x': 400, 'y': 50},
+  'attacked': {'x': 400, 'y': 50},
   'target': {'x': 750, 'y': 50}
 }
 var div_margins = {
   'original': 100 + 50,
-  'adversarial': 50,
+  'attacked': 50,
   'target': 50
 }
 var g_width = 300;
@@ -34,10 +34,10 @@ document.body.appendChild(dummy_newline)
 
 // Generate graph views
 gen_attribution_graph_view('original')
-gen_attribution_graph_view('adversarial')
+gen_attribution_graph_view('attacked')
 gen_attribution_graph_view('target')
 make_graph_view_zoomable('original')
-make_graph_view_zoomable('adversarial')
+make_graph_view_zoomable('attacked')
 make_graph_view_zoomable('target')
 
 
@@ -90,9 +90,9 @@ function graph_region_on_mouse(mouse_coords) {
     return 'original'
   }
 
-  limit = g_coords['adversarial']['x'] + g_width
+  limit = g_coords['attacked']['x'] + g_width
   if (mouse_x < limit) {
-    return 'adversarial'
+    return 'attacked'
   } 
 
   return 'target'
