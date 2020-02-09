@@ -48,6 +48,8 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   // Generate x, y scale
   x_domain_range['original'] = get_x_domain_range('original', node_data, attack_type, curr_eps)
   x_scale['original'] = gen_x_scale('original', attack_type, curr_eps)
+  x_domain_range['target'] = get_x_domain_range('target', node_data, attack_type, curr_eps)
+  x_scale['target'] = gen_x_scale('target', attack_type, curr_eps)
   epss.forEach(eps => {
     var value_key = get_value_key('attacked', attack_type, eps)
     x_domain_range[value_key] = get_x_domain_range('attacked', node_data, attack_type, eps)
@@ -65,6 +67,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   // Draw attribution graphs
   draw_neurons('original', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
   draw_neurons('attacked', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
+  draw_neurons('target', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
   
 })
 
