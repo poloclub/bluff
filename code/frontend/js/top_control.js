@@ -1,7 +1,8 @@
 // TODO: Do not hard code this
-var epss = [0.5, 1, 1.5, 2, 2.5, 3, 3.5]
-var default_strength = 3.5
+var epss = [0.5, 1, 1.5, 2, 2.0]
+var default_strength = 2.0
 var curr_eps = default_strength
+var attack_type = 'pgd'
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -15,7 +16,7 @@ top_control_horizontal_line.setAttribute('noshade', 'true')
 top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
-var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', 'PGD', null)
+var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', attack_type, null)
 top_control.appendChild(attack_type_control)
 
 // From class
