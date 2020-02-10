@@ -7,9 +7,9 @@ var g_coords = {
   'target': {'x': 750, 'y': 50}
 }
 var div_margins = {
-  'original': 100 + 50,
-  'attacked': 50,
-  'target': 50
+  'original': 100,
+  'attacked': 100,
+  'target': 100
 }
 var g_width = 300;
 var g_height = 600;

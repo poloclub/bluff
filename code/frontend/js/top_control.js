@@ -1,6 +1,6 @@
 // TODO: Do not hard code this
-var epss = [0.5, 1, 1.5, 2, 2.0]
-var default_strength = 1.0
+var epss = [0.5, 1.0, 1.5, 2.0]
+var default_strength = 2.0
 var curr_eps = default_strength
 var attack_type = 'pgd'
 
