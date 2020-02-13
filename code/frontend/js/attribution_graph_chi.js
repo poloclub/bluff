@@ -7,6 +7,7 @@ var feature_vis_dir = '../../../summit/summit-data/data/feature-vis'
 var data_dir = '../../../massif/aggregated/panda-armadillo/'
 var file_list = get_file_list(data_dir)
 
+import {attack_type, curr_eps, epss} from './top_control.js';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variable

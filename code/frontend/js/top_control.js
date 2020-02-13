@@ -1,8 +1,10 @@
+import { update_neurons_with_new_strength } from './attribution_graph.js';
+
 // TODO: Do not hard code this
-var epss = [0.5, 1.0, 1.5, 2.0]
-var default_strength = 2.0
-var curr_eps = default_strength
-var attack_type = 'pgd'
+export var epss = [0.5, 1.0, 1.5, 2.0]
+export var default_strength = 0.5
+export var curr_eps = default_strength
+export var attack_type = 'pgd'
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -58,7 +60,7 @@ function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
   // Define value
   control_val.setAttribute('id', dropdown_id + '-val')
   control_val.setAttribute('class', 'top-control-dropdown-val')
-  control_val.innerText = default_val
+  control_val.innerText = default_val.toUpperCase()
 
   // Define color box representing the title
   control_title_color_box.setAttribute('id', dropdown_id + '-colorbox')
@@ -125,13 +127,17 @@ function gen_attack_strength_control_bar(epss) {
     .on('drag', function() {
       // Get the position of the circle and the front bar
       let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
-      let new_strength = bar_length_to_strength(mouse_x)
-      new_strength = round_unit(new_strength, strength_unit)
+      curr_eps = bar_length_to_strength(mouse_x)
+      curr_eps = round_unit(curr_eps, strength_unit)
 
       // Position the circle and the front bar
       d3.select('#attack-strength-circle').style('cx', mouse_x)
       d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
-      d3.select('#attack-strength-val').text(new_strength)
+      d3.select('#attack-strength-val').text(curr_eps)
+
+      // Update the neurons
+      console.log('curr_eps:', curr_eps)
+      update_neurons_with_new_strength()
     })
     .on('end', function() {
       // Sticky movement
@@ -139,7 +145,7 @@ function gen_attack_strength_control_bar(epss) {
       mouse_x = round_unit(mouse_x, bar_length_unit)
       d3.select('#attack-strength-circle').style('cx', mouse_x).style('fill', 'white')
       d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
-      curr_eps = new_strength
+
     })
 
   svg_attack_strength_control
@@ -155,6 +161,7 @@ function gen_attack_strength_control_bar(epss) {
     .text(default_strength)
     .attr('x', 350)
     .attr('y', 23)
+
 }
 
 // Get css variable value

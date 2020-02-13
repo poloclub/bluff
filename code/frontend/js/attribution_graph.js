@@ -4,18 +4,22 @@
 var node_data_path = '../../data/sample-graphs/sample-node.json'
 var file_list = [node_data_path]
 
+import {attack_type, curr_eps, epss} from './top_control.js';
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
 ////////////////////////////////////////////////////////////////////////////////////////////////
+var node_data;
 var layers = ['mixed_4d', 'mixed_4c', 'mixed_4b', 'mixed_4a']
+var graph_keys = ['original', 'attacked', 'target']
 var x_domain_keys = ['median_activation', 'median_activation_percentile']
 var vul_type = 'overall_vulnerability'
 var bucket_colors = {
   '1': fullColorHex(131, 170, 225),
   '2': fullColorHex(210, 69, 138),
-  '3': fullColorHex(235, 59, 97),
+  '3': fullColorHex(235, 59, 43),
   '4': fullColorHex(178, 227, 89),
-  '5': fullColorHex(147, 100, 178),
+  '5': fullColorHex(175, 140, 198),
   '6': fullColorHex(223, 149, 31),
   '7': fullColorHex(253, 205, 59),
 }
@@ -36,6 +40,7 @@ var ag_margin = {'top': 50, 'bottom': 50, 'left': 50, 'right': 50}
 var node_size_range = [15, 50]
 var node_size_scale = null
 var jitter_strength = 15
+var x_coordinate_duration = 1500
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
@@ -43,10 +48,21 @@ var jitter_strength = 15
 Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
 
   // Read the sample neurons
-  var node_data = data[0]
+  node_data = data[0]
   console.log(node_data)
 
   // Generate x, y scale
+  gen_x_y_scales()
+
+  // Generate node size scale 
+  gen_node_size_scale()
+
+  // Draw nodes in the attribution graphs
+  draw_neurons_all_graph_key()
+
+})
+
+function gen_x_y_scales() {
   x_domain_range['original'] = get_x_domain_range('original', node_data, attack_type, curr_eps)
   x_scale['original'] = gen_x_scale('original', attack_type, curr_eps)
   x_domain_range['target'] = get_x_domain_range('target', node_data, attack_type, curr_eps)
@@ -57,46 +73,62 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
     x_scale[value_key] = gen_x_scale('attacked', attack_type, eps)
   })
   y_scale = gen_y_scale()
+}
 
-  // Generate node size scale 
+function gen_node_size_scale() {
   // TODO: need to get max, min vulnerability for all neurons
   node_size_scale = d3
     .scaleLinear()
     .domain([0, 90])
     .range(node_size_range)
-  
-  // Draw attribution graphs
-  draw_neurons('original', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  jitter_neurons('original', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  draw_neurons('attacked', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  jitter_neurons('attacked', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  draw_neurons('target', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  jitter_neurons('target', node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  
-})
+}
 
-function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_type) {
+function filter_nodes(graph_key, layer, eps, node_data) {
+  var filtered_nodes = d3
+    .entries(node_data[layer])
+    .filter(function(d) {
+      var bucket = d['value']['buckets'][attack_type][eps.toFixed(1)]
+      return graph_key_to_buckets[graph_key].includes(bucket)
+    })
+  return filtered_nodes
+}
+
+function draw_neurons(graph_key, layer, filtered_node_data, domain_key, attack_type, eps, vul_type) {
+
+  // Filter out nodes that has already been displayed
+  var node_to_be_not_displayed = filter_out_node_already_displayed()
   
   // Draw neurons
-  layers.forEach(layer => {
-    
-    d3.select('#g-ag-' + graph_key)
-      .selectAll('g')
-      .data(filter_nodes(graph_key, layer, eps, node_data))
-      .enter()
-      .append('rect')
-      .attr('id', function(d) { return node_id(d, graph_key) })
-      .attr('class', 'node-' + graph_key)
-      .attr('width', function(d) { return node_size(d) })
-      .attr('height', function(d) { return node_size(d) })
-      .attr('x', function(d) { return x_coord_node(d, layer) })
-      .attr('y', function(d) { return y_coord_node(d, layer) })
-      .attr('rx', function(d) { return 0.3 * node_size(d) })
-      .attr('fill', function(d) { return node_color(d) })
+  d3.select('#g-ag-' + graph_key)
+    .selectAll('g')
+    .data(filtered_node_data)
+    .enter()
+    .append('rect')
+    .attr('id', function(d) { return gen_node_id(d, graph_key) })
+    .attr('class', 'node-' + graph_key)
+    .attr('width', function(d) { return node_size(d) })
+    .attr('height', function(d) { return node_size(d) })
+    .attr('x', function(d) { return x_coord_node(d, layer, graph_key, eps, domain_key) })
+    .attr('y', function(d) { return y_coord_node(d, layer) })
+    .attr('rx', function(d) { return 0.3 * node_size(d) })
+    .attr('fill', function(d) { return node_color(d) })
+    .style('display', function(d) { return display_node(d) })
 
-  })
+  // Function to filter out nodes that already displayed
+  function filter_out_node_already_displayed() {
+    var node_to_be_not_displayed = []
+    filtered_node_data = filtered_node_data.filter(function(d) {
+      var neuron_id = d['key']
+      var node_id = ['node', graph_key, neuron_id].join('-')
+      if (!does_exist(node_id) && eps != curr_eps) {
+        node_to_be_not_displayed.push(node_id)
+      } 
+      return !does_exist(node_id)
+    })
+    return node_to_be_not_displayed
+  }
 
-  // Functions for setting x coordinate of a neuron
+  // Function for setting x coordinate of a neuron
   function x_coord_node(d, layer) {
     var value_key = get_value_key(graph_key, attack_type, eps)
     var x_domain_val = d['value'][value_key][domain_key]
@@ -104,9 +136,9 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
     return x_coord
   }
 
-  // Functions for setting y coordinate of a neuron
+  // Function for setting y coordinate of a neuron
   function y_coord_node(d, layer) {
-    var id = node_id(d, graph_key)
+    var id = gen_node_id(d, graph_key)
     var height = parseFloat(d3.select('#' + id).attr('height'))
     var starting_y = y_scale(layer)
     return starting_y - height / 2
@@ -122,10 +154,116 @@ function draw_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_ty
     var bucket = String(d['value']['buckets'][attack_type][(eps).toFixed(1)])
     return bucket_colors[bucket]
   }
+
+  // Function for setting display of a node
+  function display_node(d) {
+    var id = gen_node_id(d, graph_key)
+      if (node_to_be_not_displayed.includes(id)){
+        return 'none'
+      } else {
+        return 'block'
+      }
+  }
+}
+
+function draw_neurons_all_graph_key() {
+  var original_target = ['original', 'target']
+  original_target.forEach(graph_key => {
+    layers.forEach(layer => {
+      var filtered_nodes = filter_nodes(graph_key, layer, curr_eps, node_data)
+      draw_neurons(graph_key, layer, filtered_nodes, x_domain_keys[0], attack_type, curr_eps, vul_type)
+    })
+    jitter_neurons(graph_key, node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
+  })
+  var graph_key = 'attacked'
+  epss.forEach(eps => {
+    layers.forEach(layer => {
+      var filtered_nodes = filter_nodes(graph_key, layer, eps, node_data)
+      draw_neurons(graph_key, layer, filtered_nodes, x_domain_keys[0], attack_type, eps, vul_type)
+    })
+    jitter_neurons(graph_key, node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
+  })
+}
+
+export function update_neurons_with_new_strength() {
+  update_neurons_with_new_strength_by_graph_key('original')
+  update_neurons_with_new_strength_by_graph_key('attacked')
+  update_neurons_with_new_strength_by_graph_key('target')
+}
+
+function update_neurons_with_new_strength_by_graph_key(graph_key) {
+
+  // Update the node color
+  d3.selectAll('.node-' + graph_key)
+    .attr('fill', function(d) {
+      var bucket = d['value']['buckets'][attack_type][curr_eps.toFixed(1)] 
+      return bucket_colors[bucket]
+    })
+
+  // Update the node x coordinate if the graph_key is attacked
+  if (graph_key == 'attacked') {
+    // Filter nodes to show
+    var filtered_nodes = {}
+    layers.forEach(layer => {
+      filtered_nodes[layer] = filter_nodes(graph_key, layer, curr_eps, node_data)
+    })
+
+    // Get node list that are displayed
+    var node_list = Array.from(d3.selectAll('.node-' + graph_key)._groups[0])
+    var displayed_node_id_by_layer = {}
+    layers.forEach(layer => {displayed_node_id_by_layer[layer] = []})
+    node_list.forEach(x => {
+      var x_id_list = x.id.split('-')
+      var layer = x_id_list.slice(-2, -1)[0]
+      var neuron_number = x_id_list.slice(-1)[0]
+      var neuron_id = [layer, neuron_number].join('-')
+      displayed_node_id_by_layer[layer].push(neuron_id)
+    })
+    
+    // Find out nodes that are not displayed before
+    var neurons_need_to_add = {}
+    layers.forEach(layer => {
+      neurons_need_to_add[layer] = []
+      filtered_nodes[layer].forEach(filtered_node => {
+        var neuron_id = filtered_node['key']
+        if (!(displayed_node_id_by_layer[layer].includes(neuron_id))) {
+          neurons_need_to_add[layer].push(filtered_node)
+        }
+      })
+    })
+
+    // layers.forEach(layer => {
+    //   // XXXXX Draw는 했는데 왜 x가 0이지?
+    //   draw_neurons(graph_key, layer, neurons_need_to_add[layer], x_domain_keys[0], attack_type, curr_eps, vul_type)
+    // })
+    // console.log(neurons_need_to_add)
+    
+    // node_list.forEach(node => {
+    //   if ()
+    //   console.log(node, node.id)
+    // })
+
+    // Update the nodes' x_coordinates
+    d3.selectAll('.node-' + graph_key)
+      .transition()
+      .duration(x_coordinate_duration)
+      .attr('x', function(d) {
+        var layer = d['key'].split('-')[0]
+        return x_coord_node(d, layer, graph_key, curr_eps, x_domain_keys[0])
+      })
+      .style('display', function(d) {
+        var neuron_id = d['key']
+        var layer = neuron_id.split('-')[0]
+
+        if (filtered_nodes[layer].includes(neuron_id)) 
+        console.log()
+        console.log(d)
+      })
+  }
 }
 
 // Function for generate node id
-function node_id(d, graph_key) {
+function gen_node_id(d, graph_key) {
   return ['node', graph_key, d['key']].join('-')
 }
 
@@ -152,7 +290,7 @@ function jitter_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_
     var prev_end_x_coord = 0
     filtered_nuerons.forEach(d => {
       var neuron = d['key']
-      var node = d3.select('#' + node_id(d, graph_key))
+      var node = d3.select('#' + gen_node_id(d, graph_key))
       var x_coord = parseFloat(node.attr('x'))
       var width = parseFloat(node.attr('width'))
       
@@ -174,25 +312,15 @@ function jitter_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_
     // Jittering
     filtered_nuerons.forEach(d => {
       var neuron = d['key']
-      d3.select('#' + node_id(d, graph_key))
+      d3.select('#' + gen_node_id(d, graph_key))
         .attr('x', function(d) { return rescale(adjusted_x_coord[neuron]) })
     })
   })
   
 }
 
-function filter_nodes(graph_key, layer, eps, node_data) {
-  var filtered_nodes = d3
-    .entries(node_data[layer])
-    .filter(function(d) {
-      var bucket = d['value']['buckets'][attack_type][eps.toFixed(1)]
-      return graph_key_to_buckets[graph_key].includes(bucket)
-    })
-  return filtered_nodes
-}
-
 // Functions for getting x coordinate of a neuron
-function x_coord_node(d, layer) {
+function x_coord_node(d, layer, graph_key, eps, domain_key) {
   var value_key = get_value_key(graph_key, attack_type, eps)
   var x_domain_val = d['value'][value_key][domain_key]
   var x_coord = x_scale[value_key][layer][domain_key](x_domain_val)
@@ -304,4 +432,13 @@ function fullColorHex (r,g,b) {
   var green = rgbToHex(g);
   var blue = rgbToHex(b);
   return '#' + red+green+blue;
+}
+
+function does_exist(id) {
+  var element = document.getElementById(id)
+  if (element) {
+    return true
+  } else {
+    return false
+  }
 }

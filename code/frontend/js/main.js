@@ -14,8 +14,6 @@ var div_margins = {
 var g_width = 300;
 var g_height = 600;
 
-
-
 // Attribution graph title
 var attribution_graph_title = document.createElement('div')
 attribution_graph_title.innerText = 'ATTRIBUTION GRAPH'
