@@ -1,4 +1,5 @@
 import { update_neurons_with_new_strength } from './attribution_graph.js';
+import { layers, div_width, div_height, ag_margin } from './constant.js';
 
 // TODO: Do not hard code this
 export var epss = [0.5, 1.0, 1.5, 2.0]
@@ -18,18 +19,10 @@ top_control_horizontal_line.setAttribute('noshade', 'true')
 top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
-var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', attack_type, null)
+var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', attack_type)
 top_control.appendChild(attack_type_control)
+attack_type_control.style.setProperty('transform', 'translate(100px, -7px)')
 
-// From class
-var from_color = get_css_val('--attack-from-color')
-var attack_from_class_control = gen_top_dropdown('top-control-from-dropdown', 'Attack from', 'Giant Panda', from_color)
-top_control.appendChild(attack_from_class_control)
-
-// To class
-var to_color = get_css_val('--attack-to-color')
-var attack_to_class_control = gen_top_dropdown('top-control-to-dropdown', 'Attack to', 'Armadillo', to_color)
-top_control.appendChild(attack_to_class_control)
 
 // Attack strength control bar
 gen_attack_strength_control_bar(epss)
@@ -40,12 +33,11 @@ gen_attack_strength_control_bar(epss)
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate dropdown options
-function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
+export function gen_top_dropdown(dropdown_id, title, default_val) {
   // Define element
   var control = document.createElement('div')
   var control_title = document.createElement('div')
   var control_val = document.createElement('div')
-  var control_title_color_box = document.createElement('div')
   var control_icon = document.createElement('div')
   
   // Define control overview
@@ -62,11 +54,6 @@ function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
   control_val.setAttribute('class', 'top-control-dropdown-val')
   control_val.innerText = default_val.toUpperCase()
 
-  // Define color box representing the title
-  control_title_color_box.setAttribute('id', dropdown_id + '-colorbox')
-  control_title_color_box.setAttribute('class', 'top-control-dropdown-colorbox')
-  control_title_color_box.style.setProperty('background', title_color)
-
   // Define icon
   control_icon.setAttribute('id', dropdown_id + '-icon')
   control_icon.setAttribute('class', 'top-control-dropdown-icon')
@@ -75,7 +62,6 @@ function gen_top_dropdown(dropdown_id, title, default_val, title_color) {
   // Append the element to the document
   control.appendChild(control_title)
   control.appendChild(control_val)
-  control.appendChild(control_title_color_box)
   control.appendChild(control_icon)
   return control
 }
@@ -91,7 +77,7 @@ function gen_attack_strength_control_bar(epss) {
     .append('text')
     .attr('id', 'attack-strength-title')
     .text('Attack strength')
-    .attr('x', 0)
+    .attr('x', 20)
     .attr('y', 23)
 
   svg_attack_strength_control
@@ -136,7 +122,6 @@ function gen_attack_strength_control_bar(epss) {
       d3.select('#attack-strength-val').text(curr_eps)
 
       // Update the neurons
-      console.log('curr_eps:', curr_eps)
       update_neurons_with_new_strength()
     })
     .on('end', function() {

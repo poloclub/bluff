@@ -1,30 +1,38 @@
+import {gen_top_dropdown} from "./top_control.js";
+import { layers, div_width, div_height, ag_margin } from './constant.js';
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variable
 ////////////////////////////////////////////////////////////////////////////////////////////////
-var g_coords = {
-  'original': {'x': 50, 'y': 50},
-  'attacked': {'x': 400, 'y': 50},
-  'target': {'x': 750, 'y': 50}
-}
+
 var div_margins = {
   'original': 100,
   'attacked': 100,
   'target': 100
 }
-var g_width = 300;
-var g_height = 600;
 
-// Attribution graph title
-var attribution_graph_title = document.createElement('div')
-attribution_graph_title.innerText = 'ATTRIBUTION GRAPH'
-attribution_graph_title.setAttribute('id', 'ag-title')
-document.body.appendChild(attribution_graph_title)
+// Graph filter
+var attribution_graph_option = document.createElement('div')
+attribution_graph_option.setAttribute('id', 'ag-option')
+document.body.appendChild(attribution_graph_option)
 
-// Analysis title
-// var analysis_title = document.createElement('div')
-// analysis_title.innerText = 'ANALYSIS'
-// analysis_title.setAttribute('id', 'analysis-title')
-// document.body.appendChild(analysis_title)
+// From class
+var attack_from_class_control = gen_top_dropdown('graph-filter-from-dropdown', 'Attack from', 'Giant Panda')
+attribution_graph_option.appendChild(attack_from_class_control)
+attack_from_class_control.style.width = div_width + 'px'
+attack_from_class_control.style.setProperty('transform', 'translateX(100px)')
+
+// Adversarial
+var adversarial_text = gen_top_dropdown('graph-filter-attacked-dropdown', 'Adversarial', 'Adversarial')
+attribution_graph_option.appendChild(adversarial_text)
+adversarial_text.style.width = div_width + 'px'
+adversarial_text.style.setProperty('transform', 'translateX(194px)')
+
+// To class
+var attack_to_class_control = gen_top_dropdown('graph-filter-to-dropdown', 'Attack to', 'Armadillo')
+attribution_graph_option.appendChild(attack_to_class_control)
+attack_to_class_control.style.width = div_width + 'px'
+attack_to_class_control.style.setProperty('transform', 'translateX(288px)')
 
 // Newline
 var dummy_newline = document.createElement('div')
@@ -37,14 +45,6 @@ gen_attribution_graph_view('target')
 make_graph_view_zoomable('original')
 make_graph_view_zoomable('attacked')
 make_graph_view_zoomable('target')
-
-
-
-// Define analysis div
-// var analysis_div = document.createElement('div')
-// analysis_div.setAttribute('id', 'analysis-txt')
-// analysis_div.innerText = "Analysis text"
-// document.body.appendChild(analysis_div)
 
 function gen_attribution_graph_view(graph_key) {
 
@@ -78,22 +78,6 @@ function make_graph_view_zoomable(graph_key) {
             .attr('transform', d3.event.transform)
         })
     )
-}
-
-function graph_region_on_mouse(mouse_coords) {
-  var mouse_x = mouse_coords[0]
-  
-  var limit = g_coords['original']['x'] + g_width
-  if (mouse_x < limit) {
-    return 'original'
-  }
-
-  limit = g_coords['attacked']['x'] + g_width
-  if (mouse_x < limit) {
-    return 'attacked'
-  } 
-
-  return 'target'
 }
 
 function get_css_val(css_key) {

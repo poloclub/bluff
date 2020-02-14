@@ -12,10 +12,9 @@
 .top-control-dropdown {
   border: 1px lightgray solid;
   border-radius: 10px;
-  transform: translate(100px, -7px);
+  /* transform: translate(100px, -7px); */
   display: inline-block;
   height: 30px;
-  margin-right: 20px;
 }
 
 .top-control-dropdown-title {
@@ -30,13 +29,6 @@
   font-size: 20px;
   transform: translate(15px, 1px);
   font-weight: bold;
-}
-
-.top-control-dropdown-colorbox {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  transform: translate(25px, 2px);
 }
 
 .top-control-dropdown-icon {
@@ -72,7 +64,7 @@
 
 .attack-strength-slidebar {
   height: 3px;
-  transform: translate(155px, 15px);
+  transform: translate(165px, 15px);
 }
 
 #attack-strength-slidebar-background{

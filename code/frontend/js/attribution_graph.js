@@ -1,17 +1,16 @@
+import { attack_type, curr_eps, epss } from './top_control.js';
+import { layers, div_width, div_height, ag_margin } from './constant.js';
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Set data directory
 ////////////////////////////////////////////////////////////////////////////////////////////////
 var node_data_path = '../../data/sample-graphs/sample-node.json'
 var file_list = [node_data_path]
 
-import {attack_type, curr_eps, epss} from './top_control.js';
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
 ////////////////////////////////////////////////////////////////////////////////////////////////
 var node_data;
-var layers = ['mixed_4d', 'mixed_4c', 'mixed_4b', 'mixed_4a']
-var graph_keys = ['original', 'attacked', 'target']
 var x_domain_keys = ['median_activation', 'median_activation_percentile']
 var vul_type = 'overall_vulnerability'
 var bucket_colors = {
@@ -32,10 +31,6 @@ var graph_key_to_buckets = {
 var x_domain_range = {}
 var x_scale = {}
 var y_scale = {}
-
-var div_width = 300
-var div_height = 600
-var ag_margin = {'top': 50, 'bottom': 50, 'left': 50, 'right': 50}
 
 var node_size_range = [15, 50]
 var node_size_scale = null
