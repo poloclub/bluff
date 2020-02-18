@@ -1,11 +1,16 @@
 import { update_neurons_with_new_strength } from './attribution_graph.js';
-import { layers, div_width, div_height, ag_margin } from './constant.js';
+import { filter_bar_length } from './constant.js';
 
 // TODO: Do not hard code this
 export var epss = [0.5, 1.0, 1.5, 2.0]
 export var default_strength = 0.5
 export var curr_eps = default_strength
 export var attack_type = 'pgd'
+
+// TODO: Do not hard code this (or maybe okay?)
+export var top_ks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+export var default_top_k = 7
+export var curr_top_k = default_top_k
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -21,11 +26,12 @@ top_control.appendChild(top_control_horizontal_line)
 // Attack dropdown
 var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', attack_type)
 top_control.appendChild(attack_type_control)
-attack_type_control.style.setProperty('transform', 'translate(100px, -7px)')
+attack_type_control.style.setProperty('transform', 'translate(100px, -13px)')
 
 
 // Attack strength control bar
-gen_attack_strength_control_bar(epss)
+gen_filter_bar(epss, default_strength, 'Attack Strength', 'attack')
+gen_filter_bar(top_ks, default_top_k, 'Top-k', 'topK')
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -66,86 +72,136 @@ export function gen_top_dropdown(dropdown_id, title, default_val) {
   return control
 }
 
-// Generate Attack strength control bar
-function gen_attack_strength_control_bar(epss) {
-  var svg_attack_strength_control = d3
+// Generate filter bar
+function gen_filter_bar(domains, default_val, title, filter_type) {
+
+  // Generate filter bar svg
+  var svg_filter_bar = d3
     .select('#top-control')
     .append('svg')
-    .attr('id', 'svg-attack-strength')
+    .attr('id', 'filter-bar-' + filter_type)
+    .attr('class', 'svg-filter-bar')
+    .style('display', 'inline')
 
-  svg_attack_strength_control
+  // Append title text
+  svg_filter_bar
     .append('text')
-    .attr('id', 'attack-strength-title')
-    .text('Attack strength')
+    .attr('id', 'filter-bar-title-' + filter_type)
+    .attr('class', 'filter-bar-title')
+    .text(title)
     .attr('x', 20)
     .attr('y', 23)
 
-  svg_attack_strength_control
+  // Append control background bar
+  svg_filter_bar
     .append('rect')
-    .attr('id', 'attack-strength-slidebar-background')
-    .attr('class', 'attack-strength-slidebar')
+    .attr('id', 'filter-bar-background-' + filter_type)
+    .attr('class', 'filter-bar-background filter-bar-rect')
+    .style('width', filter_bar_length)
+  
+  // Generate front bar scale
+  var [domain_to_bar, bar_to_domain] = gen_front_bar_length_scale()
 
-  var max_attack_strength = d3.max(epss)
-  var strength_bar_length = get_css_val('--strength_bar_length')
-  var strength_unit = max_attack_strength / epss.length
-  var bar_length_unit = strength_bar_length / epss.length
-
-  var front_bar_length = d3
-    .scaleLinear()
-    .domain([0, max_attack_strength])
-    .range([0, strength_bar_length])
-  var bar_length_to_strength = d3
-    .scaleLinear()
-    .domain([0, strength_bar_length])
-    .range([0, max_attack_strength])
-
-  svg_attack_strength_control
+  // Append control front bar  
+  svg_filter_bar
     .append('rect')
-    .attr('id', 'attack-strength-slidebar-front')
-    .attr('class', 'attack-strength-slidebar')
-    .style('width', front_bar_length(default_strength))
+    .attr('id', 'filter-bar-front-' + filter_type)
+    .attr('class', 'filter-bar-front filter-bar-rect')
+    .style('width', domain_to_bar(default_val))
 
-  var strength_drag = d3
-    .drag()
-    .on('start', function() {
-      this.style.fill = d3.select(this).style('stroke')
-    })
-    .on('drag', function() {
-      // Get the position of the circle and the front bar
-      let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
-      curr_eps = bar_length_to_strength(mouse_x)
-      curr_eps = round_unit(curr_eps, strength_unit)
-
-      // Position the circle and the front bar
-      d3.select('#attack-strength-circle').style('cx', mouse_x)
-      d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
-      d3.select('#attack-strength-val').text(curr_eps)
-
-      // Update the neurons
-      update_neurons_with_new_strength()
-    })
-    .on('end', function() {
-      // Sticky movement
-      let mouse_x = d3.min([d3.max([0, d3.mouse(this)[0]]), strength_bar_length])
-      mouse_x = round_unit(mouse_x, bar_length_unit)
-      d3.select('#attack-strength-circle').style('cx', mouse_x).style('fill', 'white')
-      d3.select('#attack-strength-slidebar-front').style('width', mouse_x)
-
-    })
-
-  svg_attack_strength_control
+  // Append control circle
+  svg_filter_bar
     .append('circle')
-    .attr('id', 'attack-strength-circle')
-    .style('cx', front_bar_length(default_strength))
-    .on('mouseover', function() {this.style.cursor = 'pointer'})
-    .call(strength_drag)
+    .attr('id', 'filter-bar-circle-' + filter_type)
+    .attr('class', 'filter-bar-circle')
+    .style('cx', domain_to_bar(default_val))
+    .on('mouseover', function(){ this.style.cursor = 'pointer'})
+    .call(gen_control_circle_drag())
 
-  svg_attack_strength_control
+  // Append filter text
+  svg_filter_bar
     .append('text')
-    .attr('id', 'attack-strength-val')
-    .text(default_strength)
-    .attr('x', 350)
-    .attr('y', 23)
+    .attr('id', 'filter-bar-text-' + filter_type)
+    .attr('class', 'filter-bar-text')
+    .text(default_val)
+
+  // Function to generate front bar length scale
+  function gen_front_bar_length_scale() {
+    var max_domain_val = d3.max(domains)
+
+    var domain_to_front_bar_length = d3
+      .scaleLinear()
+      .domain([0, max_domain_val])
+      .range([0, filter_bar_length])
+
+    var front_bar_length_to_domain = d3
+      .scaleLinear()
+      .domain([0, filter_bar_length])
+      .range([0, max_domain_val])
+    
+    return [domain_to_front_bar_length, front_bar_length_to_domain]
+  }
+
+  // Function to generate control circle drag
+  function gen_control_circle_drag() {
+
+    var control_drag = d3
+      .drag()
+      .on('start', function() { circle_drag_start() })
+      .on('drag', function() { circle_drag_ing() })
+      .on('end', function() { circle_drag_end() })
+
+    return control_drag
+  }
+
+  function circle_drag_start() {
+    // Update the circle's color 
+    d3.select('#filter-bar-circle-' + filter_type)
+    .style('fill', 'gray')
+    .style('stroke', 'none')
+  }
+
+  function circle_drag_ing() {
+    // Get the position of the circle and the front bar
+    var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
+    mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar_length])
+
+    var max_domain_val = d3.max(domains)
+    var domain_unit = max_domain_val / domains.length
+
+    // Update the filter value
+    if (filter_type == 'attack') {
+      curr_eps = bar_to_domain(mouse_x)
+      curr_eps = round_unit(curr_eps, domain_unit)
+      d3.select('#filter-bar-text-' + filter_type).text(curr_eps) 
+      update_neurons_with_new_strength()
+    } else if (filter_type == 'topK') {
+      curr_top_k = bar_to_domain(mouse_x)
+      curr_top_k = round_unit(curr_top_k, domain_unit)
+      d3.select('#filter-bar-text-' + filter_type).text(curr_top_k) 
+    }
+      
+    // Position the circle and the front bar
+    d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
+    d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+  }
+
+  function circle_drag_end() {
+    // Update the circle's color 
+    d3.select('#filter-bar-circle-' + filter_type)
+      .style('fill', 'white')
+      .style('stroke', 'gray')
+
+    // Get the position of the circle and the front bar
+    var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
+    mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar_length])
+
+    // Sticky movement
+    var bar_length_unit = filter_bar_length / domains.length
+    mouse_x = round_unit(mouse_x, bar_length_unit)
+    d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
+    d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+  }
 
 }
 

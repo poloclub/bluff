@@ -23,16 +23,20 @@ attack_from_class_control.style.width = div_width + 'px'
 attack_from_class_control.style.setProperty('transform', 'translateX(100px)')
 
 // Adversarial
-var adversarial_text = gen_top_dropdown('graph-filter-attacked-dropdown', 'Adversarial', 'Adversarial')
+var adversarial_text = document.createElement('div')
 attribution_graph_option.appendChild(adversarial_text)
-adversarial_text.style.width = div_width + 'px'
-adversarial_text.style.setProperty('transform', 'translateX(194px)')
+adversarial_text.setAttribute('id', 'graph-adversarial')
+adversarial_text.style.setProperty('display', 'inline')
+adversarial_text.style.setProperty('transform', 'translate(280px, 5px)')
+adversarial_text.style.setProperty('position', 'absolute')
+adversarial_text.style.setProperty('font-size', '20px')
+adversarial_text.innerHTML = 'ADVERSARIAL'
 
 // To class
 var attack_to_class_control = gen_top_dropdown('graph-filter-to-dropdown', 'Attack to', 'Armadillo')
 attribution_graph_option.appendChild(attack_to_class_control)
 attack_to_class_control.style.width = div_width + 'px'
-attack_to_class_control.style.setProperty('transform', 'translateX(288px)')
+attack_to_class_control.style.setProperty('transform', 'translateX(588px)')
 
 // Newline
 var dummy_newline = document.createElement('div')

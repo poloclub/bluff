@@ -16,18 +16,6 @@
   display: inline;
 }
 
-/* #g-ag-original {
-  transform: translate(10px, 10px);
-}
-
-#g-ag-adversarial {
-  transform: translate(610px, 10px);
-}
-
-#g-ag-target {
-  transform: translate(1210px, 10px);
-} */
-
 .ex-box {
   width: 230px;
   height: 110px;

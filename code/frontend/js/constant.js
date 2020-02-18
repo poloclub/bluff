@@ -8,3 +8,5 @@ export var layers = ['mixed_4d', 'mixed_4c', 'mixed_4b', 'mixed_4a']
 export var div_width = 300
 export var div_height = 600
 export var ag_margin = {'top': 50, 'bottom': 50, 'left': 50, 'right': 50}
+
+export var filter_bar_length = 150

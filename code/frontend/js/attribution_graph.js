@@ -187,7 +187,7 @@ export function update_neurons_with_new_strength() {
 }
 
 function update_neurons_with_new_strength_by_graph_key(graph_key) {
-
+  
   // Update the node color
   d3.selectAll('.node-' + graph_key)
     .attr('fill', function(d) {
