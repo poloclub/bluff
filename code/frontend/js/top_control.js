@@ -1,14 +1,15 @@
 import { update_neurons_with_new_strength } from './attribution_graph.js';
 import { 
   strengths, 
-  default_strengths, 
-  curr_strengths, 
-  attack_type, 
   top_ks, 
-  curr_filters,
+  default_strengths, 
   default_filters,
   filter_bar_length 
 } from './constant.js';
+
+export var cur_attack_type = 'pgd'
+export var curr_strengths = {'pgd': default_strengths['pgd']}
+export var curr_filters = {'topK': default_filters['topK'], 'vulnerability': 0.5}
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -23,12 +24,12 @@ top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
 // Todo: need to add other attacks
-var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', attack_type)
+var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', cur_attack_type)
 top_control.appendChild(attack_type_control)
 attack_type_control.style.setProperty('transform', 'translate(100px, -13px)')
 
 // Attack strength control bar
-gen_filter_bar(strengths[attack_type], default_strengths[attack_type], 'Attack Strength', 'attack')
+gen_filter_bar(strengths[cur_attack_type], default_strengths[cur_attack_type], 'Attack Strength', 'attack')
 gen_filter_bar(top_ks, default_filters['topK'], 'Top-k', 'topK')
 
 
