@@ -1,16 +1,14 @@
 import { update_neurons_with_new_strength } from './attribution_graph.js';
-import { filter_bar_length } from './constant.js';
-
-// TODO: Do not hard code this
-export var epss = [0.5, 1.0, 1.5, 2.0]
-export var default_strength = 0.5
-export var curr_eps = default_strength
-export var attack_type = 'pgd'
-
-// TODO: Do not hard code this (or maybe okay?)
-export var top_ks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-export var default_top_k = 7
-export var curr_top_k = default_top_k
+import { 
+  strengths, 
+  default_strengths, 
+  curr_strengths, 
+  attack_type, 
+  top_ks, 
+  curr_filters,
+  default_filters,
+  filter_bar_length 
+} from './constant.js';
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -24,18 +22,18 @@ top_control_horizontal_line.setAttribute('noshade', 'true')
 top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
+// Todo: need to add other attacks
 var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', attack_type)
 top_control.appendChild(attack_type_control)
 attack_type_control.style.setProperty('transform', 'translate(100px, -13px)')
 
-
 // Attack strength control bar
-gen_filter_bar(epss, default_strength, 'Attack Strength', 'attack')
-gen_filter_bar(top_ks, default_top_k, 'Top-k', 'topK')
+gen_filter_bar(strengths[attack_type], default_strengths[attack_type], 'Attack Strength', 'attack')
+gen_filter_bar(top_ks, default_filters['topK'], 'Top-k', 'topK')
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Functions
+// Functions for generating dropdown menu
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate dropdown options
@@ -71,6 +69,10 @@ export function gen_top_dropdown(dropdown_id, title, default_val) {
   control.appendChild(control_icon)
   return control
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Functions for generating filter bar
+//////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate filter bar
 function gen_filter_bar(domains, default_val, title, filter_type) {
@@ -125,7 +127,6 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
     .attr('class', 'filter-bar-text')
     .text(default_val)
 
-  // Function to generate front bar length scale
   function gen_front_bar_length_scale() {
     var max_domain_val = d3.max(domains)
 
@@ -142,7 +143,6 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
     return [domain_to_front_bar_length, front_bar_length_to_domain]
   }
 
-  // Function to generate control circle drag
   function gen_control_circle_drag() {
 
     var control_drag = d3
@@ -171,14 +171,14 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
 
     // Update the filter value
     if (filter_type == 'attack') {
-      curr_eps = bar_to_domain(mouse_x)
-      curr_eps = round_unit(curr_eps, domain_unit)
-      d3.select('#filter-bar-text-' + filter_type).text(curr_eps) 
+      curr_strengths[attack_type] = bar_to_domain(mouse_x)
+      curr_strengths[attack_type] = round_unit(curr_strengths[attack_type], domain_unit)
+      d3.select('#filter-bar-text-' + filter_type).text(curr_strengths[attack_type]) 
       update_neurons_with_new_strength()
-    } else if (filter_type == 'topK') {
-      curr_top_k = bar_to_domain(mouse_x)
-      curr_top_k = round_unit(curr_top_k, domain_unit)
-      d3.select('#filter-bar-text-' + filter_type).text(curr_top_k) 
+    } else {
+      curr_filters[filter_type] = bar_to_domain(mouse_x)
+      curr_filters[filter_type] = round_unit(curr_filters[filter_type], domain_unit)
+      d3.select('#filter-bar-text-' + filter_type).text(curr_filters[filter_type])
     }
       
     // Position the circle and the front bar
@@ -203,11 +203,6 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
     d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
   }
 
-}
-
-// Get css variable value
-function get_css_val(css_key) {
-  return getComputedStyle(document.body).getPropertyValue(css_key)
 }
 
 // Round by a specific unit

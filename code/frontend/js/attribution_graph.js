@@ -1,16 +1,22 @@
-import { attack_type, curr_eps, epss } from './top_control.js';
 import { layers, div_width, div_height, ag_margin } from './constant.js';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Set data directory
 ////////////////////////////////////////////////////////////////////////////////////////////////
-var node_data_path = '../../data/sample-graphs/sample-node.json'
-var file_list = [node_data_path]
+var node_sample_data_path = '../../data/sample-graphs/sample-node.json'
+var neuron_data_dir = '../../../massif/neurons/'
+var activation_data_path = neuron_data_dir + 'neuron_data-giant_panda-armadillo-pgd.json'
+var vulnerability_data_path = neuron_data_dir + 'neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
+var top_neuron_data_path = neuron_data_dir + 'top_neurons-giant_panda-armadillo-pgd.json'
+var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
 ////////////////////////////////////////////////////////////////////////////////////////////////
-var node_data;
+// var node_data;
+var activation_data
+var vulnerability_data
+var top_neuron_data
 var x_domain_keys = ['median_activation', 'median_activation_percentile']
 var vul_type = 'overall_vulnerability'
 var bucket_colors = {
@@ -42,32 +48,99 @@ var x_coordinate_duration = 1500
 ////////////////////////////////////////////////////////////////////////////////////////////////
 Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
 
-  // Read the sample neurons
-  node_data = data[0]
-  console.log(node_data)
+  // Read the neuron data
+  activation_data = data[0]
+  vulnerability_data = data[1]
+  top_neuron_data = data[2]
+  console.log(activation_data)
 
   // Generate x, y scale
-  gen_x_y_scales()
+  // gen_x_y_scales()
 
-  // Generate node size scale 
-  gen_node_size_scale()
+  // // Generate node size scale 
+  // gen_node_size_scale()
 
-  // Draw nodes in the attribution graphs
-  draw_neurons_all_graph_key()
+  // // Draw nodes in the attribution graphs
+  // draw_neurons_all_graph_key()
 
 })
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for generating x, y scales
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 function gen_x_y_scales() {
-  x_domain_range['original'] = get_x_domain_range('original', node_data, attack_type, curr_eps)
-  x_scale['original'] = gen_x_scale('original', attack_type, curr_eps)
-  x_domain_range['target'] = get_x_domain_range('target', node_data, attack_type, curr_eps)
-  x_scale['target'] = gen_x_scale('target', attack_type, curr_eps)
-  epss.forEach(eps => {
-    var value_key = get_value_key('attacked', attack_type, eps)
-    x_domain_range[value_key] = get_x_domain_range('attacked', node_data, attack_type, eps)
-    x_scale[value_key] = gen_x_scale('attacked', attack_type, eps)
+  // Generate x, y scales for original class
+  x_domain_range['original'] = get_x_domain_range('original', activation_data, attack_type, curr_eps)
+  // x_scale['original'] = gen_x_scale('original', attack_type, curr_eps)
+  // x_domain_range['target'] = get_x_domain_range('target', node_data, attack_type, curr_eps)
+  // x_scale['target'] = gen_x_scale('target', attack_type, curr_eps)
+  // epss.forEach(eps => {
+  //   var value_key = get_value_key('attacked', attack_type, eps)
+  //   x_domain_range[value_key] = get_x_domain_range('attacked', node_data, attack_type, eps)
+  //   x_scale[value_key] = gen_x_scale('attacked', attack_type, eps)
+  // })
+  // y_scale = gen_y_scale()
+}
+
+function filter_nodes(graph_key, layer, strength, node_data) {
+  var filtered_nodes = d3
+    .entries(node_data[layer])
+    .filter(function(d) {
+      var bucket = d['value']['buckets'][attack_type][strength.toFixed(2)]
+      return graph_key_to_buckets[graph_key].includes(bucket)
+    })
+  return filtered_nodes
+}
+
+function get_x_domain_range(graph_key, activation_data, attack_type, strength) {
+  /*
+  Get the range of domain values
+  * input 
+    - graph_key: one of ['original', 'adversarial', 'target']
+    - activation_data: neurons' activation. 
+    - attack_type: attack algorithm
+    - strength: the strength of attack
+  */
+
+  // Get the value key to access to the activation values
+  var value_key = get_value_key(graph_key, attack_type, strength)
+  
+  // Initialize x_range
+  var x_range = {}
+
+  // Get the x_range
+  layers.forEach(layer => {
+    console.log(layer)
+    var filtered_nodes = filter_nodes(graph_key, layer, strength, activation_data)
+    console.log(filtered_nodes)
+
+  //   // Initialize x_range in the current layer
+  //   x_range[layer] = {}
+  //   x_domain_keys.forEach(x_domain_key => {
+  //     x_range[layer][x_domain_key] = [10000, -10000]
+  //   })
+
+  //   // Get x_range in the current layer
+  //   filtered_nodes.forEach(filtered_node => {
+  //     x_domain_keys.forEach(x_domain_key => {
+  //       let curr_x_val = filtered_node['value'][value_key][x_domain_key]
+  //       let prev_x_val_min = x_range[layer][x_domain_key][0]
+  //       let prev_x_val_max = x_range[layer][x_domain_key][1]
+
+  //       if (curr_x_val < prev_x_val_min) {
+  //         x_range[layer][x_domain_key][0] = curr_x_val
+  //       }
+
+  //       if (curr_x_val > prev_x_val_max) {
+  //         x_range[layer][x_domain_key][1] = curr_x_val
+  //       }
+  //     })
+      
+  //   })
   })
-  y_scale = gen_y_scale()
+
+  return x_range
 }
 
 function gen_node_size_scale() {
@@ -78,15 +151,7 @@ function gen_node_size_scale() {
     .range(node_size_range)
 }
 
-function filter_nodes(graph_key, layer, eps, node_data) {
-  var filtered_nodes = d3
-    .entries(node_data[layer])
-    .filter(function(d) {
-      var bucket = d['value']['buckets'][attack_type][eps.toFixed(1)]
-      return graph_key_to_buckets[graph_key].includes(bucket)
-    })
-  return filtered_nodes
-}
+
 
 function draw_neurons(graph_key, layer, filtered_node_data, domain_key, attack_type, eps, vul_type) {
 
@@ -188,35 +253,34 @@ export function update_neurons_with_new_strength() {
 
 function update_neurons_with_new_strength_by_graph_key(graph_key) {
   
-  // Update the node color
-  d3.selectAll('.node-' + graph_key)
-    .attr('fill', function(d) {
-      var bucket = d['value']['buckets'][attack_type][curr_eps.toFixed(1)] 
-      return bucket_colors[bucket]
-    })
+  // // Update the node color
+  // d3.selectAll('.node-' + graph_key)
+  //   .attr('fill', function(d) {
+  //     var bucket = d['value']['buckets'][attack_type][curr_eps.toFixed(1)] 
+  //     return bucket_colors[bucket]
+  //   })
 
-  
-  if (graph_key == 'attacked') {
-    // Display setting update of nodes in adversarial graph
-    var filtered_neurons = []
-    layers.forEach(layer => {
-      var filtered_nodes = filter_nodes(graph_key, layer, curr_eps, node_data)
-      filtered_neurons = filtered_neurons.concat(filtered_nodes.map(x => x['key']))
-    })
+  // if (graph_key == 'attacked') {
+  //   // Display setting update of nodes in adversarial graph
+  //   var filtered_neurons = []
+  //   layers.forEach(layer => {
+  //     var filtered_nodes = filter_nodes(graph_key, layer, curr_eps, node_data)
+  //     filtered_neurons = filtered_neurons.concat(filtered_nodes.map(x => x['key']))
+  //   })
 
-    d3.selectAll('.node-' + graph_key)
-      .style('display', function(d) {
-        var neuron_id = d['key']
-        if (filtered_neurons.includes(neuron_id)) {
-          return 'block'
-        } else {
-          return 'none'
-        }
-      })
+  //   d3.selectAll('.node-' + graph_key)
+  //     .style('display', function(d) {
+  //       var neuron_id = d['key']
+  //       if (filtered_neurons.includes(neuron_id)) {
+  //         return 'block'
+  //       } else {
+  //         return 'none'
+  //       }
+  //     })
 
-    // Update the nodes' x_coordinates 
-    jitter_neurons(graph_key, node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  }
+  //   // Update the nodes' x_coordinates 
+  //   jitter_neurons(graph_key, node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
+  // }
 
 }
 
@@ -295,43 +359,7 @@ function get_value_key(graph_key, attack_type, eps) {
   return value_key
 }
 
-function get_x_domain_range(graph_key, node_data, attack_type, eps) {
-  var value_key = get_value_key(graph_key, attack_type, eps)
-  
-  // Initialize x_range
-  var x_range = {}
 
-  // Get the x_range
-  layers.forEach(layer => {
-    var filtered_nodes = filter_nodes(graph_key, layer, eps, node_data)
-
-    // Initialize x_range in the current layerㅁ
-    x_range[layer] = {}
-    x_domain_keys.forEach(x_domain_key => {
-      x_range[layer][x_domain_key] = [10000, -10000]
-    })
-
-    // Get x_range in the current layer
-    filtered_nodes.forEach(filtered_node => {
-      x_domain_keys.forEach(x_domain_key => {
-        let curr_x_val = filtered_node['value'][value_key][x_domain_key]
-        let prev_x_val_min = x_range[layer][x_domain_key][0]
-        let prev_x_val_max = x_range[layer][x_domain_key][1]
-
-        if (curr_x_val < prev_x_val_min) {
-          x_range[layer][x_domain_key][0] = curr_x_val
-        }
-
-        if (curr_x_val > prev_x_val_max) {
-          x_range[layer][x_domain_key][1] = curr_x_val
-        }
-      })
-      
-    })
-  })
-
-  return x_range
-}
 
 function gen_x_scale(graph_key, attack_type, eps) {
   // Get the value_key
