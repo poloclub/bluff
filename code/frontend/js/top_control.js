@@ -172,9 +172,9 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
 
     // Update the filter value
     if (filter_type == 'attack') {
-      curr_strengths[attack_type] = bar_to_domain(mouse_x)
-      curr_strengths[attack_type] = round_unit(curr_strengths[attack_type], domain_unit)
-      d3.select('#filter-bar-text-' + filter_type).text(curr_strengths[attack_type]) 
+      curr_strengths[curr_attack_type] = bar_to_domain(mouse_x)
+      curr_strengths[curr_attack_type] = round_unit(curr_strengths[curr_attack_type], domain_unit)
+      d3.select('#filter-bar-text-' + filter_type).text(curr_strengths[curr_attack_type]) 
       update_neurons_with_new_strength()
     } else {
       curr_filters[filter_type] = bar_to_domain(mouse_x)
