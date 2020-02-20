@@ -11,7 +11,7 @@ import {
 } from './constant.js';
 
 import { 
-  cur_attack_type,
+  curr_attack_type,
   curr_strengths,
   curr_filters 
  } from './top_control.js'
@@ -38,9 +38,9 @@ var vulnerability_range = {}
 var x_scale = {}
 var y_scale = {}
 
-var node_size_range = [15, 50]
+var node_size_range = [10, 30]
 var node_size_scale = {}
-var jitter_strength = 15
+var jitter_strength = -1
 var x_coordinate_duration = 1500
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -440,16 +440,15 @@ function draw_neurons_all_graph_key() {
   original_target.forEach(graph_key => {
     layers.forEach(layer => {
       var filtered_activations = filter_activations(graph_key, layer, 100)
-      
       draw_neurons(graph_key, 
                   layer, 
                   filtered_activations, 
                   x_domain_keys[0], 
-                  cur_attack_type, 
-                  curr_strengths[cur_attack_type], 
+                  curr_attack_type, 
+                  curr_strengths[curr_attack_type], 
                   vul_type)
     })
-    // jitter_neurons(graph_key, node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
+    jitter_neurons(graph_key, x_domain_keys[0])
   })
   // var graph_key = 'attacked'
   // epss.forEach(eps => {
@@ -471,7 +470,7 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, attack
     .data(filtered_activations)
     .enter()
     .append('rect')
-    .attr('id', function(d) { return gen_node_id(d, graph_key) })
+    .attr('id', function(d) { return gen_node_id(d['key'], graph_key) })
     .attr('class', 'node-' + graph_key)
     .attr('width', function(d) { return node_size(d) })
     .attr('height', function(d) { return node_size(d) })
@@ -491,35 +490,28 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, attack
 
   // Function for setting y coordinate of a neuron
   function y_coord_node(d, layer) {
-    var id = gen_node_id(d, graph_key)
+    var id = gen_node_id(d['key'], graph_key)
     var height = parseFloat(d3.select('#' + id).attr('height'))
     var starting_y = y_scale(layer)
     return starting_y - height / 2
   }
   
-  // Function for the size of neuron
+  // Function for the size of neuron based on the vulnerability
   function node_size(d) {
-    if (graph_key != 'attacked') {
+    if ((graph_key != 'attacked') && (curr_strengths[curr_attack_type] == 0)) {
       return node_size_range[0]
     } 
 
-    var value_key = get_value_key(graph_key, attack_type, strength)
-    var domain_val = d['value'][value_key][domain_key]
-    if (vul_type == 'overall_vulnerability') {
-      return node_size_scale['all'][vul_type][attack_type](domain_val)
-    } else if (vul_type == 'strengthwise_vulnerability') {
-      console.log(value_key)
-      console.log(node_size_scale['all'])
-      return node_size_scale['all'][vul_type][value_key](domain_val)
-    } else {
-      console.log('ERROR: wrong vul_type', vul_type)
-      return 0
-    }
+    var neuron = d['key']
+    var value_key = get_value_key('attacked', attack_type, strength)
+    var vul_val = vulnerability_data[layer][neuron][vul_type][attack_type][value_key]
+    return node_size_scale['all'][vul_type][value_key](vul_val)
+    
   }
 
   // Function for node color
   function node_color(d) {
-    var bucket = neuron_to_bucket(d['key'], layer, curr_filters['topK'], cur_attack_type)
+    var bucket = neuron_to_bucket(d['key'], layer, curr_filters['topK'], curr_attack_type)
     return bucket_colors[bucket]
   }
 
@@ -535,6 +527,60 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, attack
     }
   }
 }
+
+// Function for generate node id
+function gen_node_id(neuron_id, graph_key) {
+  return ['node', graph_key, neuron_id].join('-')
+}
+
+function jitter_neurons(graph_key, domain_key) {
+  // XXXXXX
+
+  // Get the value key
+  var value_key = get_value_key(graph_key, curr_attack_type, strengths[curr_attack_type])
+
+  layers.forEach(layer => {
+    // Get the current top neurons
+    var top_neurons = top_neuron_data[layer][value_key].slice(0, curr_filters['topK']).reverse()
+
+    // Get adjusted jittered x coordinates
+    var adjusted_x_coord = {}
+    var adjusted_x_range = [1000, 0]
+    var prev_end_x_coord = 0
+    top_neurons.forEach(neuron => {
+      var node = d3.select('#' + gen_node_id(neuron, graph_key))
+      var x_coord = parseFloat(node.attr('x'))
+      var width = parseFloat(node.attr('width'))
+      
+      if (prev_end_x_coord > x_coord) {
+        x_coord = prev_end_x_coord + jitter_strength
+      }
+      adjusted_x_coord[neuron] = x_coord
+      adjusted_x_range[0] = d3.min([adjusted_x_range[0], x_coord])
+      adjusted_x_range[1] = d3.max([adjusted_x_range[1], x_coord])
+      prev_end_x_coord = x_coord + width
+    })
+
+    // Compute a new scale for rescaling
+    var rescale = d3
+      .scaleLinear()
+      .domain(adjusted_x_range)
+      .range([0, div_width - ag_margin['right']])
+
+    // Jittering
+    top_neurons.forEach(neuron => {
+      d3.select('#' + gen_node_id(neuron, graph_key))
+        .transition()
+        .duration(x_coordinate_duration)
+        .attr('x', function(d) { return rescale(adjusted_x_coord[neuron]) })
+    })
+  })
+  
+}
+
+
+
+
 
 
 export function update_neurons_with_new_strength() {
@@ -576,64 +622,9 @@ function update_neurons_with_new_strength_by_graph_key(graph_key) {
 
 }
 
-// Function for generate node id
-function gen_node_id(d, graph_key) {
-  return ['node', graph_key, d['key']].join('-')
-}
 
-function jitter_neurons(graph_key, node_data, domain_key, attack_type, eps, vul_type) {
-  // Get the value key
-  var value_key = get_value_key(graph_key, attack_type, eps)
 
-  // Get the node margin before rescaled by juttering
-  var node_margin = jitter_strength
 
-  layers.forEach(layer => {
-    // Sort the neurons based on the domain values for the original x coords
-    // XXX sorting could be slow if we have many neurons
-    var filtered_nuerons = filter_nodes(graph_key, layer, eps, node_data)
-    filtered_nuerons = filtered_nuerons.sort(function (a, b) {
-      var val_a = a['value'][value_key][domain_key]
-      var val_b = b['value'][value_key][domain_key]
-      return d3.ascending(val_a, val_b)
-    })
-
-    // Get adjusted jittered x coordinates
-    var adjusted_x_coord = {}
-    var adjusted_x_range = [1000, 0]
-    var prev_end_x_coord = 0
-    filtered_nuerons.forEach(d => {
-      var neuron = d['key']
-      var node = d3.select('#' + gen_node_id(d, graph_key))
-      var x_coord = parseFloat(node.attr('x'))
-      var width = parseFloat(node.attr('width'))
-      
-      if (prev_end_x_coord + node_margin > x_coord) {
-        x_coord = prev_end_x_coord + node_margin
-      }
-      adjusted_x_coord[neuron] = x_coord
-      adjusted_x_range[0] = d3.min([adjusted_x_range[0], x_coord])
-      adjusted_x_range[1] = d3.max([adjusted_x_range[1], x_coord])
-      prev_end_x_coord = x_coord + width
-    })
-
-    // Compute a new scale for rescaling
-    var rescale = d3
-      .scaleLinear()
-      .domain(adjusted_x_range)
-      .range([0, div_width - ag_margin['right']])
-
-    // Jittering
-    filtered_nuerons.forEach(d => {
-      var neuron = d['key']
-      d3.select('#' + gen_node_id(d, graph_key))
-        .transition()
-        .duration(x_coordinate_duration)
-        .attr('x', function(d) { return rescale(adjusted_x_coord[neuron]) })
-    })
-  })
-  
-}
 
 // Functions for getting x coordinate of a neuron
 function x_coord_node(d, layer, graph_key, eps, domain_key) {
