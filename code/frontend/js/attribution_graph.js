@@ -40,7 +40,7 @@ var y_scale = {}
 
 var node_size_range = [10, 30]
 var node_size_scale = {}
-var jitter_strength = -1
+var jitter_strength = 3
 var x_coordinate_duration = 1500
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -448,26 +448,47 @@ function draw_neurons_all_graph_key() {
                   curr_strengths[curr_attack_type], 
                   vul_type)
     })
-    jitter_neurons(graph_key, x_domain_keys[0])
+    jitter_neurons(graph_key)
   })
-  // var graph_key = 'attacked'
-  // epss.forEach(eps => {
-  //   layers.forEach(layer => {
-  //     var filtered_nodes = filter_nodes(graph_key, layer, eps, node_data)
-  //     draw_neurons(graph_key, layer, filtered_nodes, x_domain_keys[0], attack_type, eps, vul_type)
-  //   })
-  //   jitter_neurons(graph_key, node_data, x_domain_keys[0], attack_type, curr_eps, vul_type)
-  // })
+
+  // Draw neurons in adverrsarial graph
+  var graph_key = 'attacked'
+  strengths[curr_attack_type].forEach(strength => {
+    layers.forEach(layer => {
+      var filtered_activations = filter_activations(graph_key, 
+                                                    layer, 
+                                                    100, 
+                                                    curr_attack_type, 
+                                                    curr_strengths[curr_attack_type])
+      draw_neurons(graph_key, 
+                  layer, 
+                  filtered_activations, 
+                  x_domain_keys[0], 
+                  curr_attack_type, 
+                  strength, 
+                  vul_type)
+    })
+    jitter_neurons(graph_key)
+  })
 }
 
 function draw_neurons(graph_key, layer, filtered_activations, domain_key, attack_type, strength, vul_type) {
 
-  // Need to exclude already-drawn neurons, if we are using different attack-type and different strength.
+  // Exclude already-drawn neurons
+  var more_filtered_activations = filtered_activations.filter(function(d) {
+    var neuron_id = d['key']
+    var node_id = gen_node_id(neuron_id, graph_key)
+    if (does_exist(node_id)) {
+      return false
+    } else {
+      return true
+    }
+  })
 
   // Draw neurons
   d3.select('#g-ag-' + graph_key)
     .selectAll('g')
-    .data(filtered_activations)
+    .data(more_filtered_activations)
     .enter()
     .append('rect')
     .attr('id', function(d) { return gen_node_id(d['key'], graph_key) })
@@ -518,9 +539,10 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, attack
   // Function for setting display of a node
   function display_node(d) {
     var neuron_id = d['key']
-    var value_key = get_value_key(graph_key, attack_type, strength)
+    
+    var value_key = get_value_key(graph_key, curr_attack_type, curr_strengths[curr_attack_type])
     var top_neurons = top_neuron_data[layer][value_key].slice(0, curr_filters['topK'])
-    if (top_neurons.includes(neuron_id)){
+    if ((strength == curr_strengths[curr_attack_type]) && top_neurons.includes(neuron_id)){
       return 'block'
     } else {
       return 'none'
@@ -533,11 +555,10 @@ function gen_node_id(neuron_id, graph_key) {
   return ['node', graph_key, neuron_id].join('-')
 }
 
-function jitter_neurons(graph_key, domain_key) {
-  // XXXXXX
+function jitter_neurons(graph_key) {
 
   // Get the value key
-  var value_key = get_value_key(graph_key, curr_attack_type, strengths[curr_attack_type])
+  var value_key = get_value_key(graph_key, curr_attack_type, curr_strengths[curr_attack_type])
 
   layers.forEach(layer => {
     // Get the current top neurons
