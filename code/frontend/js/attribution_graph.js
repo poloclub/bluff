@@ -767,8 +767,8 @@ export function update_neurons_with_new_vulnerability() {
 }
 
 function update_neurons_with_new_vulnerability_by_graph_key(graph_key) {
-  update_opacity()
-  // update_display()
+  // update_opacity()
+  update_display()
 
   // Update nodes' opacity
   function update_opacity() {
@@ -791,7 +791,8 @@ function update_neurons_with_new_vulnerability_by_graph_key(graph_key) {
         var neuron_id = d['key']
         var layer = neuron_id.split('-')[0]
         var bucket = neuron_to_bucket(neuron_id, layer, curr_filters['topK'], curr_attack_type)
-        if ((vul >= curr_filters['vulnerability']) && (bucket != -1)) {
+        var is_in_right_bucket = graph_key_to_buckets[graph_key].includes(bucket)
+        if ((vul >= curr_filters['vulnerability']) && is_in_right_bucket) {
           return 'block'
         } else {
           return 'none'
