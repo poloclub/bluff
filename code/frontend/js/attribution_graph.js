@@ -38,7 +38,7 @@ var vulnerability_range = {}
 var x_scale = {}
 var y_scale = {}
 
-var node_size_range = [6, 30]
+var node_size_range = [7, 30]
 var node_size_scale = {}
 var jitter_strength = 0
 var x_coordinate_duration = 1500
@@ -113,7 +113,6 @@ function sort_vulnerability_data() {
   })
   return sorted_vulnerability_data
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // General functions for the interface
@@ -544,7 +543,7 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     .enter()
     .append('rect')
     .attr('id', function(d) { return gen_node_id(d['key'], graph_key) })
-    .attr('class', 'node-' + graph_key)
+    .attr('class', 'node node-' + graph_key)
     .attr('width', function(d) { return node_size(d, graph_key, strength) })
     .attr('height', function(d) { return node_size(d, graph_key, strength) })
     .attr('x', function(d) { return x_coord_node(d, graph_key, strength, domain_key) })
@@ -654,14 +653,13 @@ function jitter_neurons(graph_key) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// Functions for drawing neurons
+// Functions for updated attack strength
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 export function update_neurons_with_new_strength() {
   update_neurons_with_new_strength_by_graph_key('original')
   update_neurons_with_new_strength_by_graph_key('target')
-  update_neurons_with_new_strength_by_graph_key('attacked')
-  
+  update_neurons_with_new_strength_by_graph_key('attacked')  
 }
 
 function update_neurons_with_new_strength_by_graph_key(graph_key) {
@@ -724,8 +722,42 @@ function update_neurons_with_new_strength_by_graph_key(graph_key) {
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for updated vulnerability
+////////////////////////////////////////////////////////////////////////////////////////////////
+export function update_neurons_with_new_vulnerability() {
+  update_neurons_with_new_vulnerability_by_graph_key('original')
+}
 
+function update_neurons_with_new_vulnerability_by_graph_key(graph_key) {
+  update_opacity()
 
+  // Update nodes' opacity
+  function update_opacity() {
+    d3.selectAll('.node')
+      .style('opacity', function(d) {
+        var vul = get_vulnerability(d)
+        if (vul >= curr_filters['vulnerability']) {
+          return 1
+        } else {
+          return 0.3
+        }
+      })
+  }
+
+  function get_vulnerability(d) {
+    var neuron_id = d['key']
+    var layer = neuron_id.split('-')[0]
+    var vul = vulnerability_data[layer][neuron_id][vul_type]
+    if (vul_type == 'overall_vulnerabiliity') {
+      vul = vul[curr_attack_type]
+    } else if (vul_type == 'strengthwise_vulnerability') {
+      var value_key = get_value_key('attacked', curr_attack_type, curr_strengths[curr_attack_type])
+      vul = vul[curr_attack_type][value_key]
+    }
+    return vul
+  }
+}
 
 
 

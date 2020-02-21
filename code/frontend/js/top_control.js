@@ -1,4 +1,8 @@
-import { update_neurons_with_new_strength } from './attribution_graph.js';
+import { 
+  update_neurons_with_new_strength,
+  update_neurons_with_new_vulnerability 
+} from './attribution_graph.js';
+
 import { 
   strengths, 
   top_ks, 
@@ -171,14 +175,12 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
 
     var max_domain_val = d3.max(domains)
     var domain_unit = max_domain_val / domains.length
-    console.log(domain_unit)
 
     // Update the filter value
     if (filter_type == 'attack') {
       curr_strengths[curr_attack_type] = bar_to_domain(mouse_x)
       curr_strengths[curr_attack_type] = round_unit(curr_strengths[curr_attack_type], domain_unit)
       d3.select('#filter-bar-text-' + filter_type).text(curr_strengths[curr_attack_type]) 
-      update_neurons_with_new_strength()
     } else {
       curr_filters[filter_type] = bar_to_domain(mouse_x)
       curr_filters[filter_type] = round_unit(curr_filters[filter_type], domain_unit)
@@ -188,6 +190,13 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
     // Position the circle and the front bar
     d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
     d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+
+    // Update attribution graph
+    if (filter_type == 'attack') {
+      update_neurons_with_new_strength()
+    } else if (filter_type == 'vulnerability') {
+      update_neurons_with_new_vulnerability()
+    }
   }
 
   function circle_drag_end() {

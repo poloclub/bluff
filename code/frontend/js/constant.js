@@ -4,9 +4,9 @@ export var strengths = {'pgd': [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0
 export var default_strengths = {'pgd': 0.5}
 
 // Other filter information
-export var top_ks = [5, 10, 15, 20, 25, 30]
+export var top_ks = Array.from(Array(40).keys()).map(x => x + 1)
 export var vulnerabilities = Array.from(Array(20).keys()).map(x => Math.round(x) / 4 + 0.25)
-export var default_filters = {'topK': 20, 'vulnerability': 1.0}
+export var default_filters = {'topK': 40, 'vulnerability': 1.0}
 
 // Bucket information
 export var bucket_colors = {
