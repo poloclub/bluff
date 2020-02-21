@@ -699,9 +699,49 @@ export function update_neurons_with_new_strength() {
 
 function update_neurons_with_new_strength_by_graph_key(graph_key) {
   
+  update_node_display()
+  jitter_neurons(graph_key)
   update_node_color()
   update_node_size()
-  update_node_x_coordinates()
+
+  function update_node_display() {
+    if ((graph_key == 'attacked') && (curr_strengths[curr_attack_type] == 0)) {
+      d3.selectAll('.node-' + graph_key).style('display', 'none')
+    } else {
+      // Get nodes to display
+      var filtered_neurons = []
+      layers.forEach(layer => {
+        // Filter nodes by top-k value
+        var filtered_nodes = filter_activations(graph_key, 
+                                                layer, 
+                                                curr_filters['topK'], 
+                                                curr_attack_type, 
+                                                curr_strengths[curr_attack_type])
+        // Filter nodes one more by vulnerability
+        filtered_nodes = filtered_nodes.filter(function(d) {
+          var neuron_id = d['key']
+          var layer = neuron_id.split('-')[0]
+          var vul = vulnerability_data[layer][neuron_id][vul_type][curr_attack_type]
+          if (vul_type == 'strengthwise_vulnerability') {
+            var value_key = get_value_key('attacked', curr_attack_type, curr_strengths[curr_attack_type])
+            vul = vul[value_key]
+          }
+          return vul >= curr_filters['vulnerability']
+        })
+        filtered_neurons = filtered_neurons.concat(filtered_nodes.map(x => x['key']))
+      })
+
+      d3.selectAll('.node-' + graph_key)
+        .style('display', function(d) {
+          var neuron_id = d['key']
+          if (filtered_neurons.includes(neuron_id)) {
+            return 'block'
+          } else {
+            return 'none'
+          }
+        })
+    }
+  }
 
   function update_node_color() {
     d3.selectAll('.node-' + graph_key)
@@ -720,38 +760,6 @@ function update_neurons_with_new_strength_by_graph_key(graph_key) {
         .attr('height', function(d) { return node_size(d, graph_key, curr_strengths[curr_attack_type]) })
         .attr('rx', function(d) { return 0.3 * node_size(d, graph_key, curr_strengths[curr_attack_type]) })
         .attr('y', function(d) { return y_coord_node(d, graph_key) })
-    }
-  }
-
-  function update_node_x_coordinates() {
-    if (graph_key == 'attacked') {
-      if (curr_strengths[curr_attack_type] == 0) {
-        d3.selectAll('.node-' + graph_key).style('display', 'none')
-      } else {
-        // Display setting update of nodes in adversarial graph
-        var filtered_neurons = []
-        layers.forEach(layer => {
-          var filtered_nodes = filter_activations(graph_key, 
-                                                  layer, 
-                                                  curr_filters['topK'], 
-                                                  curr_attack_type, 
-                                                  curr_strengths[curr_attack_type])
-          filtered_neurons = filtered_neurons.concat(filtered_nodes.map(x => x['key']))
-        })
-  
-        d3.selectAll('.node-' + graph_key)
-          .style('display', function(d) {
-            var neuron_id = d['key']
-            if (filtered_neurons.includes(neuron_id)) {
-              return 'block'
-            } else {
-              return 'none'
-            }
-          })
-  
-        // Update the nodes' x_coordinates 
-        jitter_neurons(graph_key)
-      }
     }
   }
 
