@@ -4,12 +4,13 @@ import {
   top_ks, 
   default_strengths, 
   default_filters,
-  filter_bar_length 
+  filter_bar_length, 
+  vulnerabilities
 } from './constant.js';
 
 export var curr_attack_type = 'pgd'
 export var curr_strengths = {'pgd': default_strengths['pgd']}
-export var curr_filters = {'topK': default_filters['topK'], 'vulnerability': 0.5}
+export var curr_filters = {'topK': default_filters['topK'], 'vulnerability': default_filters['vulnerability']}
 
 // Define top-control div
 var top_control = document.createElement('div')
@@ -23,13 +24,14 @@ top_control_horizontal_line.setAttribute('noshade', 'true')
 top_control.appendChild(top_control_horizontal_line)
 
 // Attack dropdown
-// Todo: need to add other attacks
+// TODO: need to add other attacks
 var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', curr_attack_type)
 top_control.appendChild(attack_type_control)
 attack_type_control.style.setProperty('transform', 'translate(100px, -13px)')
 
 // Attack strength control bar
 gen_filter_bar(strengths[curr_attack_type], default_strengths[curr_attack_type], 'Attack Strength', 'attack')
+gen_filter_bar(vulnerabilities, default_filters['vulnerability'], 'Vulnerability', 'vulnerability')
 gen_filter_bar(top_ks, default_filters['topK'], 'Top-k', 'topK')
 
 
@@ -169,6 +171,7 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
 
     var max_domain_val = d3.max(domains)
     var domain_unit = max_domain_val / domains.length
+    console.log(domain_unit)
 
     // Update the filter value
     if (filter_type == 'attack') {
@@ -188,6 +191,7 @@ function gen_filter_bar(domains, default_val, title, filter_type) {
   }
 
   function circle_drag_end() {
+
     // Update the circle's color 
     d3.select('#filter-bar-circle-' + filter_type)
       .style('fill', 'white')

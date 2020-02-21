@@ -38,7 +38,7 @@ var vulnerability_range = {}
 var x_scale = {}
 var y_scale = {}
 
-var node_size_range = [10, 30]
+var node_size_range = [6, 30]
 var node_size_scale = {}
 var jitter_strength = 0
 var x_coordinate_duration = 1500
@@ -52,9 +52,14 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   activation_data = data[0]
   vulnerability_data = data[1]
   top_neuron_data = data[2]
-  console.log(activation_data)
-  console.log(top_neuron_data)
-  console.log(vulnerability_data)
+
+  // Parse vulnerability data
+  parse_vulnerability_data()
+  var sorted_vulnerability_data = sort_vulnerability_data()
+  window.activation_data = activation_data
+  window.vulnerability_data = vulnerability_data
+  window.top_neuron_data = top_neuron_data
+  window.sorted_vulnerability_data = sorted_vulnerability_data
 
   // Generate x, y scale
   gen_x_y_scales()
@@ -68,7 +73,50 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
 })
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// General functions
+// Parse dataset
+////////////////////////////////////////////////////////////////////////////////////////////////
+function parse_vulnerability_data() {
+  layers.forEach(layer => {
+    for (var neuron in vulnerability_data[layer]) {
+      attack_types.forEach(attack_type => {
+        var accumulated_vul = 0
+        strengths[attack_type].forEach((strength, i) => {
+          var value_key = get_value_key('attacked', attack_type, strength)
+          var curr_strengthwise_vul = vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key]
+          accumulated_vul += curr_strengthwise_vul
+          vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key] = accumulated_vul 
+        })
+        
+      })
+    }
+  })
+}
+
+function sort_vulnerability_data() {
+  // Sort neurons by overall vulnerability
+  var sorted_vulnerability_data = {}
+  attack_types.forEach(attack_type => {
+    sorted_vulnerability_data[attack_type] = {}
+    layers.forEach(layer => {
+      sorted_vulnerability_data[attack_type][layer] = Object
+        .keys(vulnerability_data[layer])
+        .map(function(key) {
+          return [key, vulnerability_data[layer][key]]
+        })
+      sorted_vulnerability_data[attack_type][layer].sort(function(a, b) {
+        var a_overall_vul = a[1]['overall_vulnerability'][attack_type]
+        var b_overall_vul = b[1]['overall_vulnerability'][attack_type]
+        return b_overall_vul - a_overall_vul
+      })
+
+    })
+  })
+  return sorted_vulnerability_data
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// General functions for the interface
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 function neuron_to_bucket(neuron_id, layer, top_k, attack_type) {
@@ -478,7 +526,7 @@ function draw_neurons_all_graph_key() {
 
 function draw_neurons(graph_key, layer, filtered_activations, domain_key, strength) {
 
-  // Exclude already-drawn neurons
+  // Get neurons excluding already-drawn ones
   var more_filtered_activations = filtered_activations.filter(function(d) {
     var neuron_id = d['key']
     var node_id = gen_node_id(neuron_id, graph_key)
@@ -529,7 +577,7 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
 function node_size(d, graph_key, strength) {
 
   if ((graph_key != 'attacked') && (strength == 0)) {
-    return node_size_range[0]
+    return node_size_range[0] - 5
   } 
 
   var neuron = d['key']

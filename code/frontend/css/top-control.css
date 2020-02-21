@@ -93,6 +93,22 @@
   transform: translate(345px, 23px);
 }
 
+#filter-bar-front-vulnerability {
+  transform: translate(150px, 15px);
+}
+
+#filter-bar-background-vulnerability {
+  transform: translate(150px, 15px);
+}
+
+#filter-bar-circle-vulnerability {
+  transform: translate(150px, 15px);
+}
+
+#filter-bar-text-vulnerability {
+  transform: translate(325px, 23px);
+} 
+
 #filter-bar-front-topK {
   transform: translate(90px, 15px);
 }
