@@ -7,7 +7,8 @@ import {
   bucket_colors,
   x_domain_keys,
   vulnerability_domain_keys,
-  strengths
+  strengths,
+  graph_key_to_buckets
 } from './constant.js';
 
 import { 
@@ -218,6 +219,15 @@ function does_exist(id) {
     return true
   } else {
     return false
+  }
+}
+
+function is_displayed(id) {
+  var element = document.getElementById(id)
+  if (element.style.display == 'none') {
+    return false
+  } else {
+    return true
   }
 }
 
@@ -543,7 +553,7 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     .enter()
     .append('rect')
     .attr('id', function(d) { return gen_node_id(d['key'], graph_key) })
-    .attr('class', 'node node-' + graph_key)
+    .attr('class', function() { return node_class() })
     .attr('width', function(d) { return node_size(d, graph_key, strength) })
     .attr('height', function(d) { return node_size(d, graph_key, strength) })
     .attr('x', function(d) { return x_coord_node(d, graph_key, strength, domain_key) })
@@ -551,6 +561,14 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     .attr('rx', function(d) { return 0.3 * node_size(d, graph_key, strength) })
     .attr('fill', function(d) { return node_color(d) })
     .style('display', function(d) { return display_node(d) })
+
+  // Function for node class
+  function node_class() {
+    var class1 = 'node'
+    var class2 = ['node', graph_key].join('-')
+    var class3 = ['node', graph_key, layer].join('-')
+    return [class1, class2, class3].join(' ')
+  }
 
   // Function for node color
   function node_color(d) {
@@ -612,16 +630,33 @@ function jitter_neurons(graph_key) {
   var value_key = get_value_key(graph_key, curr_attack_type, curr_strengths[curr_attack_type])
 
   // jittering -> start from the x_scale!!
-
   layers.forEach(layer => {
-    // Get the current top neurons
-    var top_neurons = top_neuron_data[layer][value_key].slice(0, curr_filters['topK']).reverse()
+    // Get the currently displayed nodes
+    var displayed_nodes = d3
+      .selectAll('.' + ['node', graph_key, layer].join('-'))
+      .filter(function(d) {
+        var neuron_id = d['key']
+        var node_id = gen_node_id(neuron_id, graph_key)
+        return is_displayed(node_id)
+      })
+    
+    var displayed_neurons = displayed_nodes._groups[0]
+      .sort(function (a, b) {
+        var a_x = parseFloat(a.getAttribute('x'))
+        var b_x = parseFloat(b.getAttribute('x'))
+        return a_x - b_x
+      })
+      .map(node => {
+        var node_id_split = node.id.split('-').slice(-2)
+        var neuron_id = node_id_split.join('-')
+        return neuron_id
+      })
 
     // Get adjusted jittered x coordinates
     var adjusted_x_coord = {}
     var adjusted_x_range = [1000, 0]
     var prev_end_x_coord = 0
-    top_neurons.forEach(neuron => {
+    displayed_neurons.forEach(neuron => {
       var node = d3.select('#' + gen_node_id(neuron, graph_key))
       var x_coord = parseFloat(node.attr('x'))
       var width = parseFloat(node.attr('width'))
@@ -642,7 +677,7 @@ function jitter_neurons(graph_key) {
       .range([0, div_width - ag_margin['right']])
 
     // Jittering
-    top_neurons.forEach(neuron => {
+    displayed_neurons.forEach(neuron => {
       d3.select('#' + gen_node_id(neuron, graph_key))
         .transition()
         .duration(x_coordinate_duration)
@@ -727,14 +762,17 @@ function update_neurons_with_new_strength_by_graph_key(graph_key) {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 export function update_neurons_with_new_vulnerability() {
   update_neurons_with_new_vulnerability_by_graph_key('original')
+  update_neurons_with_new_vulnerability_by_graph_key('target')
+  update_neurons_with_new_vulnerability_by_graph_key('attacked')
 }
 
 function update_neurons_with_new_vulnerability_by_graph_key(graph_key) {
   update_opacity()
+  // update_display()
 
   // Update nodes' opacity
   function update_opacity() {
-    d3.selectAll('.node')
+    d3.selectAll('.node-' + graph_key)
       .style('opacity', function(d) {
         var vul = get_vulnerability(d)
         if (vul >= curr_filters['vulnerability']) {
@@ -743,6 +781,23 @@ function update_neurons_with_new_vulnerability_by_graph_key(graph_key) {
           return 0.3
         }
       })
+  }
+
+  // Update nodes' display
+  function update_display() {
+    d3.selectAll('.node-' + graph_key)
+      .style('display', function(d) {
+        var vul = get_vulnerability(d)
+        var neuron_id = d['key']
+        var layer = neuron_id.split('-')[0]
+        var bucket = neuron_to_bucket(neuron_id, layer, curr_filters['topK'], curr_attack_type)
+        if ((vul >= curr_filters['vulnerability']) && (bucket != -1)) {
+          return 'block'
+        } else {
+          return 'none'
+        }
+      })
+    jitter_neurons(graph_key)
   }
 
   function get_vulnerability(d) {
