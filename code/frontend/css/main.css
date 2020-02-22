@@ -1,68 +1,12 @@
 @import url('https://fonts.googleapis.com/css?family=Oxygen&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Barlow|Oxygen&display=swap');
 
-:root {
-  --attack-from-color: rgb(60, 120, 240);
-  --attack-to-color: rgb(240, 120, 60);
-  --strength_bar_length: 150;
-  --neuron_img_width: 50px;
-  --neuron_img_height: 50px;
-  --neuron_ex_box_padding: 20px;
-  --neuron_img_lr: 10px;
-  --neuron_img_tb: 40px;
-  --ex_img_width: 40px;
-  --ex_img_height: 40px;
-  --ex_img_lr: 4px;
-  --ex_img_tb: 4px;
-  --ex_start_x: 7px;
-  --ex_start_y: 22px;
-  --neuron_group_lr: 40px;
-  --ag_start_y: 100px;
-}
-
 body {
   margin: 0;
   font-family: 'Barlow', sans-serif;
 }
 
-#svg-left {
-  width: 100%; 
-  /* width: 80%; */
+#svg-ag-all {
+  width: 1200px;
   height: 1000px;
-  display: inline-block;
-}
-
-#ag-title {
-  transform: translate(100px, 0px);
-  height: 40px;
-  display: inline-block;
-  width: 80%;
-}
-
-#analysis-title {
-  height: 40px;
-  display: inline-block;
-}
-
-#analysis-txt {
-  transform: translate(0px, -990px);
-  display: inline-block;
-}
-
-.stop-left {
-  stop-color: #3f51b5;
-}
-
-.stop-right {
-  stop-color: #009688;
-}
-
-.filled {
-  fill: url(#mainGradient);
-}
-
-.outlined {
-  fill: none;
-  stroke: url(#mainGradient);
-  stroke-width: 4;
 }
