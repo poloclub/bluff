@@ -38,11 +38,73 @@ attribution_graph_option.appendChild(attack_to_class_control)
 attack_to_class_control.style.width = div_width + 'px'
 attack_to_class_control.style.setProperty('transform', 'translateX(588px)')
 
-// Newline
-var dummy_newline = document.createElement('div')
-document.body.appendChild(dummy_newline)
+// var transform_dict = {}
 
 // Generate graph views
+// d3.select('body')
+//   .append('div')
+//   .attr('id', 'main-div')
+
+// d3.select('#main-div')
+//   .append('svg')
+//   .attr('id', 'main-svg')
+//   .attr('width', 1200)
+//   .attr('height', 1000)
+//   .call(
+//     d3.zoom()
+//       .on('zoom', function() {
+//         var mouse_x = d3.mouse(this)[0]
+//         if (mouse_x < 210) {
+//           d3.select('#g-11')
+//             .attr('transform', d3.event.transform)
+//         } else if (mouse_x < 410) {
+//           d3.select('#g-22')
+//             .attr('transform', d3.event.transform)
+//         } else {
+//           d3.select('#g-33')
+//             .attr('transform', d3.event.transform)
+//         }
+        
+//       })
+//   )
+
+// d3.select('#main-svg')
+//   .append('g')
+//   .attr('id', 'g-1')
+//   .attr('transform', 'translate(10, 10)')
+// d3.select('#g-1')
+//   .append('g')
+//   .attr('id', 'g-11')
+//   .append('circle')
+//   .attr('r', 20)
+//   .attr('cx', 100)
+//   .attr('cy', 100)
+
+// d3.select('#main-svg')
+//   .append('g')
+//   .attr('id', 'g-2')
+//   .attr('transform', 'translate(210, 10)')
+// d3.select('#g-2')
+//   .append('g')
+//   .attr('id', 'g-22')
+//   .append('circle')
+//   .attr('r', 20)
+//   .attr('cx', 100)
+//   .attr('cy', 100)
+
+// d3.select('#main-svg')
+//   .append('g')
+//   .attr('id', 'g-3')
+//   .attr('transform', 'translate(410, 10)')
+// d3.select('#g-3')
+//   .append('g')
+//   .attr('id', 'g-33')
+//   .append('circle')
+//   .attr('r', 20)
+//   .attr('cx', 100)
+//   .attr('cy', 100)
+
+
 gen_attribution_graph_view('original')
 gen_attribution_graph_view('attacked')
 gen_attribution_graph_view('target')

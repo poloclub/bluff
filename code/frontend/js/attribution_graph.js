@@ -8,7 +8,8 @@ import {
   x_domain_keys,
   vulnerability_domain_keys,
   strengths,
-  graph_key_to_buckets
+  graph_key_to_buckets,
+  node_box
 } from './constant.js';
 
 import { 
@@ -536,15 +537,7 @@ function draw_neurons_all_graph_key() {
 function draw_neurons(graph_key, layer, filtered_activations, domain_key, strength) {
 
   // Get neurons excluding already-drawn ones
-  var more_filtered_activations = filtered_activations.filter(function(d) {
-    var neuron_id = d['key']
-    var node_id = gen_node_id(neuron_id, graph_key)
-    if (does_exist(node_id)) {
-      return false
-    } else {
-      return true
-    }
-  })
+  var more_filtered_activations = filter_out_already_displayed()
 
   // Draw neurons
   d3.select('#g-ag-' + graph_key)
@@ -561,6 +554,7 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     .attr('rx', function(d) { return 0.3 * node_size(d, graph_key, strength) })
     .attr('fill', function(d) { return node_color(d) })
     .style('display', function(d) { return display_node(d) })
+    .on('mouseover', function(d) { return mouseover_node(d) })
 
   // Function for node class
   function node_class() {
@@ -568,6 +562,20 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     var class2 = ['node', graph_key].join('-')
     var class3 = ['node', graph_key, layer].join('-')
     return [class1, class2, class3].join(' ')
+  }
+
+  // Filter out already displayed nodes
+  function filter_out_already_displayed() {
+    var more_filtered_activations = filtered_activations.filter(function(d) {
+      var neuron_id = d['key']
+      var node_id = gen_node_id(neuron_id, graph_key)
+      if (does_exist(node_id)) {
+        return false
+      } else {
+        return true
+      }
+    })
+    return more_filtered_activations
   }
 
   // Function for node color
@@ -587,6 +595,44 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     } else {
       return 'none'
     }
+  }
+
+  // Function for mouseover on nodes
+  function mouseover_node(d) {
+    // Get element
+    var neuron_id = d['key']
+    var node_id = gen_node_id(neuron_id, graph_key)
+    var node = d3.select('#' + node_id)
+
+    // Mouse pointer
+    node.style('cursor', 'pointer')
+
+    // Position of node
+    var x = parseFloat(node.attr('x'))
+    var y = parseFloat(node.attr('y'))
+    var w = parseFloat(node.attr('width'))
+    var h = parseFloat(node.attr('height'))
+    var end_x = x + w
+    var center_y = y + h / 2
+
+    // Draw a box
+    // var box_id = node_box_id(neuron_id)
+    // if (!does_exist(box_id)) {
+    //   d3.select('#g-ag-' + graph_key)
+    //     .append('rect')
+    //     .attr('id', box_id)
+    //     .attr('class', 'node-box')
+    //     .attr('x', end_x + node_box['left'])
+    //     .attr('y', center_y - node_box['height'] / 2)
+    //     .attr('width', node_box['width'])
+    //     .attr('height', node_box['height'])
+
+    // }
+    // XXXXXX
+  }
+
+  function node_box_id(neuron_id) {
+    return ['node', 'box', graph_key, neuron_id].join('-')
   }
 }
 
