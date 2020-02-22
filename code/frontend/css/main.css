@@ -7,6 +7,17 @@ body {
 }
 
 #svg-ag-all {
-  width: 1200px;
+  /* width: 1300px; */
   height: 1000px;
+}
+
+.g-wrapper-rect {
+  width: 500px;
+  height: 1000px;
+}
+
+.g-padding-rect {
+  width: 100px;
+  height: 1000px;
+  fill: white;
 }

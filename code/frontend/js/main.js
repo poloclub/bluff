@@ -1,21 +1,5 @@
-import {gen_top_dropdown} from "./top_control.js";
-import { layers, div_width, div_height, ag_margin } from './constant.js';
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-// Global variable
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-// var div_margins = {
-//   'original': 100,
-//   'attacked': 100,
-//   'target': 100
-// }
-
-var div_margins = {
-  'original': 115,
-  'attacked': 510,
-  'target': 910
-}
+import { gen_top_dropdown } from "./top_control.js";
+import { div_width, ag_margins } from './constant.js';
 
 // Graph filter
 var attribution_graph_option = document.createElement('div')
@@ -44,69 +28,78 @@ attribution_graph_option.appendChild(attack_to_class_control)
 attack_to_class_control.style.width = div_width + 'px'
 attack_to_class_control.style.setProperty('transform', 'translateX(588px)')
 
-// Generate div for attribution graphs
+// Generate div for attribution graph
 d3.select('body')
   .append('div')
   .attr('id', 'div-ag')
 
-// Generate the main svg for attribution graphs
+// Generate the main svg for
 d3.select('#div-ag')
   .append('svg')
-  .attr('id', 'svg-ag')
-  .attr('height', 1200)
-  .attr('width', 1200)
+  .attr('id', 'svg-ag-all')
+  .attr('width', ag_margins['total'])
 
-
+// Generate attribution graph views
 gen_attribution_graph_view('original')
+add_padding_svg('original')
 gen_attribution_graph_view('attacked')
+add_padding_svg('attacked')
 gen_attribution_graph_view('target')
+
+// Make attribution graph views zoomable
 make_graph_view_zoomable('original')
 make_graph_view_zoomable('attacked')
 make_graph_view_zoomable('target')
 
-d3.select('#svg-ag')
-  .append('circle')
-  .style('fill', 'red')
-  .attr('r', 50)
-  .attr('cx', 400)
-  .attr('cy', 90)
-
+// Function to generate attribution graph view
 function gen_attribution_graph_view(graph_key) {
-  
-  d3.select('#svg-ag')
+  d3.select('#svg-ag-all')
     .append('svg')
-    .attr('id', 'div-ag-' + graph_key)
-    .attr('class', 'div-ag')
+    .attr('id', 'svg-wrapper-ag-' + graph_key)
+    .attr('class', 'svg-wrapper-ag')
 
-
-  d3.select('#div-ag-' + graph_key)
+  d3.select('#svg-wrapper-ag-' + graph_key)
     .append('g')
-    .attr('id', 'ggg-' + graph_key)
-    .attr('transform', 'translate(' + div_margins[graph_key] + ', 0)')
-    // .style('margin-left', div_margins[graph_key] + 'px')
+    .attr('id', 'g-wrapper-ag-' + graph_key)
+    .attr('class', 'g-wrapper')
+    .attr('transform', 'translate(' + ag_margins[graph_key] + ', 0)')
 
-  d3.select('#ggg-' + graph_key)
+  d3.select('#g-wrapper-ag-' + graph_key)
     .append('rect')
-    .attr('width', 500)
-    .attr('height', 1000)
-  // Generate svg
-  // d3.select('#div-ag-' + graph_key)
-  d3.select('#ggg-' + graph_key)
+    .attr('class', 'g-wrapper-rect')
+
+  d3.select('#g-wrapper-ag-' + graph_key)
     .append('svg')
     .attr('id', 'svg-ag-' + graph_key)
     .attr('class', 'svg-ag')
 
-  // Generate g
   d3.select('#svg-ag-' + graph_key)
     .append('g')
     .attr('id', 'g-ag-' + graph_key)
     .attr('class', 'g-ag')
-
 }
 
+// Function to add padding svg between attribution graphs
+function add_padding_svg(graph_key) {
+  d3.select('#svg-ag-all')
+    .append('svg')
+    .attr('id', 'svg-padding-' + graph_key)
+    .attr('class', 'svg-padding')
+
+  d3.select('#svg-padding-' + graph_key)
+    .append('g')
+    .attr('id', 'g-padding-' + graph_key)
+    .attr('class', 'g-padding')
+    .attr('transform', 'translate(' + ag_margins[graph_key + '-padding'] + ', 0)')
+  
+  d3.select('#g-padding-' + graph_key) 
+    .append('rect')
+    .attr('class', 'g-padding-rect')
+}
+
+// Function to make attribution graph zoomable
 function make_graph_view_zoomable(graph_key) {
-  // d3.select('#div-ag-' + graph_key)
-  d3.select('#ggg-' + graph_key)
+  d3.select('#g-wrapper-ag-' + graph_key)
     .call(
       d3.zoom()
         .on('zoom', function(){
@@ -115,5 +108,7 @@ function make_graph_view_zoomable(graph_key) {
         })
     )
 }
+
+
 
 

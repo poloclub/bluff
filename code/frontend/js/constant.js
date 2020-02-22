@@ -40,6 +40,21 @@ export var div_height = 600
 export var ag_margin = {'top': 50, 'bottom': 50, 'left': 50, 'right': 50}
 export var node_box = {'left': 10, 'width': 400, 'height': 100}
 
+// Attribution graph margin
+var ag_first_margin = 100
+var ag_width = 350
+var ag_padding = 50
+
+export var ag_margins = {
+  'original': ag_first_margin,
+  'original-padding': ag_first_margin + ag_width,
+  'attacked': ag_first_margin + ag_width + ag_padding,
+  'attacked-padding': ag_first_margin + 2 * ag_width + ag_padding,
+  'target': ag_first_margin + 2 * ag_width + 2 * ag_padding,
+  'total': ag_first_margin + 3 * ag_width + 2 * ag_padding
+}
+
+
 
 function rgbToHex (rgb) { 
   var hex = Number(rgb).toString(16);
