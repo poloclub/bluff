@@ -7,3 +7,6 @@ export var option_box_style = {
   'option-bot': 8,
   'highlight-opacity': 0.2
 }
+
+// Fontawsome icon (https://fontawesome.com/cheatsheet?from=io)
+export var icons = {'angle-up': '\uf106', 'angle-down': '\uf107'}

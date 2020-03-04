@@ -6,11 +6,6 @@ var header = document.createElement('div')
 header.setAttribute('id', 'header')
 document.body.appendChild(header)
 
-// Graph filter
-var attribution_graph_option = document.createElement('div')
-attribution_graph_option.setAttribute('id', 'ag-option')
-document.body.appendChild(attribution_graph_option)
-
 // Generate div for attribution graph
 d3.select('body')
   .append('div')
@@ -19,10 +14,10 @@ d3.select('body')
 // Generate svg for attribution graph and nodebox
 d3.select('#div-main')
   .append('svg')
-  .attr('id', 'svg-ag-wrapper')
+  .attr('id', 'svg-main')
 
 // Generate the main svg for all attribution graphs
-d3.select('#svg-ag-wrapper')
+d3.select('#svg-main')
   .append('svg')
   .attr('id', 'svg-ag-all')
   .attr('width', ag_margins['total'])
@@ -35,12 +30,17 @@ add_padding_svg('attacked')
 gen_attribution_graph_view('target')
 
 // Generate svg for node box
-d3.select('#svg-ag-wrapper')
+d3.select('#svg-main')
   .append('svg')
   .attr('id', 'svg-ag-nodebox')
+  
+// Generate svg for attack option
+d3.select('#svg-main')
+  .append('svg')
+  .attr('id', 'svg-attack-option')
 
 // Generate svg for class option box
-d3.select('#svg-ag-wrapper')
+d3.select('#svg-main')
   .append('svg')
   .attr('id', 'svg-class-option-box')
 

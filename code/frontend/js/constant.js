@@ -1,13 +1,13 @@
-// Classes
+// Class
 export var class_pairs = {
   'brown_bear': ['american_black_bear'],
   'giant_panda': ['armadillo']
 }
 
-// Attack information
-export var attack_types = ['pgd']
-export var strengths = {'pgd': [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]}
-export var default_strengths = {'pgd': 0.5}
+// Attack
+export var attack_types = ['pgd', 'fsgm']
+export var attack_strengths = {'pgd': [0.1, 0.2, 0.3, 0.4, 0.5]}
+export var attack_default_strengths = {'pgd': 0.1, 'fsgm': 0.1}
 
 // Other filter information
 export var top_ks = Array.from(Array(50).keys()).map(x => x + 1)

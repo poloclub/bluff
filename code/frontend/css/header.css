@@ -76,30 +76,3 @@
   font-size: 15px;
 }
 
-/*
-
-.header-dropdown {
-  border: 1px lightgray solid;
-  border-radis: 10px;
-  display: inline-block;
-  width: 200px;
-  height: 30px;
-  transform: translate(0px, 2px);
-}
-
-
-.header-dropdown-title {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(10px, -3px);
-  color: gray;
-}
-
-
-.header-dropdown-val {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(15px, -3px);
-  font-weight: bold;
-}
- */

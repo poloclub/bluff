@@ -1,3 +1,7 @@
+//////////////////////////////////////////////////////////////////////////////////////////
+// Import variables
+//////////////////////////////////////////////////////////////////////////////////////////
+
 import { 
   class_pairs
 } from './constant.js';
@@ -8,7 +12,7 @@ import {
 } from './style.js'
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Global variable
+// Global variables
 //////////////////////////////////////////////////////////////////////////////////////////
 
 export var selected_class = {'original': '-', 'target': '-'}
@@ -83,7 +87,7 @@ function draw_subtitle() {
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Main division
+// Generate dropdown menu
 //////////////////////////////////////////////////////////////////////////////////////////
 
 function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
@@ -314,7 +318,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
           d3.select('#class-dropdown-text-target').text('- - - Select - - -')
         }
       }
-      
+
       var curr_class_text = document.getElementById('class-dropdown-text-' + original_or_target)
       curr_class_text.innerText = class_name_for_display(class_name)
       selected_class[original_or_target] = class_name
@@ -352,82 +356,3 @@ function get_absolute_position(element_id) {
   var rect = element.getBoundingClientRect();
   return [rect.left, rect.top, rect.right, rect.bottom]
 }
-
-
-// // Attack from
-// var attack_from_class_control = gen_dropdown('from-dropdown', '', 'Giant Panda', class_pairs[0])
-// // gen_header_dropdown('from-dropdown', 'Giant Panda')
-// sub_title_2_2.appendChild(attack_from_class_control)
-
-// // Attack to
-// var attack_to_class_control = gen_header_dropdown('to-dropdown', 'Armadillo')
-// sub_title_2_4.appendChild(attack_to_class_control)
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// Functions for generating dropdown menu
-//////////////////////////////////////////////////////////////////////////////////////////
-
-
-// function gen_dropdown(dropdown_id, title, default_val, val_list) {
-//   // Define element
-//   var control = document.createElement('div')
-//   var control_val = document.createElement('div')
-//   var control_icon = document.createElement('div')
-  
-//   // Define control overview
-//   control.setAttribute('id', dropdown_id)
-//   control.setAttribute('class', 'header-dropdown')
-
-//   // Define value
-//   control_val.setAttribute('id', dropdown_id + '-val')
-//   control_val.setAttribute('class', 'header-dropdown-val')
-//   control_val.innerText = default_val.toUpperCase()
-
-//   // Define icon
-//   control_icon.setAttribute('id', dropdown_id + '-icon')
-//   control_icon.setAttribute('class', 'header-dropdown-icon')
-//   control_icon.innerHTML = '<i class="fas fa-caret-down dropdown-header-before-icon"></i>'
-
-//   // Append the element to the document
-//   control.appendChild(control_val)
-//   control.appendChild(control_icon)
-//   return control
-// }
-
-// Generate dropdown options
-// export function gen_dropdown(dropdown_id, title, default_val, val_list) {
-//   // Define element
-//   var control = document.createElement('div')
-//   var control_val = document.createElement('div')
-//   var control_icon = document.createElement('div')
-  
-//   // Define control overview
-//   control.setAttribute('id', dropdown_id)
-//   control.setAttribute('class', 'top-control-dropdown')
-  
-//   // Define value
-//   control_val.setAttribute('id', dropdown_id + '-val')
-//   control_val.setAttribute('class', 'top-control-dropdown-val')
-//   control_val.innerText = default_val.toUpperCase()
-
-//   // Define icon
-//   control_icon.setAttribute('id', dropdown_id + '-icon')
-//   control_icon.setAttribute('class', 'top-control-dropdown-icon')
-//   control_icon.innerHTML = '<i class="fas fa-caret-down"></i>'
-
-//   // Append the element to the document
-//   control.appendChild(control_val)
-//   control.appendChild(control_icon)
-
-//   // Append title
-//   if (title != '') {
-//     var control_title = document.createElement('div')
-//     control_title.setAttribute('id', dropdown_id + '-title')
-//     control_title.setAttribute('class', 'top-control-dropdown-title')
-//     control_title.innerText = title + ': '
-//     control.appendChild(control_title)
-//   }
-//   return control
-// }
