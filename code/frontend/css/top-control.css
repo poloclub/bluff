@@ -2,9 +2,15 @@
   height: 70px;
 }
 
+#top-control-title {
+  display: inline-block;
+  font-size: 20px;
+  transform: translate(100px, 19px);
+}
+
 #top-control-horizontal-line {
   width: 5000px;
-  transform: translate(0px, 50px);
+  transform: translate(0px, 24px);
   border-color: lightgray;
   border-width: 0.5px;
 }
@@ -33,18 +39,20 @@
 .top-control-dropdown-icon {
   display: inline-block;
   float: right;
-  transform: translate(-6px, 5px);
+  transform: translate(-7px, -2px);
   color: gray;
+  font-size: 25px;
 }
 
 #top-control-attack-dropdown {
   width: 200px;
+  transform: translate(320px, -38px);
 }
 
 .svg-filter-bar {
   display: inline-block;
   height: 35px;
-  transform: translate(100px, 0px);
+  transform: translate(330px, -25px);
   width: 400px;
 }
 

@@ -1,40 +1,28 @@
-import { gen_top_dropdown } from "./top_control.js";
-import { div_width, ag_margins } from './constant.js';
+
+import { ag_margins } from './constant.js';
+
+// Add header
+var header = document.createElement('div')
+header.setAttribute('id', 'header')
+document.body.appendChild(header)
 
 // Graph filter
 var attribution_graph_option = document.createElement('div')
 attribution_graph_option.setAttribute('id', 'ag-option')
 document.body.appendChild(attribution_graph_option)
 
-// From class
-var attack_from_class_control = gen_top_dropdown('graph-filter-from-dropdown', 'Attack from', 'Giant Panda')
-attribution_graph_option.appendChild(attack_from_class_control)
-attack_from_class_control.style.width = div_width + 'px'
-attack_from_class_control.style.setProperty('transform', 'translateX(100px)')
-
-// Adversarial
-var adversarial_text = document.createElement('div')
-attribution_graph_option.appendChild(adversarial_text)
-adversarial_text.setAttribute('id', 'graph-adversarial')
-adversarial_text.style.setProperty('display', 'inline')
-adversarial_text.style.setProperty('transform', 'translate(280px, 5px)')
-adversarial_text.style.setProperty('position', 'absolute')
-adversarial_text.style.setProperty('font-size', '20px')
-adversarial_text.innerHTML = 'ADVERSARIAL'
-
-// To class
-var attack_to_class_control = gen_top_dropdown('graph-filter-to-dropdown', 'Attack to', 'Armadillo')
-attribution_graph_option.appendChild(attack_to_class_control)
-attack_to_class_control.style.width = div_width + 'px'
-attack_to_class_control.style.setProperty('transform', 'translateX(588px)')
-
 // Generate div for attribution graph
 d3.select('body')
   .append('div')
-  .attr('id', 'div-ag')
+  .attr('id', 'div-main')
 
-// Generate the main svg for
-d3.select('#div-ag')
+// Generate svg for attribution graph and nodebox
+d3.select('#div-main')
+  .append('svg')
+  .attr('id', 'svg-ag-wrapper')
+
+// Generate the main svg for all attribution graphs
+d3.select('#svg-ag-wrapper')
   .append('svg')
   .attr('id', 'svg-ag-all')
   .attr('width', ag_margins['total'])
@@ -45,6 +33,16 @@ add_padding_svg('original')
 gen_attribution_graph_view('attacked')
 add_padding_svg('attacked')
 gen_attribution_graph_view('target')
+
+// Generate svg for node box
+d3.select('#svg-ag-wrapper')
+  .append('svg')
+  .attr('id', 'svg-ag-nodebox')
+
+// Generate svg for class option box
+d3.select('#svg-ag-wrapper')
+  .append('svg')
+  .attr('id', 'svg-class-option-box')
 
 // Make attribution graph views zoomable
 make_graph_view_zoomable('original')
@@ -108,7 +106,5 @@ function make_graph_view_zoomable(graph_key) {
         })
     )
 }
-
-
 
 

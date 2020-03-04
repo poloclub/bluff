@@ -6,14 +6,19 @@ body {
   font-family: 'Barlow', sans-serif;
 }
 
+#svg-ag-wrapper {
+  width: 1600px;
+  height: 1000px;
+}
+
 #svg-ag-all {
-  /* width: 1300px; */
   height: 1000px;
 }
 
 .g-wrapper-rect {
   width: 500px;
   height: 1000px;
+  fill: white;
 }
 
 .g-padding-rect {

@@ -12,6 +12,8 @@ import {
   vulnerabilities
 } from './constant.js';
 
+import { gen_top_dropdown } from "./header.js";
+
 export var curr_attack_type = 'pgd'
 export var curr_strengths = {'pgd': default_strengths['pgd']}
 export var curr_filters = {'topK': default_filters['topK'], 'vulnerability': default_filters['vulnerability']}
@@ -20,6 +22,12 @@ export var curr_filters = {'topK': default_filters['topK'], 'vulnerability': def
 var top_control = document.createElement('div')
 top_control.setAttribute('id', 'top-control')
 document.body.appendChild(top_control)
+
+// Section title
+var top_control_title = document.createElement('div')
+top_control_title.innerText = 'How to manipulate'
+top_control_title.setAttribute('id', 'top-control-title')
+top_control.appendChild(top_control_title)
 
 // Horizontal line
 var top_control_horizontal_line = document.createElement('hr')
@@ -31,51 +39,11 @@ top_control.appendChild(top_control_horizontal_line)
 // TODO: need to add other attacks
 var attack_type_control = gen_top_dropdown('top-control-attack-dropdown', 'Attack', curr_attack_type)
 top_control.appendChild(attack_type_control)
-attack_type_control.style.setProperty('transform', 'translate(100px, -13px)')
 
 // Attack strength control bar
 gen_filter_bar(strengths[curr_attack_type], default_strengths[curr_attack_type], 'Attack Strength', 'attack')
-gen_filter_bar(vulnerabilities, default_filters['vulnerability'], 'Vulnerability', 'vulnerability')
-gen_filter_bar(top_ks, default_filters['topK'], 'Top-k', 'topK')
 
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// Functions for generating dropdown menu
-//////////////////////////////////////////////////////////////////////////////////////////
-
-// Generate dropdown options
-export function gen_top_dropdown(dropdown_id, title, default_val) {
-  // Define element
-  var control = document.createElement('div')
-  var control_title = document.createElement('div')
-  var control_val = document.createElement('div')
-  var control_icon = document.createElement('div')
-  
-  // Define control overview
-  control.setAttribute('id', dropdown_id)
-  control.setAttribute('class', 'top-control-dropdown')
-
-  // Define title
-  control_title.setAttribute('id', dropdown_id + '-title')
-  control_title.setAttribute('class', 'top-control-dropdown-title')
-  control_title.innerText = title + ': '
-
-  // Define value
-  control_val.setAttribute('id', dropdown_id + '-val')
-  control_val.setAttribute('class', 'top-control-dropdown-val')
-  control_val.innerText = default_val.toUpperCase()
-
-  // Define icon
-  control_icon.setAttribute('id', dropdown_id + '-icon')
-  control_icon.setAttribute('class', 'top-control-dropdown-icon')
-  control_icon.innerHTML = '<i class="fas fa-caret-down"></i>'
-
-  // Append the element to the document
-  control.appendChild(control_title)
-  control.appendChild(control_val)
-  control.appendChild(control_icon)
-  return control
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Functions for generating filter bar

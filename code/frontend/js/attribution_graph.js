@@ -9,7 +9,8 @@ import {
   vulnerability_domain_keys,
   strengths,
   graph_key_to_buckets,
-  node_box
+  node_box,
+  feature_vis_dir
 } from './constant.js';
 
 import { 
@@ -17,6 +18,8 @@ import {
   curr_strengths,
   curr_filters 
  } from './top_control.js'
+
+//  import { gen_top_dropdown } from "./header.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Set data directory
@@ -40,7 +43,7 @@ var vulnerability_range = {}
 var x_scale = {}
 var y_scale = {}
 
-var node_size_range = [7, 30]
+var node_size_range = [10, 40]
 var node_size_scale = {}
 var jitter_strength = 0
 var x_coordinate_duration = 1500
@@ -555,6 +558,7 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     .attr('fill', function(d) { return node_color(d) })
     .style('display', function(d) { return display_node(d) })
     .on('mouseover', function(d) { return mouseover_node(d) })
+    .on('mouseout', function(d) { return mouseout_node(d) })
 
   // Function for node class
   function node_class() {
@@ -602,37 +606,126 @@ function draw_neurons(graph_key, layer, filtered_activations, domain_key, streng
     // Get element
     var neuron_id = d['key']
     var node_id = gen_node_id(neuron_id, graph_key)
-    var node = d3.select('#' + node_id)
+    var node = document.getElementById(node_id)
 
     // Mouse pointer
-    node.style('cursor', 'pointer')
+    node.style.cursor = 'pointer'
 
     // Position of node
-    var x = parseFloat(node.attr('x'))
-    var y = parseFloat(node.attr('y'))
-    var w = parseFloat(node.attr('width'))
-    var h = parseFloat(node.attr('height'))
-    var end_x = x + w
-    var center_y = y + h / 2
+    var node_rect = node.getBoundingClientRect()
+    var node_x = node_rect.right 
+    var node_y = (node_rect.top + node_rect.bottom) / 2 - 190
 
     // Draw a box
-    // var box_id = node_box_id(neuron_id)
-    // if (!does_exist(box_id)) {
-    //   d3.select('#g-ag-' + graph_key)
-    //     .append('rect')
-    //     .attr('id', box_id)
-    //     .attr('class', 'node-box')
-    //     .attr('x', end_x + node_box['left'])
-    //     .attr('y', center_y - node_box['height'] / 2)
-    //     .attr('width', node_box['width'])
-    //     .attr('height', node_box['height'])
+    var box_id = node_box_id(neuron_id)
+    if (!does_exist(box_id)) {
 
-    // }
-    // XXXXXX
+      // Add nodebox
+      d3.select('#svg-ag-nodebox')
+        .append('g')
+        .attr('id', box_id)
+        .attr('transform', function() {
+          var x = node_x + node_box['left']
+          var y = node_y - node_box['height'] / 2
+          return 'translate(' + x + ',' + y +')'
+        })
+
+      // Draw background rect
+      draw_bg_rect(box_id)
+
+      // Draw a feature vis
+      draw_fv(box_id)
+
+      // Draw example patches
+      draw_examples(box_id)
+    } else {
+      d3.select('#' + box_id)
+        .style('display', 'block')
+        .attr('transform', function() {
+          var x = node_x + node_box['left']
+          var y = node_y - node_box['height'] / 2
+          console.log(node_x)
+          return 'translate(' + x + ',' + y +')'
+        })
+    }
+
+    function draw_bg_rect(box_id) {
+      d3.select('#' + box_id)
+        .append('rect')
+        .attr('id', box_id + '-bg')
+        .attr('class', 'nodebox-bg')
+        // .attr('x', node_x + node_box['left'])
+        // .attr('y', node_y - node_box['height'] / 2)
+        .attr('width', node_box['width'])
+        .attr('height', node_box['height'])
+    }
+
+    function draw_fv(box_id) {
+      d3.select('#' + box_id)
+        .append('image')
+        .attr('id', box_id + '-fv')
+        .attr('class', 'nodebox-fv')
+        .attr('xlink:href', vis_filename(neuron_id, 'channel'))
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('transform', function() { return fv_transform() })
+        .attr('width', node_box['fv-width'])
+        .attr('height', node_box['fv-height'])
+    }
+
+    function draw_examples(box_id) {
+      for(var i = 0; i < 4; i++) {
+        d3.select('#' + box_id)
+          .append('image')
+          .attr('id', box_id + '-ex-' + i)
+          .attr('class', 'nodebox-ex')
+          .attr('xlink:href', vis_filename(neuron_id, 'ex-' + i))
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('transform', function() { return ex_transform(i) })
+          .attr('width', node_box['fv-width'])
+          .attr('height', node_box['fv-height'])
+      }
+    }
+
+    function fv_transform() {
+      var x = node_box['fv-left']
+      var y = - node_box['fv-height'] / 2 + 50
+      return 'translate(' + x + ',' + y + ')'
+    }
+
+    function ex_transform(i) {
+      var x = node_box['left'] + node_box['ex-left'] + i * (node_box['ex-padding'] + node_box['ex-width']) - 10
+      var y = - node_box['ex-height'] / 2 + 50
+      return 'translate(' + x + ',' + y + ')'
+    }
+
+    function vis_filename(neuron_id, type) {
+      var filename = feature_vis_dir + '/'
+      if (type == 'channel') {
+        filename += 'channel/'
+        filename += [neuron_id, type].join('-')
+        filename += '.jpg'
+      } else if (type.includes('ex')) {
+        var ex = type.split('-')[1]
+        filename += 'dataset-p/'
+        filename += [neuron_id, 'dataset', 'p', ex].join('-')
+        filename += '.jpg'
+      }
+      return filename
+    }
   }
 
+  // Function for mouseout
+  function mouseout_node(d) {
+    var neuron_id = d['key']
+    var box_id = node_box_id(neuron_id)
+    d3.select('#' + box_id).style('display', 'none')
+  }
+
+  // Define node box id
   function node_box_id(neuron_id) {
-    return ['node', 'box', graph_key, neuron_id].join('-')
+    return ['nodebox', graph_key, neuron_id].join('-')
   }
 }
 

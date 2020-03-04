@@ -16,31 +16,9 @@
   display: inline;
 }
 
-.ex-box {
-  width: 230px;
-  height: 110px;
-  stroke: darkgray;
+.nodebox-bg {
   fill: white;
+  stroke: gray;
+  stroke-width: 1px;
+  rx: 10;
 }
-
-.ex-box-title {
-  font-weight: bold;
-  fill: rgb(100, 100, 100);
-}
-
-.neuron-number {
-  font-size: 13px;
-  stroke: white;
-  stroke-width: 0.2px;
-}
-
-.annotation-details {
-  font-size: 25px;
-}
-
-.annotation-arrows {
-  stroke: black;
-  stroke-width: 2px;
-  stroke-linecap: round;
-}
-
