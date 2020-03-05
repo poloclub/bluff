@@ -11,18 +11,6 @@ body {
   height: 1000px;
 }
 
-#svg-ag-all {
+#svg-ag {
   height: 1000px;
-}
-
-.g-wrapper-rect {
-  width: 500px;
-  height: 1000px;
-  fill: white;
-}
-
-.g-padding-rect {
-  width: 100px;
-  height: 1000px;
-  fill: white;
 }

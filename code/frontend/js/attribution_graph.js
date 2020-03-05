@@ -1,503 +1,371 @@
-// import { 
-//   layers, 
-//   div_width, 
-//   div_height, 
-//   ag_margin,
-//   attack_types,
-//   bucket_colors,
-//   x_domain_keys,
-//   vulnerability_domain_keys,
-//   strengths,
-//   graph_key_to_buckets,
-//   node_box,
-//   feature_vis_dir
-// } from './constant.js';
+import { 
+  layers,
+  top_k,
+  rough_top_k,
+  attack_types,
+  attack_strengths
+} from './constant.js';
 
-// import { 
-//   curr_attack_type,
-//   curr_strengths,
-//   curr_filters 
-//  } from './attack_control.js'
+import {
+  graph_margin,
+  node_color
+} from './style.js';
 
-// //  import { gen_top_dropdown } from "./header.js";
+import { 
+  selected_attack_info
+} from './attack_control.js'
 
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Set data directory
-// ////////////////////////////////////////////////////////////////////////////////////////////////
+// //  import { gen_top_dropdown } from './header.js';
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Set data directory
+////////////////////////////////////////////////////////////////////////////////////////////////
 // var neuron_data_dir = '../../../massif/neurons/'
-// var activation_data_path = neuron_data_dir + 'neuron_data-giant_panda-armadillo-pgd.json'
-// var vulnerability_data_path = neuron_data_dir + 'neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
-// var top_neuron_data_path = neuron_data_dir + 'top_neurons-giant_panda-armadillo-pgd.json'
-// var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
+var data_dir = '../../data/'
+var activation_data_path = data_dir + 'neuron_data/neuron_data-giant_panda-armadillo-pgd.json'
+var vulnerability_data_path = data_dir + 'neuron_vulnerabilities/neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
+var top_neuron_data_path = data_dir + 'top_neurons/top_neurons-giant_panda-armadillo-pgd.json'
+var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Global variables
+////////////////////////////////////////////////////////////////////////////////////////////////
+var activation_data = {}
+var vulnerability_data = {}
+var top_neuron_data = {}
+var extracted_neurons = {}
+
+var unique_attack_only_neurons = {}
+
+var sorted_vulnerability_data = {}
+var vul_type = 'strengthwise_vulnerability'
+
+var node_size = {}
+var node_group_x = {}
+var y_coords = {}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Main part for drawing the attribution graphs 
 // ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Global variables
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// var activation_data = {}
-// var vulnerability_data = {}
-// var top_neuron_data = {}
-// var vul_type = 'strengthwise_vulnerability'
+Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
 
-// var x_domain_range = {}
-// var vulnerability_range = {}
-// var x_scale = {}
-// var y_scale = {}
+  // Read the neuron data
+  activation_data = data[0]
+  vulnerability_data = data[1]
+  top_neuron_data = data[2]
 
-// var node_size_range = [10, 40]
-// var node_size_scale = {}
-// var jitter_strength = 0
-// var x_coordinate_duration = 1500
+  // Parse vulnerability data
+  parse_vulnerability_data()
+  sorted_vulnerability_data = sort_vulnerability_data()
+  extracted_neurons = extract_neurons()
 
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Main part for drawing the attribution graphs 
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
+  // Generate x, y coordinate info
+  gen_x_coords()
+  gen_y_coords()
 
-//   // Read the neuron data
-//   activation_data = data[0]
-//   vulnerability_data = data[1]
-//   top_neuron_data = data[2]
+  // Draw nodes
+  draw_neurons()
 
-//   // Parse vulnerability data
-//   parse_vulnerability_data()
-//   var sorted_vulnerability_data = sort_vulnerability_data()
-//   window.activation_data = activation_data
-//   window.vulnerability_data = vulnerability_data
-//   window.top_neuron_data = top_neuron_data
-//   window.sorted_vulnerability_data = sorted_vulnerability_data
+  window.activation_data = activation_data
+  window.vulnerability_data = vulnerability_data
+  window.top_neuron_data = top_neuron_data
+  window.sorted_vulnerability_data = sorted_vulnerability_data
+  window.extracted_neurons = extracted_neurons
+  window.node_size = node_size
+  window.node_group_x = node_group_x
+  window.y_coords = y_coords
 
-//   // Generate x, y scale
-//   gen_x_y_scales()
 
-//   // Generate node size scale 
-//   gen_node_size_scale()
+})
 
-//   // Draw nodes in the attribution graphs
-//   draw_neurons_all_graph_key()
-
-// })
-
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Parse dataset
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// function parse_vulnerability_data() {
-//   layers.forEach(layer => {
-//     for (var neuron in vulnerability_data[layer]) {
-//       attack_types.forEach(attack_type => {
-//         var accumulated_vul = 0
-//         strengths[attack_type].forEach((strength, i) => {
-//           var value_key = get_value_key('attacked', attack_type, strength)
-//           var curr_strengthwise_vul = vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key]
-//           accumulated_vul += curr_strengthwise_vul
-//           vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key] = accumulated_vul 
-//         })
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Parse dataset
+////////////////////////////////////////////////////////////////////////////////////////////////
+function parse_vulnerability_data() {
+  layers.forEach(layer => {
+    for (var neuron in vulnerability_data[layer]) {
+      attack_types.forEach(attack_type => {
+        var accumulated_vul = 0
+        attack_strengths[attack_type].forEach((strength, i) => {
+          var value_key = get_value_key('attacked', attack_type, strength)
+          var curr_strengthwise_vul = vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key]
+          accumulated_vul += curr_strengthwise_vul
+          vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key] = accumulated_vul 
+        })
         
-//       })
-//     }
-//   })
-// }
+      })
+    }
+  })
+}
 
-// function sort_vulnerability_data() {
-//   // Sort neurons by overall vulnerability
-//   var sorted_vulnerability_data = {}
-//   attack_types.forEach(attack_type => {
-//     sorted_vulnerability_data[attack_type] = {}
-//     layers.forEach(layer => {
-//       sorted_vulnerability_data[attack_type][layer] = Object
-//         .keys(vulnerability_data[layer])
-//         .map(function(key) {
-//           return [key, vulnerability_data[layer][key]]
-//         })
-//       sorted_vulnerability_data[attack_type][layer].sort(function(a, b) {
-//         var a_overall_vul = a[1]['overall_vulnerability'][attack_type]
-//         var b_overall_vul = b[1]['overall_vulnerability'][attack_type]
-//         return b_overall_vul - a_overall_vul
-//       })
+function sort_vulnerability_data() {
+  // Sort neurons by overall vulnerability
+  var sorted_vulnerability_data = {}
+  attack_types.forEach(attack_type => {
+    sorted_vulnerability_data[attack_type] = {}
+    layers.forEach(layer => {
+      sorted_vulnerability_data[attack_type][layer] = Object
+        .keys(vulnerability_data[layer])
+        .map(function(key) {
+          return [key, vulnerability_data[layer][key]]
+        })
+      sorted_vulnerability_data[attack_type][layer].sort(function(a, b) {
+        var a_overall_vul = a[1]['overall_vulnerability'][attack_type]
+        var b_overall_vul = b[1]['overall_vulnerability'][attack_type]
+        return b_overall_vul - a_overall_vul
+      })
 
-//     })
-//   })
-//   return sorted_vulnerability_data
-// }
+    })
+  })
+  return sorted_vulnerability_data
+}
 
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // General functions for the interface
-// ////////////////////////////////////////////////////////////////////////////////////////////////
+function extract_neurons() {
+  var extracted_neurons = {}
 
-// function neuron_to_bucket(neuron_id, layer, top_k, attack_type) {
+  layers.forEach(layer => {
+    extracted_neurons[layer] = {}
+
+    // Extract original class' neurons
+    var rough_original = top_neuron_data[layer]['original'].slice(0, rough_top_k)
   
-//   var layer = neuron_id.split('-')[0]
+    // Extract target class' neurons
+    var rough_target = top_neuron_data[layer]['target'].slice(0, rough_top_k)
 
-//   // See if the neuron is in the original graph's top neuron list
-//   var is_in_original = is_in_topk('original')
+    // Extract intersection
+    var extracted_original_target = get_intersection(rough_original, rough_target)
+    var extracted_original = get_difference(rough_original, extracted_original_target).slice(0, top_k)
+    var extracted_target = get_difference(rough_target, extracted_original_target).slice(0, top_k)
+    extracted_neurons[layer]['original'] = extracted_original
+    extracted_neurons[layer]['target'] = extracted_target
+    extracted_neurons[layer]['original-and-target'] = extracted_original_target.slice(0, top_k)
 
-//   // See if the neuron is in the attacked graph's top neuron list
-//   var is_in_attacked = false
-//   if (curr_strengths[attack_type] != 0) {
-//     var attacked_key = ['attacked', attack_type, curr_strengths[attack_type].toFixed(2)].join('-')
-//   is_in_attacked = is_in_topk(attacked_key)
-//   }
+    // Extract neurons in adversarial graph
+    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+      var attacked_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+      var rough_attacked = top_neuron_data[layer][attacked_key].slice(0, rough_top_k)
+      var extracted_attacked = get_difference(rough_attacked, rough_original)
+      extracted_attacked = get_difference(rough_attacked, rough_target)
+      extracted_neurons[layer]['only-' + attacked_key] = extracted_attacked.slice(0, parseInt(top_k / 2))
+    })
+  })
 
-//   // See if the neuron is in the target graph's top neuron list
-//   var is_in_target = is_in_topk('target')
+  return extracted_neurons
 
-//   // Get the bucket
-//   var bucket = get_bucket_from_belongings(is_in_original, is_in_attacked, is_in_target)
-//   return bucket
+  function get_intersection(lst1, lst2) {
+    var intersection = []
+    lst1.forEach(e1 => {
+      if (lst2.includes(e1)) {
+        intersection.push(e1)
+      }
+    })
+    return intersection
+  }
 
-//   function is_in_topk(key) {
-//     return top_neuron_data[layer][key]
-//       .slice(0, top_k)
-//       .includes(neuron_id)
-//   }
-
-//   function get_bucket_from_belongings(is_in_original, is_in_attacked, is_in_target) {
-//     // Bucket 1
-//     if (is_in_original && !is_in_attacked && !is_in_target) {
-//       return 1
-//     }
-
-//     // Bucket 2
-//     if (is_in_original && is_in_attacked && !is_in_target) {
-//       return 2
-//     }
-
-//     // Bucket 3
-//     if (!is_in_original && is_in_attacked && !is_in_target) {
-//       return 3
-//     }
-
-//     // Bucket 4
-//     if (is_in_original && !is_in_attacked && is_in_target) {
-//       return 4
-//     }
-
-//     // Bucket 5
-//     if (is_in_original && is_in_attacked && is_in_target) {
-//       return 5
-//     }
-
-//     // Bucket 6
-//     if (!is_in_original && is_in_attacked && is_in_target) {
-//       return 6
-//     }
-
-//     // Bucket 7
-//     if (!is_in_original && !is_in_attacked && is_in_target) {
-//       return 7
-//     } 
-
-//     // Not included in any bucket
-//     return -1
-
-//   }
+  function get_difference(lst1, lst2) {
+    // lst1 - lst2
+    var diff = []
+    lst1.forEach(e1 => {
+      if (!(lst2.includes(e1))) {
+        diff.push(e1)
+      }
+    })
+    return diff
+  }
   
-// }
+}
 
-// function filter_activations(graph_key, layer, top_k, attack_type, strength) {
-//   // Filter nodes' activation based on top neuron list
+////////////////////////////////////////////////////////////////////////////////////////////////
+// General functions
+////////////////////////////////////////////////////////////////////////////////////////////////
 
-//   var value_key = get_value_key(graph_key, attack_type, strength)
+function get_value_key(graph_key, attack_type, strength) {
+  var value_key = graph_key
+  if (graph_key == 'attacked') {
+    value_key = [graph_key, attack_type, strength.toFixed(2)].join('-')
+  }
+  return value_key
+}
 
-//   var filtered_nodes = d3
-//     .entries(activation_data[layer])
-//     .filter(function(d) {
-//       var neuron_id = d['key']
-//       return top_neuron_data[layer][value_key].slice(0, top_k).includes(neuron_id)
-//     })
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for generating x, y scales
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+function gen_x_coords() {
+
+  // Count out the total number of unique neurons in attack only
+  unique_attack_only_neurons = count_unique_neurons_neither_original_nor_target()
+  var max_num_attacked_only = get_max_num_attacked_only()
+
+  // Set node group x coordinates
+  node_size = calculate_node_size()
+  set_node_group_x_coords()
+
+  function set_node_group_x_coords() {
+
+    attack_types.forEach(attack_type => {
+      node_group_x[attack_type] = {}        
+      var w = node_size[attack_type]
+
+      // Set original group
+      node_group_x[attack_type]['original'] = {}
+      node_group_x[attack_type]['original']['start_x'] = graph_margin['start_x']
+      node_group_x[attack_type]['original']['end_x'] = node_group_x[attack_type]['original']['start_x'] + length_node_group(top_k, w)
+
+      // Set intersection group
+      node_group_x[attack_type]['original-and-target'] = {}
+      node_group_x[attack_type]['original-and-target']['start_x'] = node_group_x[attack_type]['original']['end_x'] + graph_margin['group_lr']
+      node_group_x[attack_type]['original']['end_x'] = node_group_x[attack_type]['original-and-target']['start_x'] + length_node_group(top_k, w)
+
+      // Set attack only group
+      node_group_x[attack_type]['attack-only'] = {}
+      node_group_x[attack_type]['attack-only']['start_x'] = node_group_x[attack_type]['original']['end_x'] + graph_margin['group_lr']
+      node_group_x[attack_type]['attack-only']['end_x'] = node_group_x[attack_type]['attack-only']['start_x'] + length_node_group(max_num_attacked_only[attack_type], w)
+
+      // Set target group
+      node_group_x[attack_type]['target'] = {}
+      node_group_x[attack_type]['target']['start_x'] = node_group_x[attack_type]['attack-only']['end_x'] + graph_margin['group_lr']
+      node_group_x[attack_type]['target']['end_x'] = node_group_x[attack_type]['target']['start_x'] + length_node_group(top_k, w) 
+    })
+  }
+
+  function length_node_group(num, node_size) {
+    return num * (node_size + graph_margin['node_lr']) - graph_margin['node_lr']
+  }    
   
-//   return filtered_nodes
-// }
+  function get_max_num_attacked_only() {
+    var max_num_attacked_only = {}
+    attack_types.forEach(attack_type => {
+      max_num_attacked_only[attack_type] = 0
+      layers.forEach(layer => {
+        var num = unique_attack_only_neurons[attack_type][layer].length
+        max_num_attacked_only[attack_type] = d3.max([max_num_attacked_only[attack_type], num])
+      })
+    })
+    return max_num_attacked_only
+  }
 
-// function get_value_key(graph_key, attack_type, strength) {
-//   // console.log(strength)
-//   var value_key = graph_key
-//   if (graph_key == 'attacked') {
-//     value_key = [graph_key, attack_type, strength.toFixed(2)].join('-')
-//   }
-//   return value_key
-// }
+  function calculate_node_size() {
+    
+    // Initialize node_size
+    var node_size = {}
 
-// function does_exist(id) {
-//   var element = document.getElementById(id)
-//   if (element) {
-//     return true
-//   } else {
-//     return false
-//   }
-// }
-
-// function is_displayed(id) {
-//   var element = document.getElementById(id)
-//   if (element.style.display == 'none') {
-//     return false
-//   } else {
-//     return true
-//   }
-// }
-
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Functions for generating x, y scales
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-
-// function gen_x_y_scales() {
-
-//   // Generate x scale for original class
-//   x_domain_range['original'] = get_x_domain_range('original')
-//   x_scale['original'] = gen_x_scale('original')
-
-//   // Generate x scale for target class
-//   x_domain_range['target'] = get_x_domain_range('target')
-//   x_scale['target'] = gen_x_scale('target')
-
-//   attack_types.forEach(attack_type => {
-//     strengths[attack_type].forEach(strength => {
-//       var value_key = get_value_key('attacked', attack_type, strength)
-//       x_domain_range[value_key] = get_x_domain_range('attacked', attack_type, strength)
-//       x_scale[value_key] = gen_x_scale('attacked', attack_type, strength)
-//     })
-//   })
-
-//   // Generate y scale
-//   y_scale = gen_y_scale()
-// }
-
-// function get_x_domain_range(graph_key, attack_type, strength) {
-//   /*
-//   Get the range of domain values
-//   - input 
-//     + graph_key: one of ['original', 'adversarial', 'target']
-//     + attack_type: attack type
-//     + strength: the strength of attack
-//   */
-
-//   // Get the value key to access to the activation values
-//   var value_key = get_value_key(graph_key, attack_type, strength)
-  
-//   // Initialize x_range
-//   var x_range = {}
-
-//   // Get the x_range
-//   layers.forEach(layer => {
-//     var filtered_nodes = filter_activations(graph_key, layer, 100, attack_type, strength)
-
-//     // Initialize x_range in the current layer
-//     x_range[layer] = {}
-//     x_domain_keys.forEach(x_domain_key => {
-//       x_range[layer][x_domain_key] = [10000, -10000]
-//     })
-
-//     // Get x_range in the current layer
-//     filtered_nodes.forEach(filtered_node => {
-//       x_domain_keys.forEach(x_domain_key => {
-//         let curr_x_val = filtered_node['value'][value_key][x_domain_key]
-//         let prev_x_val_min = x_range[layer][x_domain_key][0]
-//         let prev_x_val_max = x_range[layer][x_domain_key][1]
-
-//         if (curr_x_val < prev_x_val_min) {
-//           x_range[layer][x_domain_key][0] = curr_x_val
-//         }
-
-//         if (curr_x_val > prev_x_val_max) {
-//           x_range[layer][x_domain_key][1] = curr_x_val
-//         }
-//       })
+    attack_types.forEach(attack_type => {
+      // Get the maximum total number of neurons in a layer
+      var num = max_num_attacked_only[attack_type] + (top_k * 3)
       
-//     })
-//   })
+      // Get the node_size
+      var size = graph_margin['end_x'] - graph_margin['start_x']
+      size = size - 3 * graph_margin['group_lr'] - (num - 1) * graph_margin['node_lr']
+      size = size / num
+      node_size[attack_type] = parseInt(size)
+    })
 
-//   return x_range
-// }
+    return node_size
+  }
 
-// function gen_x_scale(graph_key, attack_type, strength) {
+  function count_unique_neurons_neither_original_nor_target() {
+    var unique_neurons = {}
+    attack_types.forEach(attack_type => {
+      unique_neurons[attack_type] = {}
+      layers.forEach(layer => {
+        unique_neurons[attack_type][layer] = []
+        attack_strengths[attack_type].forEach(strength => {
+          var attacked_key = 'only-' + get_value_key('attacked', attack_type, strength)
+          unique_neurons[attack_type][layer] = keep_unique(unique_neurons[attack_type][layer], extracted_neurons[layer][attacked_key])
+        })
+      })
+    })
+    return unique_neurons
+  }
 
-//   // Get the value_key
-//   var value_key = get_value_key(graph_key, attack_type, strength)
+  function keep_unique(lst, items) {
+    items.forEach(item => {
+      if (!(lst.includes(item))) {
+        lst.push(item)
+      }
+    })
+    return lst
+  }
+}
+
+function gen_y_coords() {
+  var num_layers = layers.length
+  var unit_height = (graph_margin['end_y'] - graph_margin['start_y']) / (num_layers - 1)
+  layers.forEach((layer, i) => {
+    y_coords[layer] = graph_margin['start_y'] + i * unit_height
+  })
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for drawing neurons
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+function draw_neurons() {
+  // XXX
+
+  // Draw neurons in original, original & target, target graph
+  var graph_keys = ['original', 'original-and-target', 'target']
+  graph_keys.forEach(graph_key => {
+    layers.forEach(layer => {
+      var neuron_data = extracted_neurons[layer][graph_key]
+      append_nodes(graph_key, neuron_data)
+    })
+  })
+
+  // Draw neurons of the current attack, of all strength first
+  layers.forEach(layer => {
+    var neuron_data = unique_attack_only_neurons[selected_attack_info['attack_type']][layer]
+    append_nodes('attack-only', neuron_data)
+  })
+
+  // Update nodes' visibilities
+
+  function append_nodes(graph_key, neuron_data) {
+    d3.select('#g-ag')
+      .selectAll('nodes')
+      .data(neuron_data)
+      .enter()
+      .append('rect')
+      .attr('id', function(neuron) { return get_node_id(neuron) })
+      .attr('class', function(neuron) { return get_node_class(graph_key, neuron) })
+      .attr('x', function(neuron, i) { return get_node_x(graph_key, i) })
+      .attr('y', function(neuron) { return get_node_y(neuron) })
+      .attr('width', node_size[selected_attack_info['attack_type']])
+      .attr('height', node_size[selected_attack_info['attack_type']])
+      .attr('rx', 0.25 * node_size[selected_attack_info['attack_type']])
+      .attr('ry', 0.25 * node_size[selected_attack_info['attack_type']])
+      .style('fill', node_color[graph_key])
+  }
   
-//   // Initialize x_scale for the given graph_key
-//   var x_scale_graph = {}
+  function get_node_id(neuron_id) {
+    return ['node', neuron_id].join('-')
+  }
 
-//   // Generate x_scale for every layers
-//   layers.forEach(layer => {
-//     x_scale_graph[layer] = {}
-//     x_domain_keys.forEach(x_domain_key => {
-//       x_scale_graph[layer][x_domain_key] = d3
-//         .scaleLinear()
-//         .domain(x_domain_range[value_key][layer][x_domain_key])
-//         .range([0, div_width - ag_margin['right']])
-//     })
-//   })
+  function get_node_class(graph_key, neuron_id) {
+    var layer = neuron_id.split('-')[0]
+    var c1 = 'node'
+    var c2 = ['node', graph_key].join('-')
+    var c3 = ['node', layer].join('-')
+    return [c1, c2, c3].join(' ')
+  }
 
-//   return x_scale_graph
-// }
+  function get_node_x(graph_key, i) {
+    var start_x = node_group_x[selected_attack_info['attack_type']][graph_key]['start_x']
+    var w = node_size[selected_attack_info['attack_type']]
+    var p = graph_margin['node_lr']
+    return start_x + i * (w + p)
+  }
 
-// function gen_y_scale() {
-//   var num_layers = layers.length
-//   var unit_space = (div_height - ag_margin['top'] - ag_margin['bottom']) / (num_layers - 1)
-//   var y_scale_layers = d3
-//     .scaleOrdinal()
-//     .domain(layers)
-//     .range(Array.from(new Array(num_layers), (val, i) => (ag_margin['top'] + i * unit_space)))
-//   return y_scale_layers
-// }
+  function get_node_y(neuron_id) {
+    var layer = neuron_id.split('-')[0]
+    return y_coords[layer]
+  }
+}
 
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Functions for generating vulnerability scales
-// ////////////////////////////////////////////////////////////////////////////////////////////////
+function update_node_opacity() {
 
-// function gen_node_size_scale() {
-//   vulnerability_range = get_vulnerability_range()
-//   gen_node_size_scale()
-
-//   function gen_node_size_scale() {
-//     // Generate node size scale for all layer
-//     node_size_scale['all'] = {'overall_vulnerability': {}, 'strengthwise_vulnerability': {}}
-//     attack_types.forEach(attack_type => {
-
-//       // Overall vulnerability, all layer
-//       node_size_scale['all']['overall_vulnerability'][attack_type] = d3
-//         .scaleLinear()
-//         .domain(vulnerability_range['all']['overall_vulnerability'][attack_type])
-//         .range(node_size_range)
-      
-//       // Strengthwise vulnerability, all layer
-//       strengths[attack_type].forEach(strength => {
-//         var value_key = get_value_key('attacked', attack_type, strength)
-//         node_size_scale['all']['strengthwise_vulnerability'][value_key] = d3
-//           .scaleLinear()
-//           .domain(vulnerability_range['all']['strengthwise_vulnerability'][value_key])
-//           .range(node_size_range)
-//       })
-//     })
-
-//     // Generate node size scale for layer by layer
-//     layers.forEach(layer => {
-//       node_size_scale[layer] = {'overall_vulnerability': {}, 'strengthwise_vulnerability': {}}
-//       attack_types.forEach(attack_type => {
-
-//         // Overall vulnerability, layer-by-layer
-//         node_size_scale[layer]['overall_vulnerability'][attack_type] = d3
-//           .scaleLinear()
-//           .domain(vulnerability_range[layer]['overall_vulnerability'][attack_type])
-
-//         // Strengthwise vulnerability, layer-by-layer
-//         strengths[attack_type].forEach(strength => {
-//           var value_key = get_value_key('attacked', attack_type, strength)
-//           node_size_scale[layer]['strengthwise_vulnerability'][value_key] = d3
-//             .scaleLinear()
-//             .domain(vulnerability_range[layer]['strengthwise_vulnerability'][value_key])
-//         })
-//       })
-//     })
-//   }
-
-// }
-
-// function get_vulnerability_range() {
-//   vulnerability_range = init_vul_range_dict()
-
-//   layers.forEach(layer => {
-//     for (var neuron_id in vulnerability_data[layer]) {
-//       attack_types.forEach(attack_type => {
-//         update_overall_vulnerability (layer, neuron_id, attack_type)
-//         update_strengthwise_vulnerability (layer, neuron_id, attack_type)
-//       })
-//     }
-//   })
-
-//   return vulnerability_range
-
-//   function init_vul_range_dict() {
-//     var vulnerability_range = {}
-
-//     // Vulnerability range of all layer
-//     vulnerability_range['all'] = {}
-//     vulnerability_range['all']['overall_vulnerability'] = {}
-//     vulnerability_range['all']['strengthwise_vulnerability'] = {}
-//     attack_types.forEach(attack_type => {
-//       vulnerability_range['all']['overall_vulnerability'][attack_type] = [1000, -1000]
-//       strengths[attack_type].forEach(strength => {
-//         var value_key = get_value_key('attacked', attack_type, strength)
-//         vulnerability_range['all']['strengthwise_vulnerability'][value_key] = [1000, -1000]
-//       })
-//     })
-
-//     // Vulnerability range of layer by layer
-//     layers.forEach(layer => {
-//       vulnerability_range[layer] = {}
-//       vulnerability_domain_keys.forEach(vulnerability_key => {
-//         vulnerability_range[layer][vulnerability_key] = {}
-//       })
-//       attack_types.forEach(attack_type => {
-//         vulnerability_range[layer]['overall_vulnerability'][attack_type] = [1000, -1000]
-//         strengths[attack_type].forEach(strength => {
-//           var value_key = get_value_key('attacked', attack_type, strength)
-//           vulnerability_range[layer]['strengthwise_vulnerability'][value_key] = [1000, -1000]
-//         })
-//       })
-//     })
-//     return vulnerability_range
-//   }
-
-//   function update_overall_vulnerability (layer, neuron_id, attack_type) {
-//     // Get the current overall vulnerability
-//     var overall_vul = vulnerability_data[layer][neuron_id]['overall_vulnerability'][attack_type]
-
-//     // Update overall vulnerability of all layer
-//     var min_all_overall_vul = vulnerability_range['all']['overall_vulnerability'][attack_type][0]
-//     var max_all_overall_vul = vulnerability_range['all']['overall_vulnerability'][attack_type][1]
-//     if (min_all_overall_vul > overall_vul) {
-//       vulnerability_range['all']['overall_vulnerability'][attack_type][0] = overall_vul
-//     }
-//     if (max_all_overall_vul < overall_vul) {
-//       vulnerability_range['all']['overall_vulnerability'][attack_type][1] = overall_vul
-//     }
-
-//     // Update overall vulnerability of each layer
-//     var min_overall_vul = vulnerability_range[layer]['overall_vulnerability'][attack_type][0]
-//     var max_overall_vul = vulnerability_range[layer]['overall_vulnerability'][attack_type][1]
-//     if (min_overall_vul > overall_vul) {
-//       vulnerability_range[layer]['overall_vulnerability'][attack_type][0] = overall_vul
-//     }
-//     if (max_overall_vul < overall_vul) {
-//       vulnerability_range[layer]['overall_vulnerability'][attack_type][1] = overall_vul
-//     }
-//   }
-
-//   function update_strengthwise_vulnerability (layer, neuron_id, attack_type) {
-//     strengths[attack_type].forEach(strength => {
-//       // Get the value key
-//       var value_key = get_value_key('attacked', attack_type, strength)
-
-//       // Get the current strengthwise vulnerability
-//       var strengthwise_vul = vulnerability_data[layer][neuron_id]['strengthwise_vulnerability'][attack_type][value_key]
-      
-//       // Update the strengthwise vulnerability of all layer
-//       var min_all_strengthwise_vul = vulnerability_range['all']['strengthwise_vulnerability'][value_key][0]
-//       var max_all_strengthwise_vul = vulnerability_range['all']['strengthwise_vulnerability'][value_key][1]
-//       if (min_all_strengthwise_vul > strengthwise_vul) {
-//         vulnerability_range['all']['strengthwise_vulnerability'][value_key][0] = strengthwise_vul
-//       }
-//       if (max_all_strengthwise_vul < strengthwise_vul) {
-//         vulnerability_range['all']['strengthwise_vulnerability'][value_key][1] = strengthwise_vul
-//       }
-
-//       // Update the strengthwise vulnerability of lthe current layer
-//       var min_strengthwise_vul = vulnerability_range[layer]['strengthwise_vulnerability'][value_key][0]
-//       var max_strengthwise_vul = vulnerability_range[layer]['strengthwise_vulnerability'][value_key][1]
-//       if (min_strengthwise_vul > strengthwise_vul) {
-//         vulnerability_range[layer]['strengthwise_vulnerability'][value_key][0] = strengthwise_vul
-//       }
-//       if (max_strengthwise_vul < strengthwise_vul) {
-//         vulnerability_range[layer]['strengthwise_vulnerability'][value_key][1] = strengthwise_vul
-//       }
-      
-//     })
-//   }
-// }
-
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Functions for drawing neurons
-// ////////////////////////////////////////////////////////////////////////////////////////////////
+}
 
 // function gen_node_id(neuron_id, graph_key) {
 //   return ['node', graph_key, neuron_id].join('-')
@@ -825,6 +693,162 @@
 //   })
   
 // }
+
+// ////////////////////////////////////////////////////////////////////////////////////////////////
+// // Functions for generating vulnerability scales
+// ////////////////////////////////////////////////////////////////////////////////////////////////
+
+// function gen_node_size_scale() {
+//   vulnerability_range = get_vulnerability_range()
+//   gen_node_size_scale()
+
+//   function gen_node_size_scale() {
+//     // Generate node size scale for all layer
+//     node_size_scale['all'] = {'overall_vulnerability': {}, 'strengthwise_vulnerability': {}}
+//     attack_types.forEach(attack_type => {
+
+//       // Overall vulnerability, all layer
+//       node_size_scale['all']['overall_vulnerability'][attack_type] = d3
+//         .scaleLinear()
+//         .domain(vulnerability_range['all']['overall_vulnerability'][attack_type])
+//         .range(node_size_range)
+      
+//       // Strengthwise vulnerability, all layer
+//       strengths[attack_type].forEach(strength => {
+//         var value_key = get_value_key('attacked', attack_type, strength)
+//         node_size_scale['all']['strengthwise_vulnerability'][value_key] = d3
+//           .scaleLinear()
+//           .domain(vulnerability_range['all']['strengthwise_vulnerability'][value_key])
+//           .range(node_size_range)
+//       })
+//     })
+
+//     // Generate node size scale for layer by layer
+//     layers.forEach(layer => {
+//       node_size_scale[layer] = {'overall_vulnerability': {}, 'strengthwise_vulnerability': {}}
+//       attack_types.forEach(attack_type => {
+
+//         // Overall vulnerability, layer-by-layer
+//         node_size_scale[layer]['overall_vulnerability'][attack_type] = d3
+//           .scaleLinear()
+//           .domain(vulnerability_range[layer]['overall_vulnerability'][attack_type])
+
+//         // Strengthwise vulnerability, layer-by-layer
+//         strengths[attack_type].forEach(strength => {
+//           var value_key = get_value_key('attacked', attack_type, strength)
+//           node_size_scale[layer]['strengthwise_vulnerability'][value_key] = d3
+//             .scaleLinear()
+//             .domain(vulnerability_range[layer]['strengthwise_vulnerability'][value_key])
+//         })
+//       })
+//     })
+//   }
+
+// }
+
+// function get_vulnerability_range() {
+//   vulnerability_range = init_vul_range_dict()
+
+//   layers.forEach(layer => {
+//     for (var neuron_id in vulnerability_data[layer]) {
+//       attack_types.forEach(attack_type => {
+//         update_overall_vulnerability (layer, neuron_id, attack_type)
+//         update_strengthwise_vulnerability (layer, neuron_id, attack_type)
+//       })
+//     }
+//   })
+
+//   return vulnerability_range
+
+//   function init_vul_range_dict() {
+//     var vulnerability_range = {}
+
+//     // Vulnerability range of all layer
+//     vulnerability_range['all'] = {}
+//     vulnerability_range['all']['overall_vulnerability'] = {}
+//     vulnerability_range['all']['strengthwise_vulnerability'] = {}
+//     attack_types.forEach(attack_type => {
+//       vulnerability_range['all']['overall_vulnerability'][attack_type] = [1000, -1000]
+//       strengths[attack_type].forEach(strength => {
+//         var value_key = get_value_key('attacked', attack_type, strength)
+//         vulnerability_range['all']['strengthwise_vulnerability'][value_key] = [1000, -1000]
+//       })
+//     })
+
+//     // Vulnerability range of layer by layer
+//     layers.forEach(layer => {
+//       vulnerability_range[layer] = {}
+//       vulnerability_domain_keys.forEach(vulnerability_key => {
+//         vulnerability_range[layer][vulnerability_key] = {}
+//       })
+//       attack_types.forEach(attack_type => {
+//         vulnerability_range[layer]['overall_vulnerability'][attack_type] = [1000, -1000]
+//         strengths[attack_type].forEach(strength => {
+//           var value_key = get_value_key('attacked', attack_type, strength)
+//           vulnerability_range[layer]['strengthwise_vulnerability'][value_key] = [1000, -1000]
+//         })
+//       })
+//     })
+//     return vulnerability_range
+//   }
+
+//   function update_overall_vulnerability (layer, neuron_id, attack_type) {
+//     // Get the current overall vulnerability
+//     var overall_vul = vulnerability_data[layer][neuron_id]['overall_vulnerability'][attack_type]
+
+//     // Update overall vulnerability of all layer
+//     var min_all_overall_vul = vulnerability_range['all']['overall_vulnerability'][attack_type][0]
+//     var max_all_overall_vul = vulnerability_range['all']['overall_vulnerability'][attack_type][1]
+//     if (min_all_overall_vul > overall_vul) {
+//       vulnerability_range['all']['overall_vulnerability'][attack_type][0] = overall_vul
+//     }
+//     if (max_all_overall_vul < overall_vul) {
+//       vulnerability_range['all']['overall_vulnerability'][attack_type][1] = overall_vul
+//     }
+
+//     // Update overall vulnerability of each layer
+//     var min_overall_vul = vulnerability_range[layer]['overall_vulnerability'][attack_type][0]
+//     var max_overall_vul = vulnerability_range[layer]['overall_vulnerability'][attack_type][1]
+//     if (min_overall_vul > overall_vul) {
+//       vulnerability_range[layer]['overall_vulnerability'][attack_type][0] = overall_vul
+//     }
+//     if (max_overall_vul < overall_vul) {
+//       vulnerability_range[layer]['overall_vulnerability'][attack_type][1] = overall_vul
+//     }
+//   }
+
+//   function update_strengthwise_vulnerability (layer, neuron_id, attack_type) {
+//     strengths[attack_type].forEach(strength => {
+//       // Get the value key
+//       var value_key = get_value_key('attacked', attack_type, strength)
+
+//       // Get the current strengthwise vulnerability
+//       var strengthwise_vul = vulnerability_data[layer][neuron_id]['strengthwise_vulnerability'][attack_type][value_key]
+      
+//       // Update the strengthwise vulnerability of all layer
+//       var min_all_strengthwise_vul = vulnerability_range['all']['strengthwise_vulnerability'][value_key][0]
+//       var max_all_strengthwise_vul = vulnerability_range['all']['strengthwise_vulnerability'][value_key][1]
+//       if (min_all_strengthwise_vul > strengthwise_vul) {
+//         vulnerability_range['all']['strengthwise_vulnerability'][value_key][0] = strengthwise_vul
+//       }
+//       if (max_all_strengthwise_vul < strengthwise_vul) {
+//         vulnerability_range['all']['strengthwise_vulnerability'][value_key][1] = strengthwise_vul
+//       }
+
+//       // Update the strengthwise vulnerability of lthe current layer
+//       var min_strengthwise_vul = vulnerability_range[layer]['strengthwise_vulnerability'][value_key][0]
+//       var max_strengthwise_vul = vulnerability_range[layer]['strengthwise_vulnerability'][value_key][1]
+//       if (min_strengthwise_vul > strengthwise_vul) {
+//         vulnerability_range[layer]['strengthwise_vulnerability'][value_key][0] = strengthwise_vul
+//       }
+//       if (max_strengthwise_vul < strengthwise_vul) {
+//         vulnerability_range[layer]['strengthwise_vulnerability'][value_key][1] = strengthwise_vul
+//       }
+      
+//     })
+//   }
+// }
+
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////
 // // Functions for updated attack strength

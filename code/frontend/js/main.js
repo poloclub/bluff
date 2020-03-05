@@ -1,38 +1,42 @@
-
-import { ag_margins } from './constant.js';
+import { main_view_size } from './style.js';
 
 // Add header
 var header = document.createElement('div')
 header.setAttribute('id', 'header')
 document.body.appendChild(header)
 
-// Generate div for attribution graph
+// Generate main-div
 d3.select('body')
   .append('div')
   .attr('id', 'div-main')
 
-// Generate svg for attribution graph and nodebox
+// Generate svg-main
 d3.select('#div-main')
   .append('svg')
   .attr('id', 'svg-main')
 
-// Generate the main svg for all attribution graphs
+// Generate svg and g for attribution graphs
+var width = main_view_size['width']
+var height = main_view_size['height']
 d3.select('#svg-main')
   .append('svg')
-  .attr('id', 'svg-ag-all')
-  .attr('width', ag_margins['total'])
+  .attr('id', 'svg-ag')
 
-// Generate attribution graph views
-gen_attribution_graph_view('original')
-add_padding_svg('original')
-gen_attribution_graph_view('attacked')
-add_padding_svg('attacked')
-gen_attribution_graph_view('target')
+d3.select('#svg-ag')
+  .append('rect')
+  .style('fill', 'white')
+  .style('width', width)
+  .style('height', height)
 
-// Generate svg for node box
-d3.select('#svg-main')
-  .append('svg')
-  .attr('id', 'svg-ag-nodebox')
+d3.select('#svg-main')  
+  .append('g')
+  .attr('id', 'g-ag')
+
+d3.select('#svg-main')  
+  .append('rect')
+  .attr('fill', 'white')
+  .style('width', width)
+  .style('height', 50)
   
 // Generate svg for attack option
 d3.select('#svg-main')
@@ -44,67 +48,13 @@ d3.select('#svg-main')
   .append('svg')
   .attr('id', 'svg-class-option-box')
 
-// Make attribution graph views zoomable
-make_graph_view_zoomable('original')
-make_graph_view_zoomable('attacked')
-make_graph_view_zoomable('target')
-
-// Function to generate attribution graph view
-function gen_attribution_graph_view(graph_key) {
-  d3.select('#svg-ag-all')
-    .append('svg')
-    .attr('id', 'svg-wrapper-ag-' + graph_key)
-    .attr('class', 'svg-wrapper-ag')
-
-  d3.select('#svg-wrapper-ag-' + graph_key)
-    .append('g')
-    .attr('id', 'g-wrapper-ag-' + graph_key)
-    .attr('class', 'g-wrapper')
-    .attr('transform', 'translate(' + ag_margins[graph_key] + ', 0)')
-
-  d3.select('#g-wrapper-ag-' + graph_key)
-    .append('rect')
-    .attr('class', 'g-wrapper-rect')
-
-  d3.select('#g-wrapper-ag-' + graph_key)
-    .append('svg')
-    .attr('id', 'svg-ag-' + graph_key)
-    .attr('class', 'svg-ag')
-
-  d3.select('#svg-ag-' + graph_key)
-    .append('g')
-    .attr('id', 'g-ag-' + graph_key)
-    .attr('class', 'g-ag')
-}
-
-// Function to add padding svg between attribution graphs
-function add_padding_svg(graph_key) {
-  d3.select('#svg-ag-all')
-    .append('svg')
-    .attr('id', 'svg-padding-' + graph_key)
-    .attr('class', 'svg-padding')
-
-  d3.select('#svg-padding-' + graph_key)
-    .append('g')
-    .attr('id', 'g-padding-' + graph_key)
-    .attr('class', 'g-padding')
-    .attr('transform', 'translate(' + ag_margins[graph_key + '-padding'] + ', 0)')
-  
-  d3.select('#g-padding-' + graph_key) 
-    .append('rect')
-    .attr('class', 'g-padding-rect')
-}
-
-// Function to make attribution graph zoomable
-function make_graph_view_zoomable(graph_key) {
-  d3.select('#g-wrapper-ag-' + graph_key)
-    .call(
-      d3.zoom()
-        .on('zoom', function(){
-          d3.select('#g-ag-' + graph_key)
-            .attr('transform', d3.event.transform)
-        })
-    )
-}
-
+// Make attribution graph view zoomable
+d3.select('#svg-ag')
+  .call(
+    d3.zoom()
+      .on('zoom', function(){
+        d3.select('#g-ag')
+          .attr('transform', d3.event.transform)
+      })
+  )
 

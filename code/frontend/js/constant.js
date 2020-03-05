@@ -5,9 +5,21 @@ export var class_pairs = {
 }
 
 // Attack
-export var attack_types = ['pgd', 'fsgm']
-export var attack_strengths = {'pgd': [0.1, 0.2, 0.3, 0.4, 0.5]}
-export var attack_default_strengths = {'pgd': 0.1, 'fsgm': 0.1}
+export var attack_types = ['pgd'] // ['pgd', 'fsgm']
+export var attack_strengths = {'pgd': [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]}
+export var attack_default_strengths = {'pgd': 0.20, 'fsgm': 0.20}
+
+// Top_k for extracting interesting neurons
+export var top_k = 5
+export var rough_top_k = 20
+
+
+
+
+
+
+
+
 
 // Other filter information
 export var top_ks = Array.from(Array(50).keys()).map(x => x + 1)

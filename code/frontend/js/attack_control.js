@@ -145,7 +145,7 @@ function gen_filter_bar(filter_type) {
       .append('text')
       .attr('id', 'filter-bar-text-' + filter_type)
       .attr('class', 'filter-bar-text')
-      .text(0.2)
+      .text(attack_default_strengths['pgd'])
 
   }
 
