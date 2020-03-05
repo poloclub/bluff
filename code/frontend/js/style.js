@@ -40,6 +40,12 @@ export var node_color = {
   'target': '#fdae61'
 }
 
+// Node opacity
+export var node_opacity = {
+  'activated': 1,
+  'deactivated': 0.1
+}
+
 // Fontawsome icon (https://fontawesome.com/cheatsheet?from=io)
 export var icons = {'angle-up': '\uf106', 'angle-down': '\uf107'}
 

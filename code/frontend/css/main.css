@@ -14,3 +14,11 @@ body {
 #svg-ag {
   height: 1000px;
 }
+
+.main-bg {
+  fill: #fdfdfd;
+}
+
+#svg-attack-option {
+  fill: gray;
+}

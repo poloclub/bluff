@@ -24,7 +24,7 @@ d3.select('#svg-main')
 
 d3.select('#svg-ag')
   .append('rect')
-  .style('fill', 'white')
+  .attr('class', 'main-bg')
   .style('width', width)
   .style('height', height)
 
@@ -34,7 +34,7 @@ d3.select('#svg-main')
 
 d3.select('#svg-main')  
   .append('rect')
-  .attr('fill', 'white')
+  .attr('class', 'main-bg')
   .style('width', width)
   .style('height', 50)
   

@@ -5,7 +5,6 @@
 import { 
   attack_types,
   attack_strengths, 
-  attack_default_strengths,
   filter_bar_length
 } from './constant.js';
 
@@ -13,10 +12,10 @@ import {
   icons
 } from './style.js'
 
-// import { 
-//   update_neurons_with_new_strength,
+import { 
+  update_node_opacity
 //   update_neurons_with_new_vulnerability 
-// } from './attribution_graph.js';
+} from './attribution_graph.js';
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -24,8 +23,10 @@ import {
 
 export var selected_attack_info = {
   'attack_type': 'pgd',
-  'attack_strength': 0.1
+  'attack_strength': 0.3
 }
+
+var strength_bar_scale = {}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Generate attack options
@@ -33,7 +34,13 @@ export var selected_attack_info = {
 
 write_attack_option_title('How to manipulate')
 gen_attack_dropdown()
-gen_filter_bar('strength')
+gen_strength_bar_length_scale()
+gen_filter_bar(
+  'strength', 
+  strength_bar_scale[selected_attack_info['attack_type']], 
+  selected_attack_info['attack_strength'],
+  attack_strengths[selected_attack_info['attack_type']]
+)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Main division
@@ -90,8 +97,25 @@ function gen_attack_dropdown() {
 //////////////////////////////////////////////////////////////////////////////////////////
 // Attack strength bar
 //////////////////////////////////////////////////////////////////////////////////////////
+function gen_strength_bar_length_scale() {
+  attack_types.forEach(attack_type => {
+    strength_bar_scale[attack_type] = {}
 
-function gen_filter_bar(filter_type) {
+    var max_domain_val = d3.max(attack_strengths[attack_type])
+    var domain_to_front_bar_length = d3
+      .scaleLinear()
+      .domain([0, max_domain_val])
+      .range([0, filter_bar_length])
+    var front_bar_length_to_domain = d3
+      .scaleLinear()
+      .domain([0, filter_bar_length])
+      .range([0, max_domain_val])
+    strength_bar_scale[attack_type]['val_to_len'] = domain_to_front_bar_length
+    strength_bar_scale[attack_type]['len_to_val'] = front_bar_length_to_domain
+  })
+}
+
+function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
   create_filter_bar_title('Attack Strength', filter_type)
   gen_strength_bar(filter_type)
 
@@ -120,34 +144,95 @@ function gen_filter_bar(filter_type) {
       .style('width', filter_bar_length)
 
     // Add front bar
-    // TODO: get the domain of the bar
     d3.select('#g-strength-bar')
       .append('rect')
       .attr('id', 'filter-bar-front-' + filter_type)
       .attr('class', 'filter-bar-front filter-bar-rect')
-      .style('width', 20)
-      // .style('width', domain_to_bar(default_val))
+      .style('width', bar_length_scale['val_to_len'](default_val))
 
     // Add circle
-    // TODO: get the domain of the bar and make it draggable
     d3.select('#g-strength-bar')
       .append('circle')
       .attr('id', 'filter-bar-circle-' + filter_type)
       .attr('class', 'filter-bar-circle')
       .style('cx', 20)
-      // .style('cx', domain_to_bar(default_val))
+      .style('cx', bar_length_scale['val_to_len'](default_val))
       .on('mouseover', function(){ this.style.cursor = 'pointer'})
-      // .call(gen_control_circle_drag())
+      .call(gen_control_circle_drag())
 
     // Add value text
-    // TODO: Don't use the fixed text
     d3.select('#g-strength-bar')
       .append('text')
       .attr('id', 'filter-bar-text-' + filter_type)
       .attr('class', 'filter-bar-text')
-      .text(attack_default_strengths['pgd'])
+      .text(selected_attack_info['attack_strength'])
 
+  }
+
+  function gen_control_circle_drag() {
+    var control_drag = d3
+      .drag()
+      .on('start', function() { circle_drag_start() })
+      .on('drag', function() { circle_drag_ing() })
+      .on('end', function() { circle_drag_end() })
+
+    return control_drag
+
+    function circle_drag_start() { 
+      d3.select('#filter-bar-circle-' + filter_type)
+      .style('fill', 'gray')
+      .style('stroke', 'none')
+    }
+
+    function circle_drag_ing() {
+      // Get the position of the circle and the front bar
+      var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
+      mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar_length])
+  
+      var max_domain_val = d3.max(domains)
+      var domain_unit = max_domain_val / domains.length
+  
+      // Update the selected value
+      if (filter_type == 'strength') {
+        selected_attack_info['attack_strength'] = strength_bar_scale[selected_attack_info['attack_type']]['len_to_val'](mouse_x)
+        selected_attack_info['attack_strength'] = round_unit(selected_attack_info['attack_strength'], domain_unit)
+        d3.select('#filter-bar-text-' + filter_type).text(selected_attack_info['attack_strength']) 
+      } 
+        
+      // Position the circle and the front bar
+      d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
+      d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+  
+      // Update attribution graph
+      if (filter_type == 'strength') {
+        update_node_opacity()
+      } 
+      
+    }
+
+    function circle_drag_end() {
+
+      // Update the circle's color 
+      d3.select('#filter-bar-circle-' + filter_type)
+        .style('fill', 'white')
+        .style('stroke', 'gray')
+  
+      // Get the position of the circle and the front bar
+      var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
+      mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar_length])
+  
+      // Sticky movement
+      var bar_length_unit = filter_bar_length / domains.length
+      mouse_x = round_unit(mouse_x, bar_length_unit)
+      d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
+      d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+    }
   }
 
 }
 
+// Round by a specific unit
+function round_unit(n, unit) {
+  var new_unit = 1 / unit
+  return Math.round(n * new_unit) / new_unit;
+}

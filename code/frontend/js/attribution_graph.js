@@ -2,20 +2,20 @@ import {
   layers,
   top_k,
   rough_top_k,
+  highlight_top_k,
   attack_types,
   attack_strengths
 } from './constant.js';
 
 import {
   graph_margin,
-  node_color
+  node_color,
+  node_opacity
 } from './style.js';
 
 import { 
   selected_attack_info
 } from './attack_control.js'
-
-// //  import { gen_top_dropdown } from './header.js';
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Set data directory
@@ -302,8 +302,6 @@ function gen_y_coords() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 function draw_neurons() {
-  // XXX
-
   // Draw neurons in original, original & target, target graph
   var graph_keys = ['original', 'original-and-target', 'target']
   graph_keys.forEach(graph_key => {
@@ -320,6 +318,7 @@ function draw_neurons() {
   })
 
   // Update nodes' visibilities
+  update_node_opacity()
 
   function append_nodes(graph_key, neuron_data) {
     d3.select('#g-ag')
@@ -363,8 +362,29 @@ function draw_neurons() {
   }
 }
 
-function update_node_opacity() {
-
+export function update_node_opacity() {
+  if (selected_attack_info['attack_strength'] == 0) {
+    d3.selectAll('.node')
+      .style('opacity', node_opacity['deactivated'])  
+    d3.selectAll('.node-original')
+      .style('opacity', node_opacity['activated'])  
+    d3.selectAll('.node-original-and-target')
+      .style('opacity', node_opacity['activated'])  
+  }
+  else {
+    d3.selectAll('.node')
+    .style('opacity', function(neuron) {
+      var layer = neuron.split('-')[0]
+      var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], selected_attack_info['attack_strength'])
+      var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
+      if (top_neurons_to_highlight.includes(neuron)) {
+        return node_opacity['activated']
+      } else {
+        return node_opacity['deactivated']
+      }
+    })
+  }
+  
 }
 
 // function gen_node_id(neuron_id, graph_key) {
