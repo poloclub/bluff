@@ -13,8 +13,8 @@ import {
 } from './style.js'
 
 import { 
-  update_node_opacity
-//   update_neurons_with_new_vulnerability 
+  update_node_opacity,
+  update_scatter_circle
 } from './attribution_graph.js';
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -206,6 +206,7 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       // Update attribution graph
       if (filter_type == 'strength') {
         update_node_opacity()
+        update_scatter_circle()
       } 
       
     }

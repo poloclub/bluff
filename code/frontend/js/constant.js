@@ -13,10 +13,11 @@ export var attack_strengths = {
 
 // Top_k for extracting interesting neurons
 export var top_k = 6
-export var rough_top_k = 20
-export var highlight_top_k = 10
+export var rough_top_k = 10
+export var highlight_top_k = rough_top_k
 
-
+// Feature vis / example patches
+export var feature_vis_dir = '../../../summit/summit-data/data/feature-vis'
 
 
 
@@ -59,18 +60,7 @@ export var layers = ['mixed5b', 'mixed5a', 'mixed4e', 'mixed4d', 'mixed4c', 'mix
 export var div_width = 300
 export var div_height = 600
 export var ag_margin = {'top': 50, 'bottom': 50, 'left': 50, 'right': 50}
-export var node_box = {
-  'left': 10, 
-  'width': 420, 
-  'height': 100,
-  'fv-left': 15,
-  'fv-width': 70,
-  'fv-height': 70,
-  'ex-padding': 5,
-  'ex-width': 70,
-  'ex-height': 70
-  }
-node_box['ex-left'] = node_box['fv-left'] + node_box['fv-width'] + 20
+
 
 // Attribution graph margin
 var ag_first_margin = 100
@@ -86,8 +76,7 @@ export var ag_margins = {
   'total': ag_first_margin + 3 * ag_width + 2 * ag_padding
 }
 
-// Feature vis / example patches
-export var feature_vis_dir = '../../../summit/summit-data/data/feature-vis'
+
 
 function rgbToHex (rgb) { 
   var hex = Number(rgb).toString(16);

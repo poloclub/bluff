@@ -18,7 +18,17 @@
 
 .nodebox-bg {
   fill: white;
-  stroke: gray;
+  stroke: lightgray;
   stroke-width: 1px;
-  rx: 10;
+  rx: 5;
+  ry: 5;
+}
+
+.node-box-scatter-line {
+  stroke: lightgray;
+  fill: none;
+}
+
+.node-box-scatter-circle {
+  fill: gray;
 }

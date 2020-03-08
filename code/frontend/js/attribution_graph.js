@@ -4,13 +4,15 @@ import {
   rough_top_k,
   highlight_top_k,
   attack_types,
-  attack_strengths
+  attack_strengths,
+  feature_vis_dir
 } from './constant.js';
 
 import {
   graph_margin,
   node_color,
-  node_opacity
+  node_opacity,
+  node_box_style
 } from './style.js';
 
 import { 
@@ -22,9 +24,12 @@ import {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // var neuron_data_dir = '../../../massif/neurons/'
 var data_dir = '../../data/'
-var activation_data_path = data_dir + 'neuron_data/neuron_data-giant_panda-armadillo-pgd.json'
+// var activation_data_path = data_dir + 'neuron_data/neuron_data-giant_panda-armadillo-pgd.json'
+// var vulnerability_data_path = data_dir + 'neuron_vulnerabilities/neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
+// var top_neuron_data_path = data_dir + 'top_neurons/top_neurons-giant_panda-armadillo-pgd.json'
+var activation_data_path = data_dir + 'neuron_data/neuron_data-brown_bear-american_black_bear-pgd.json'
 var vulnerability_data_path = data_dir + 'neuron_vulnerabilities/neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
-var top_neuron_data_path = data_dir + 'top_neurons/top_neurons-giant_panda-armadillo-pgd.json'
+var top_neuron_data_path = data_dir + 'top_neurons/top_neurons-brown_bear-american_black_bear-pgd.json'
 var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,6 +41,11 @@ var top_neuron_data = {}
 var extracted_neurons = {}
 
 var unique_attack_only_neurons = {}
+
+var act_type = 'median_activation'
+// var act_type = 'median_activation_percentile'
+var activation_range = {}
+var activation_y_scale = {}
 
 var sorted_vulnerability_data = {}
 var vul_type = 'strengthwise_vulnerability'
@@ -54,6 +64,9 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   vulnerability_data = data[1]
   top_neuron_data = data[2]
 
+  // Get activation scale
+  get_actiavtion_y_scale()
+
   // Parse vulnerability data
   parse_vulnerability_data()
   sorted_vulnerability_data = sort_vulnerability_data()
@@ -64,6 +77,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   gen_y_coords()
 
   // Draw nodes
+  write_layers()
   draw_neurons()
 
   window.activation_data = activation_data
@@ -74,7 +88,7 @@ Promise.all(file_list.map(file => d3.json(file))).then(function(data) {
   window.node_size = node_size
   window.node_group_x = node_group_x
   window.y_coords = y_coords
-
+  window.activation_range = activation_range
 
 })
 
@@ -128,7 +142,7 @@ function extract_neurons() {
 
     // Extract original class' neurons
     var rough_original = top_neuron_data[layer]['original'].slice(0, rough_top_k)
-  
+
     // Extract target class' neurons
     var rough_target = top_neuron_data[layer]['target'].slice(0, rough_top_k)
 
@@ -141,13 +155,16 @@ function extract_neurons() {
     extracted_neurons[layer]['original-and-target'] = extracted_original_target.slice(0, top_k)
 
     // Extract neurons in adversarial graph
-    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-      var attacked_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-      var rough_attacked = top_neuron_data[layer][attacked_key].slice(0, rough_top_k)
-      var extracted_attacked = get_difference(rough_attacked, rough_original)
-      extracted_attacked = get_difference(rough_attacked, rough_target)
-      extracted_neurons[layer]['only-' + attacked_key] = extracted_attacked.slice(0, parseInt(top_k / 2))
+    attack_types.forEach(attack_type => {
+      attack_strengths[attack_type].forEach(strength => {
+        var attacked_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+        var rough_attacked = top_neuron_data[layer][attacked_key].slice(0, rough_top_k)
+        var extracted_attacked = get_difference(rough_attacked, rough_original)
+        extracted_attacked = get_difference(extracted_attacked, rough_target)
+        extracted_neurons[layer]['only-' + attacked_key] = extracted_attacked.slice(0, parseInt(top_k / 2))
+      })
     })
+    
   })
 
   return extracted_neurons
@@ -175,6 +192,35 @@ function extract_neurons() {
   
 }
 
+function get_actiavtion_y_scale() {
+
+  get_activation_range()
+  get_activation_scale()
+
+  function get_activation_range() {
+    layers.forEach(layer => {
+      activation_range[layer] = [0, 0]
+      for (var neuron in activation_data[layer]) {
+        for (var key in activation_data[layer][neuron]) {
+          var act = activation_data[layer][neuron][key][act_type]
+          activation_range[layer][1] = d3.max([act, activation_range[layer][1]])
+        }
+        
+      }
+    })
+  }
+
+  function get_activation_scale() {
+    layers.forEach(layer => {
+      activation_y_scale[layer] = d3
+        .scaleLinear()
+        .domain(activation_range[layer])
+        .range([0, node_box_style['act-plot-height']])
+    })
+  }
+  
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // General functions
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +231,30 @@ function get_value_key(graph_key, attack_type, strength) {
     value_key = [graph_key, attack_type, strength.toFixed(2)].join('-')
   }
   return value_key
+}
+
+function does_exist(id) {
+  var element = document.getElementById(id)
+  if (element) {
+    return true
+  } else {
+    return false
+  }
+}
+
+function vis_filename(neuron_id, type) {
+  var filename = feature_vis_dir + '/'
+  if (type == 'channel') {
+    filename += 'channel/'
+    filename += [neuron_id, type].join('-')
+    filename += '.jpg'
+  } else if (type.includes('ex')) {
+    var ex = type.split('-')[1]
+    filename += 'dataset-p/'
+    filename += [neuron_id, 'dataset', 'p', ex].join('-')
+    filename += '.jpg'
+  }
+  return filename
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +343,7 @@ function gen_x_coords() {
         attack_strengths[attack_type].forEach(strength => {
           var attacked_key = 'only-' + get_value_key('attacked', attack_type, strength)
           unique_neurons[attack_type][layer] = keep_unique(unique_neurons[attack_type][layer], extracted_neurons[layer][attacked_key])
+          
         })
       })
     })
@@ -301,6 +372,18 @@ function gen_y_coords() {
 // Functions for drawing neurons
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
+function write_layers() {
+  console.log(layers)
+  d3.select('#g-ag')
+    .selectAll('layers')
+    .data(layers)
+    .enter()
+    .append('text')
+    .text(function(layer) { return layer })
+    .attr('x', 20)
+    .attr('y', function(layer) { return y_coords[layer] + node_size[selected_attack_info['attack_type']] / 2 + 5})
+}
+
 function draw_neurons() {
   // Draw neurons in original, original & target, target graph
   var graph_keys = ['original', 'original-and-target', 'target']
@@ -320,6 +403,7 @@ function draw_neurons() {
   // Update nodes' visibilities
   update_node_opacity()
 
+  // Functions
   function append_nodes(graph_key, neuron_data) {
     d3.select('#g-ag')
       .selectAll('nodes')
@@ -335,6 +419,8 @@ function draw_neurons() {
       .attr('rx', 0.25 * node_size[selected_attack_info['attack_type']])
       .attr('ry', 0.25 * node_size[selected_attack_info['attack_type']])
       .style('fill', node_color[graph_key])
+      .on('mouseover', function(neuron) { return mouseover_node(neuron) })
+      .on('mouseout', function(neuron) { return mouseout_node(neuron) })
   }
   
   function get_node_id(neuron_id) {
@@ -360,8 +446,269 @@ function draw_neurons() {
     var layer = neuron_id.split('-')[0]
     return y_coords[layer]
   }
-}
 
+  function mouseover_node(neuron) {
+    // Mouse pointer
+    var node_id = get_node_id(neuron)
+    d3.select('#' + node_id).style('cursor', 'pointer')
+
+    // Add node box if it does not exist
+    var node_box_id = get_node_box_id(neuron)
+    if (!does_exist(node_box_id)) {
+      add_node_box()
+    }
+    // Show node box if it exists
+    else {
+      d3.select('#' + node_box_id).style('display', 'block')
+    } 
+
+    function add_node_box() {
+      mk_node_box_g()
+      mk_node_box_bg()
+      draw_fv()
+      draw_examples() 
+      draw_activation_plot()
+    }
+
+    function mk_node_box_g() {
+      var node_x = parseFloat(d3.select('#' + node_id).attr('x'))
+      var node_y = parseFloat(d3.select('#' + node_id).attr('y'))
+      
+      d3.select('#g-ag')
+        .append('g')
+        .attr('id', node_box_id)
+        .attr('transform', function() {
+          var x = node_x + node_box_style['left']
+          var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2
+          return 'translate(' + x + ',' + y +')'
+        })
+    }
+
+    function mk_node_box_bg() {
+      d3.select('#' + node_box_id)
+        .append('rect')
+        .attr('id', node_box_id + '-bg')
+        .attr('class', 'nodebox-bg')
+        .attr('width', node_box_style['width'])
+        .attr('height', node_box_style['height'])
+    }
+    
+    function draw_fv() {
+      d3.select('#' + node_box_id)
+        .append('image')
+        .attr('id', node_box_id + '-fv')
+        .attr('class', 'nodebox-fv')
+        .attr('xlink:href', vis_filename(neuron, 'channel'))
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('transform', function() { return fv_transform() })
+        .attr('width', node_box_style['fv-width'])
+        .attr('height', node_box_style['fv-height'])
+
+      function fv_transform() {
+        var x = node_box_style['fv-left']
+        var y = node_box_style['fv-top']
+        return 'translate(' + x + ',' + y + ')'
+      }
+    }
+
+    function draw_examples() {
+      for(var i = 0; i < 10; i++) {
+        d3.select('#' + node_box_id)
+          .append('image')
+          .attr('id', node_box_id + '-ex-' + i)
+          .attr('class', 'nodebox-ex')
+          .attr('xlink:href', vis_filename(neuron, 'ex-' + i))
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('transform', function() { return ex_transform(i) })
+          .attr('width', node_box_style['ex-width'])
+          .attr('height', node_box_style['ex-height'])
+      }
+
+      function ex_transform(i) {
+        var x = node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding']
+        x += (i % 5) * (node_box_style['ex-padding'] + node_box_style['ex-width'])
+        var y = node_box_style['ex-top'] + parseInt(i / 5) * (node_box_style['ex-height'] + node_box_style['ex-padding'])
+        return 'translate(' + x + ',' + y + ')'
+      }
+    }
+
+    function draw_activation_plot() {
+
+      // Get activation data
+      var layer = neuron.split('-')[0]
+      var med_acts = get_activation_data()
+      
+      // Draw scatter plot
+      draw_axis()
+      draw_lines()
+      draw_dots()
+      
+      
+      // Draw lines
+      function draw_lines() {
+        var coords = []
+        med_acts.forEach((med_act, i) => {
+          var x = activation_x(i)
+          var y = activation_y(med_act)
+          coords.push([x, y])
+        })
+
+        d3.select('#' + node_box_id)
+          .append('path')
+          .attr('id', node_box_id + '-scatter-line')
+          .attr('class', 'node-box-scatter-line')
+          .attr('d', d3.line()(coords))
+      }
+
+      function get_activation_data() {
+        var med_acts = [activation_data[layer][neuron]['original'][act_type]]
+        attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+          var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+          var med_act = activation_data[layer][neuron][attack_key][act_type]
+          med_acts.push(med_act)
+        })
+        return med_acts
+      }
+
+      function draw_dots() {
+        d3.select('#' + node_box_id)
+          .selectAll('scatter-dots')
+          .data(med_acts)
+          .enter()
+          .append('circle')
+          .attr('id', function (a, i) { 
+            if (i > 10) {
+              console.log(node_box_id)
+            }
+            return node_box_id + '-circle-' + i
+          })
+          .attr('class', function(a, i) { return scatter_dots_class(i) })
+          .attr('r', function(a, i) { return scatter_circle_r(i) })
+          .attr('cy', function(a) { return activation_y(a) })
+          .attr('cx', function(a, i) { return activation_x(i) })
+          .style('fill', function(a, i) { return scatter_circle_color(i) })
+      }
+
+      function activation_x(i) {
+        var start_x = node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding']
+        start_x += 5 * (node_box_style['ex-padding'] + node_box_style['ex-width']) - node_box_style['ex-padding']
+        start_x += node_box_style['act-ex-padding']
+  
+        var num_strength = attack_strengths[selected_attack_info['attack_type']].length
+        var val_x = i * (node_box_style['act-plot-width']) / num_strength
+        return start_x + val_x
+      }
+  
+      function activation_y(a) {
+        var start_y = node_box_style['act-plot-top'] + node_box_style['act-plot-height']
+        var val_y = activation_y_scale[layer](a)
+        return start_y - val_y
+      }
+
+      function draw_axis() {
+        d3.select('#' + node_box_id)
+          .append('g')
+          .attr('id', node_box_id + '-x-axis')
+          .attr('class', 'node-box-axis node-box-x-axis')
+          .attr('transform', function() {
+            var x = activation_x(0)
+            var y = node_box_style['act-plot-top'] + node_box_style['act-plot-height']
+            return 'translate(' + x + ',' + y + ')'
+          })
+
+        d3.select('#' + node_box_id)
+          .append('g')
+          .attr('id', node_box_id + '-y-axis')
+          .attr('class', 'node-box-axis node-box-y-axis')
+          .attr('transform', function() {
+            var x = activation_x(0)
+            var y = node_box_style['act-plot-top']
+            return 'translate(' + x + ',' + y + ')'
+          })
+
+        // console.log([0].concat(attack_strengths[selected_attack_info['attack_type']]))
+        var max_attack_strength = attack_strengths[selected_attack_info['attack_type']].slice(-1)[0]
+        var x_scale = d3
+          .scaleLinear()
+          .domain([0, max_attack_strength])
+          .range([0, node_box_style['act-plot-width']])
+
+        var layer = neuron.split('-')[0]
+        var y_scale = d3
+          .scaleLinear()
+          .domain(activation_range[layer])
+          .range([node_box_style['act-plot-height'], 0])
+
+        var x_axis = d3
+          .axisBottom()
+          .scale(x_scale)
+          .tickFormat(function(d, i) {
+            if (i % 2 == 0) {
+              return d
+            }
+          })
+
+        var y_axis = d3
+          .axisLeft()
+          .scale(y_scale)
+          .ticks(4)
+
+        d3.select('#' + node_box_id + '-x-axis')
+          .call(x_axis)
+        
+        d3.select('#' + node_box_id + '-y-axis')
+          .call(y_axis)
+      }
+      
+      function scatter_dots_class(i) {
+        var c1 = 'node-box-scatter-circle'
+        var c2 = 'node-box-scatter-circle-' + i
+        return [c1, c2].join(' ')
+      }
+
+      function scatter_circle_color(i) {
+        var curr_strength = selected_attack_info['attack_strength']
+        var curr_attack_type = selected_attack_info['attack_type']
+        var curr_strength_idx = 0
+        if (curr_strength > 0) {
+          curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
+        }
+        if (i == curr_strength_idx) {
+          return 'red'
+        } else {
+          return 'gray'
+        }
+      }
+      
+      function scatter_circle_r(i) {
+        var curr_strength = selected_attack_info['attack_strength']
+        var curr_attack_type = selected_attack_info['attack_type']
+        var curr_strength_idx = 0
+        if (curr_strength > 0) {
+          curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
+        }
+        if (i == curr_strength_idx) {
+          return 4
+        } else {
+          return 2
+        }
+      }
+      
+    }
+  }
+
+  function mouseout_node(neuron) {
+    var node_box_id = get_node_box_id(neuron)
+    d3.select('#' + node_box_id).style('display', 'none')
+  }
+
+  function get_node_box_id(neuron) {
+    return ['node-box', neuron].join('-')
+  }
+
+}
 export function update_node_opacity() {
   if (selected_attack_info['attack_strength'] == 0) {
     d3.selectAll('.node')
@@ -387,626 +734,21 @@ export function update_node_opacity() {
   
 }
 
-// function gen_node_id(neuron_id, graph_key) {
-//   return ['node', graph_key, neuron_id].join('-')
-// }
+export function update_scatter_circle() {
 
-// function draw_neurons_all_graph_key() {
-//   // Draw neurons of original and target class
-//   var original_target = ['original', 'target']
-//   original_target.forEach(graph_key => {
-//     layers.forEach(layer => {
-//       var filtered_activations = filter_activations(graph_key, layer, 100)
-//       draw_neurons(graph_key, 
-//                   layer, 
-//                   filtered_activations, 
-//                   x_domain_keys[0], 
-//                   curr_strengths[curr_attack_type])
-//     })
-//     jitter_neurons(graph_key)
-//   })
+  d3.selectAll('.node-box-scatter-circle')
+    .attr('r', 2)
+    .style('fill', 'gray')
 
-//   // Draw neurons in adverrsarial graph
-//   var graph_key = 'attacked'
-//   strengths[curr_attack_type].forEach(strength => {
-//     layers.forEach(layer => {
-//       var filtered_activations = filter_activations(graph_key, 
-//                                                     layer, 
-//                                                     100, 
-//                                                     curr_attack_type, 
-//                                                     curr_strengths[curr_attack_type])
-//       draw_neurons(graph_key, 
-//                   layer, 
-//                   filtered_activations, 
-//                   x_domain_keys[0],
-//                   strength)
-//     })
-//     jitter_neurons(graph_key)
-//   })
-// }
+  var curr_strength = selected_attack_info['attack_strength']
+  var curr_attack_type = selected_attack_info['attack_type']
+  var curr_strength_idx = 0
+  if (curr_strength > 0) {
+    curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
+  }
 
-// function draw_neurons(graph_key, layer, filtered_activations, domain_key, strength) {
-
-//   // Get neurons excluding already-drawn ones
-//   var more_filtered_activations = filter_out_already_displayed()
-
-//   // Draw neurons
-//   d3.select('#g-ag-' + graph_key)
-//     .selectAll('g')
-//     .data(more_filtered_activations)
-//     .enter()
-//     .append('rect')
-//     .attr('id', function(d) { return gen_node_id(d['key'], graph_key) })
-//     .attr('class', function() { return node_class() })
-//     .attr('width', function(d) { return node_size(d, graph_key, strength) })
-//     .attr('height', function(d) { return node_size(d, graph_key, strength) })
-//     .attr('x', function(d) { return x_coord_node(d, graph_key, strength, domain_key) })
-//     .attr('y', function(d) { return y_coord_node(d, graph_key) })
-//     .attr('rx', function(d) { return 0.3 * node_size(d, graph_key, strength) })
-//     .attr('fill', function(d) { return node_color(d) })
-//     .style('display', function(d) { return display_node(d) })
-//     .on('mouseover', function(d) { return mouseover_node(d) })
-//     .on('mouseout', function(d) { return mouseout_node(d) })
-
-//   // Function for node class
-//   function node_class() {
-//     var class1 = 'node'
-//     var class2 = ['node', graph_key].join('-')
-//     var class3 = ['node', graph_key, layer].join('-')
-//     return [class1, class2, class3].join(' ')
-//   }
-
-//   // Filter out already displayed nodes
-//   function filter_out_already_displayed() {
-//     var more_filtered_activations = filtered_activations.filter(function(d) {
-//       var neuron_id = d['key']
-//       var node_id = gen_node_id(neuron_id, graph_key)
-//       if (does_exist(node_id)) {
-//         return false
-//       } else {
-//         return true
-//       }
-//     })
-//     return more_filtered_activations
-//   }
-
-//   // Function for node color
-//   function node_color(d) {
-//     var bucket = neuron_to_bucket(d['key'], layer, curr_filters['topK'], curr_attack_type)
-//     return bucket_colors[bucket]
-//   }
-
-//   // Function for setting display of a node
-//   function display_node(d) {
-//     var neuron_id = d['key']
-    
-//     var value_key = get_value_key(graph_key, curr_attack_type, curr_strengths[curr_attack_type])
-//     var top_neurons = top_neuron_data[layer][value_key].slice(0, curr_filters['topK'])
-//     if ((strength == curr_strengths[curr_attack_type]) && top_neurons.includes(neuron_id)){
-//       return 'block'
-//     } else {
-//       return 'none'
-//     }
-//   }
-
-//   // Function for mouseover on nodes
-//   function mouseover_node(d) {
-//     // Get element
-//     var neuron_id = d['key']
-//     var node_id = gen_node_id(neuron_id, graph_key)
-//     var node = document.getElementById(node_id)
-
-//     // Mouse pointer
-//     node.style.cursor = 'pointer'
-
-//     // Position of node
-//     var node_rect = node.getBoundingClientRect()
-//     var node_x = node_rect.right 
-//     var node_y = (node_rect.top + node_rect.bottom) / 2 - 190
-
-//     // Draw a box
-//     var box_id = node_box_id(neuron_id)
-//     if (!does_exist(box_id)) {
-
-//       // Add nodebox
-//       d3.select('#svg-ag-nodebox')
-//         .append('g')
-//         .attr('id', box_id)
-//         .attr('transform', function() {
-//           var x = node_x + node_box['left']
-//           var y = node_y - node_box['height'] / 2
-//           return 'translate(' + x + ',' + y +')'
-//         })
-
-//       // Draw background rect
-//       draw_bg_rect(box_id)
-
-//       // Draw a feature vis
-//       draw_fv(box_id)
-
-//       // Draw example patches
-//       draw_examples(box_id)
-//     } else {
-//       d3.select('#' + box_id)
-//         .style('display', 'block')
-//         .attr('transform', function() {
-//           var x = node_x + node_box['left']
-//           var y = node_y - node_box['height'] / 2
-//           console.log(node_x)
-//           return 'translate(' + x + ',' + y +')'
-//         })
-//     }
-
-//     function draw_bg_rect(box_id) {
-//       d3.select('#' + box_id)
-//         .append('rect')
-//         .attr('id', box_id + '-bg')
-//         .attr('class', 'nodebox-bg')
-//         // .attr('x', node_x + node_box['left'])
-//         // .attr('y', node_y - node_box['height'] / 2)
-//         .attr('width', node_box['width'])
-//         .attr('height', node_box['height'])
-//     }
-
-//     function draw_fv(box_id) {
-//       d3.select('#' + box_id)
-//         .append('image')
-//         .attr('id', box_id + '-fv')
-//         .attr('class', 'nodebox-fv')
-//         .attr('xlink:href', vis_filename(neuron_id, 'channel'))
-//         .attr('x', 0)
-//         .attr('y', 0)
-//         .attr('transform', function() { return fv_transform() })
-//         .attr('width', node_box['fv-width'])
-//         .attr('height', node_box['fv-height'])
-//     }
-
-//     function draw_examples(box_id) {
-//       for(var i = 0; i < 4; i++) {
-//         d3.select('#' + box_id)
-//           .append('image')
-//           .attr('id', box_id + '-ex-' + i)
-//           .attr('class', 'nodebox-ex')
-//           .attr('xlink:href', vis_filename(neuron_id, 'ex-' + i))
-//           .attr('x', 0)
-//           .attr('y', 0)
-//           .attr('transform', function() { return ex_transform(i) })
-//           .attr('width', node_box['fv-width'])
-//           .attr('height', node_box['fv-height'])
-//       }
-//     }
-
-//     function fv_transform() {
-//       var x = node_box['fv-left']
-//       var y = - node_box['fv-height'] / 2 + 50
-//       return 'translate(' + x + ',' + y + ')'
-//     }
-
-//     function ex_transform(i) {
-//       var x = node_box['left'] + node_box['ex-left'] + i * (node_box['ex-padding'] + node_box['ex-width']) - 10
-//       var y = - node_box['ex-height'] / 2 + 50
-//       return 'translate(' + x + ',' + y + ')'
-//     }
-
-//     function vis_filename(neuron_id, type) {
-//       var filename = feature_vis_dir + '/'
-//       if (type == 'channel') {
-//         filename += 'channel/'
-//         filename += [neuron_id, type].join('-')
-//         filename += '.jpg'
-//       } else if (type.includes('ex')) {
-//         var ex = type.split('-')[1]
-//         filename += 'dataset-p/'
-//         filename += [neuron_id, 'dataset', 'p', ex].join('-')
-//         filename += '.jpg'
-//       }
-//       return filename
-//     }
-//   }
-
-//   // Function for mouseout
-//   function mouseout_node(d) {
-//     var neuron_id = d['key']
-//     var box_id = node_box_id(neuron_id)
-//     d3.select('#' + box_id).style('display', 'none')
-//   }
-
-//   // Define node box id
-//   function node_box_id(neuron_id) {
-//     return ['nodebox', graph_key, neuron_id].join('-')
-//   }
-// }
-
-// // Function for the size of neuron based on the vulnerability
-// function node_size(d, graph_key, strength) {
-
-//   if ((graph_key != 'attacked') && (strength == 0)) {
-//     return node_size_range[0] - 5
-//   } 
-
-//   var neuron = d['key']
-//   var layer = neuron.split('-')[0]
-//   var value_key = get_value_key('attacked', curr_attack_type, strength)
-//   var vul_val = vulnerability_data[layer][neuron][vul_type][curr_attack_type][value_key]
-//   return node_size_scale['all'][vul_type][value_key](vul_val)
+  d3.selectAll('.node-box-scatter-circle-' + curr_strength_idx)
+    .attr('r', 4)
+    .style('fill', 'red')
   
-// }
-
-// // Function for setting x coordinate of a neuron
-// function x_coord_node(d, graph_key, strength, domain_key) {
-//   var layer = d['key'].split('-')[0]
-//   var value_key = get_value_key(graph_key, curr_attack_type, strength)
-//   var x_domain_val = d['value'][value_key][domain_key]
-//   var x_coord = x_scale[value_key][layer][domain_key](x_domain_val)
-//   return x_coord
-// }
-
-// // Function for setting y coordinate of a neuron
-// function y_coord_node(d, graph_key) {
-//   var neuron = d['key']
-//   var id = gen_node_id(neuron, graph_key)
-//   var layer = neuron.split('-')[0]
-//   var height = parseFloat(d3.select('#' + id).attr('height'))
-//   var starting_y = y_scale(layer)
-//   return starting_y - height / 2
-// }
-
-// function jitter_neurons(graph_key) {
-
-//   // Get the value key
-//   var value_key = get_value_key(graph_key, curr_attack_type, curr_strengths[curr_attack_type])
-
-//   // jittering -> start from the x_scale!!
-//   layers.forEach(layer => {
-//     // Get the currently displayed nodes
-//     var displayed_nodes = d3
-//       .selectAll('.' + ['node', graph_key, layer].join('-'))
-//       .filter(function(d) {
-//         var neuron_id = d['key']
-//         var node_id = gen_node_id(neuron_id, graph_key)
-//         return is_displayed(node_id)
-//       })
-    
-//     var displayed_neurons = displayed_nodes._groups[0]
-//       .sort(function (a, b) {
-//         var a_x = parseFloat(a.getAttribute('x'))
-//         var b_x = parseFloat(b.getAttribute('x'))
-//         return a_x - b_x
-//       })
-//       .map(node => {
-//         var node_id_split = node.id.split('-').slice(-2)
-//         var neuron_id = node_id_split.join('-')
-//         return neuron_id
-//       })
-
-//     // Get adjusted jittered x coordinates
-//     var adjusted_x_coord = {}
-//     var adjusted_x_range = [1000, 0]
-//     var prev_end_x_coord = 0
-//     displayed_neurons.forEach(neuron => {
-//       var node = d3.select('#' + gen_node_id(neuron, graph_key))
-//       var x_coord = parseFloat(node.attr('x'))
-//       var width = parseFloat(node.attr('width'))
-      
-//       if (prev_end_x_coord > x_coord) {
-//         x_coord = prev_end_x_coord + jitter_strength
-//       }
-//       adjusted_x_coord[neuron] = x_coord
-//       adjusted_x_range[0] = d3.min([adjusted_x_range[0], x_coord])
-//       adjusted_x_range[1] = d3.max([adjusted_x_range[1], x_coord])
-//       prev_end_x_coord = x_coord + width
-//     })
-
-//     // Compute a new scale for rescaling
-//     var rescale = d3
-//       .scaleLinear()
-//       .domain(adjusted_x_range)
-//       .range([0, div_width - ag_margin['right']])
-
-//     // Jittering
-//     displayed_neurons.forEach(neuron => {
-//       d3.select('#' + gen_node_id(neuron, graph_key))
-//         .transition()
-//         .duration(x_coordinate_duration)
-//         .attr('x', function(d) { return rescale(adjusted_x_coord[neuron]) })
-//     })
-//   })
-  
-// }
-
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Functions for generating vulnerability scales
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-
-// function gen_node_size_scale() {
-//   vulnerability_range = get_vulnerability_range()
-//   gen_node_size_scale()
-
-//   function gen_node_size_scale() {
-//     // Generate node size scale for all layer
-//     node_size_scale['all'] = {'overall_vulnerability': {}, 'strengthwise_vulnerability': {}}
-//     attack_types.forEach(attack_type => {
-
-//       // Overall vulnerability, all layer
-//       node_size_scale['all']['overall_vulnerability'][attack_type] = d3
-//         .scaleLinear()
-//         .domain(vulnerability_range['all']['overall_vulnerability'][attack_type])
-//         .range(node_size_range)
-      
-//       // Strengthwise vulnerability, all layer
-//       strengths[attack_type].forEach(strength => {
-//         var value_key = get_value_key('attacked', attack_type, strength)
-//         node_size_scale['all']['strengthwise_vulnerability'][value_key] = d3
-//           .scaleLinear()
-//           .domain(vulnerability_range['all']['strengthwise_vulnerability'][value_key])
-//           .range(node_size_range)
-//       })
-//     })
-
-//     // Generate node size scale for layer by layer
-//     layers.forEach(layer => {
-//       node_size_scale[layer] = {'overall_vulnerability': {}, 'strengthwise_vulnerability': {}}
-//       attack_types.forEach(attack_type => {
-
-//         // Overall vulnerability, layer-by-layer
-//         node_size_scale[layer]['overall_vulnerability'][attack_type] = d3
-//           .scaleLinear()
-//           .domain(vulnerability_range[layer]['overall_vulnerability'][attack_type])
-
-//         // Strengthwise vulnerability, layer-by-layer
-//         strengths[attack_type].forEach(strength => {
-//           var value_key = get_value_key('attacked', attack_type, strength)
-//           node_size_scale[layer]['strengthwise_vulnerability'][value_key] = d3
-//             .scaleLinear()
-//             .domain(vulnerability_range[layer]['strengthwise_vulnerability'][value_key])
-//         })
-//       })
-//     })
-//   }
-
-// }
-
-// function get_vulnerability_range() {
-//   vulnerability_range = init_vul_range_dict()
-
-//   layers.forEach(layer => {
-//     for (var neuron_id in vulnerability_data[layer]) {
-//       attack_types.forEach(attack_type => {
-//         update_overall_vulnerability (layer, neuron_id, attack_type)
-//         update_strengthwise_vulnerability (layer, neuron_id, attack_type)
-//       })
-//     }
-//   })
-
-//   return vulnerability_range
-
-//   function init_vul_range_dict() {
-//     var vulnerability_range = {}
-
-//     // Vulnerability range of all layer
-//     vulnerability_range['all'] = {}
-//     vulnerability_range['all']['overall_vulnerability'] = {}
-//     vulnerability_range['all']['strengthwise_vulnerability'] = {}
-//     attack_types.forEach(attack_type => {
-//       vulnerability_range['all']['overall_vulnerability'][attack_type] = [1000, -1000]
-//       strengths[attack_type].forEach(strength => {
-//         var value_key = get_value_key('attacked', attack_type, strength)
-//         vulnerability_range['all']['strengthwise_vulnerability'][value_key] = [1000, -1000]
-//       })
-//     })
-
-//     // Vulnerability range of layer by layer
-//     layers.forEach(layer => {
-//       vulnerability_range[layer] = {}
-//       vulnerability_domain_keys.forEach(vulnerability_key => {
-//         vulnerability_range[layer][vulnerability_key] = {}
-//       })
-//       attack_types.forEach(attack_type => {
-//         vulnerability_range[layer]['overall_vulnerability'][attack_type] = [1000, -1000]
-//         strengths[attack_type].forEach(strength => {
-//           var value_key = get_value_key('attacked', attack_type, strength)
-//           vulnerability_range[layer]['strengthwise_vulnerability'][value_key] = [1000, -1000]
-//         })
-//       })
-//     })
-//     return vulnerability_range
-//   }
-
-//   function update_overall_vulnerability (layer, neuron_id, attack_type) {
-//     // Get the current overall vulnerability
-//     var overall_vul = vulnerability_data[layer][neuron_id]['overall_vulnerability'][attack_type]
-
-//     // Update overall vulnerability of all layer
-//     var min_all_overall_vul = vulnerability_range['all']['overall_vulnerability'][attack_type][0]
-//     var max_all_overall_vul = vulnerability_range['all']['overall_vulnerability'][attack_type][1]
-//     if (min_all_overall_vul > overall_vul) {
-//       vulnerability_range['all']['overall_vulnerability'][attack_type][0] = overall_vul
-//     }
-//     if (max_all_overall_vul < overall_vul) {
-//       vulnerability_range['all']['overall_vulnerability'][attack_type][1] = overall_vul
-//     }
-
-//     // Update overall vulnerability of each layer
-//     var min_overall_vul = vulnerability_range[layer]['overall_vulnerability'][attack_type][0]
-//     var max_overall_vul = vulnerability_range[layer]['overall_vulnerability'][attack_type][1]
-//     if (min_overall_vul > overall_vul) {
-//       vulnerability_range[layer]['overall_vulnerability'][attack_type][0] = overall_vul
-//     }
-//     if (max_overall_vul < overall_vul) {
-//       vulnerability_range[layer]['overall_vulnerability'][attack_type][1] = overall_vul
-//     }
-//   }
-
-//   function update_strengthwise_vulnerability (layer, neuron_id, attack_type) {
-//     strengths[attack_type].forEach(strength => {
-//       // Get the value key
-//       var value_key = get_value_key('attacked', attack_type, strength)
-
-//       // Get the current strengthwise vulnerability
-//       var strengthwise_vul = vulnerability_data[layer][neuron_id]['strengthwise_vulnerability'][attack_type][value_key]
-      
-//       // Update the strengthwise vulnerability of all layer
-//       var min_all_strengthwise_vul = vulnerability_range['all']['strengthwise_vulnerability'][value_key][0]
-//       var max_all_strengthwise_vul = vulnerability_range['all']['strengthwise_vulnerability'][value_key][1]
-//       if (min_all_strengthwise_vul > strengthwise_vul) {
-//         vulnerability_range['all']['strengthwise_vulnerability'][value_key][0] = strengthwise_vul
-//       }
-//       if (max_all_strengthwise_vul < strengthwise_vul) {
-//         vulnerability_range['all']['strengthwise_vulnerability'][value_key][1] = strengthwise_vul
-//       }
-
-//       // Update the strengthwise vulnerability of lthe current layer
-//       var min_strengthwise_vul = vulnerability_range[layer]['strengthwise_vulnerability'][value_key][0]
-//       var max_strengthwise_vul = vulnerability_range[layer]['strengthwise_vulnerability'][value_key][1]
-//       if (min_strengthwise_vul > strengthwise_vul) {
-//         vulnerability_range[layer]['strengthwise_vulnerability'][value_key][0] = strengthwise_vul
-//       }
-//       if (max_strengthwise_vul < strengthwise_vul) {
-//         vulnerability_range[layer]['strengthwise_vulnerability'][value_key][1] = strengthwise_vul
-//       }
-      
-//     })
-//   }
-// }
-
-
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Functions for updated attack strength
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-
-// export function update_neurons_with_new_strength() {
-//   update_neurons_with_new_strength_by_graph_key('original')
-//   update_neurons_with_new_strength_by_graph_key('target')
-//   update_neurons_with_new_strength_by_graph_key('attacked')  
-// }
-
-// function update_neurons_with_new_strength_by_graph_key(graph_key) {
-  
-//   update_node_display()
-//   jitter_neurons(graph_key)
-//   update_node_color()
-//   update_node_size()
-
-//   function update_node_display() {
-//     if ((graph_key == 'attacked') && (curr_strengths[curr_attack_type] == 0)) {
-//       d3.selectAll('.node-' + graph_key).style('display', 'none')
-//     } else {
-//       // Get nodes to display
-//       var filtered_neurons = []
-//       layers.forEach(layer => {
-//         // Filter nodes by top-k value
-//         var filtered_nodes = filter_activations(graph_key, 
-//                                                 layer, 
-//                                                 curr_filters['topK'], 
-//                                                 curr_attack_type, 
-//                                                 curr_strengths[curr_attack_type])
-//         // Filter nodes one more by vulnerability
-//         filtered_nodes = filtered_nodes.filter(function(d) {
-//           var neuron_id = d['key']
-//           var layer = neuron_id.split('-')[0]
-//           var vul = vulnerability_data[layer][neuron_id][vul_type][curr_attack_type]
-//           if (vul_type == 'strengthwise_vulnerability') {
-//             var value_key = get_value_key('attacked', curr_attack_type, curr_strengths[curr_attack_type])
-//             vul = vul[value_key]
-//           }
-//           return vul >= curr_filters['vulnerability']
-//         })
-//         filtered_neurons = filtered_neurons.concat(filtered_nodes.map(x => x['key']))
-//       })
-
-//       d3.selectAll('.node-' + graph_key)
-//         .style('display', function(d) {
-//           var neuron_id = d['key']
-//           if (filtered_neurons.includes(neuron_id)) {
-//             return 'block'
-//           } else {
-//             return 'none'
-//           }
-//         })
-//     }
-//   }
-
-//   function update_node_color() {
-//     d3.selectAll('.node-' + graph_key)
-//       .attr('fill', function(d) {
-//         var neuron_id = d['key']
-//         var layer = neuron_id.split('-')[0]
-//         var bucket = neuron_to_bucket(neuron_id, layer, curr_filters['topK'], curr_attack_type)
-//         return bucket_colors[bucket]
-//       })
-//   }
-
-//   function update_node_size() {
-//     if ((graph_key != 'attacked') || (curr_strengths[curr_attack_type] > 0)) {
-//       d3.selectAll('.node-' + graph_key)
-//         .attr('width', function(d) { return node_size(d, graph_key, curr_strengths[curr_attack_type]) })
-//         .attr('height', function(d) { return node_size(d, graph_key, curr_strengths[curr_attack_type]) })
-//         .attr('rx', function(d) { return 0.3 * node_size(d, graph_key, curr_strengths[curr_attack_type]) })
-//         .attr('y', function(d) { return y_coord_node(d, graph_key) })
-//     }
-//   }
-
-// }
-
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// // Functions for updated vulnerability
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-// export function update_neurons_with_new_vulnerability() {
-//   update_neurons_with_new_vulnerability_by_graph_key('original')
-//   update_neurons_with_new_vulnerability_by_graph_key('target')
-//   update_neurons_with_new_vulnerability_by_graph_key('attacked')
-// }
-
-// function update_neurons_with_new_vulnerability_by_graph_key(graph_key) {
-//   // update_opacity()
-//   update_display()
-
-//   // Update nodes' opacity
-//   function update_opacity() {
-//     d3.selectAll('.node-' + graph_key)
-//       .style('opacity', function(d) {
-//         var vul = get_vulnerability(d)
-//         if (vul >= curr_filters['vulnerability']) {
-//           return 1
-//         } else {
-//           return 0.3
-//         }
-//       })
-//   }
-
-//   // Update nodes' display
-//   function update_display() {
-//     d3.selectAll('.node-' + graph_key)
-//       .style('display', function(d) {
-//         var vul = get_vulnerability(d)
-//         var neuron_id = d['key']
-//         var layer = neuron_id.split('-')[0]
-//         var bucket = neuron_to_bucket(neuron_id, layer, curr_filters['topK'], curr_attack_type)
-//         var is_in_right_bucket = graph_key_to_buckets[graph_key].includes(bucket)
-//         if ((vul >= curr_filters['vulnerability']) && is_in_right_bucket) {
-//           return 'block'
-//         } else {
-//           return 'none'
-//         }
-//       })
-//     jitter_neurons(graph_key)
-//   }
-
-//   function get_vulnerability(d) {
-//     var neuron_id = d['key']
-//     var layer = neuron_id.split('-')[0]
-//     var vul = vulnerability_data[layer][neuron_id][vul_type]
-//     if (vul_type == 'overall_vulnerabiliity') {
-//       vul = vul[curr_attack_type]
-//     } else if (vul_type == 'strengthwise_vulnerability') {
-//       var value_key = get_value_key('attacked', curr_attack_type, curr_strengths[curr_attack_type])
-//       vul = vul[curr_attack_type][value_key]
-//     }
-//     return vul
-//   }
-// }
-
-
-
-
-
+}

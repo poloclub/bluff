@@ -11,9 +11,9 @@ export var main_view_size = {
 // Attribution graph group
 export var graph_margin = {
   'start_x': 100,
-  'end_x': 1200,
-  'start_y': 80,
-  'end_y': 700,
+  'end_x': 1000,
+  'start_y': 100,
+  'end_y': 500,
   'group_lr': 50,
   'node_lr': 5
 }
@@ -49,3 +49,25 @@ export var node_opacity = {
 // Fontawsome icon (https://fontawesome.com/cheatsheet?from=io)
 export var icons = {'angle-up': '\uf106', 'angle-down': '\uf107'}
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Nodes
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+export var node_box_style = {
+  'left': 40, 
+  'width': 430, 
+  'height': 85,
+  'fv-left': 10,
+  'fv-top': 10,
+  'fv-width': 65,
+  'fv-height': 65,
+  'fv-ex-padding': 10,
+  'ex-top': 10,
+  'ex-padding': 5,
+  'ex-width': 30,
+  'ex-height': 30,
+  'act-ex-padding': 35,
+  'act-plot-top': 10 + 2,
+  'act-plot-width': 120 - 2,
+  'act-plot-height': 53
+}
