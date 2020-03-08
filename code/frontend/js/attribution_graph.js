@@ -15,22 +15,14 @@ import {
   node_box_style
 } from './style.js';
 
+import {
+  selected_class
+} from './header.js'
+
 import { 
   selected_attack_info
 } from './attack_control.js'
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// Set data directory
-////////////////////////////////////////////////////////////////////////////////////////////////
-// var neuron_data_dir = '../../../massif/neurons/'
-var data_dir = '../../data/'
-var activation_data_path = data_dir + 'neuron_data/neuron_data-giant_panda-armadillo-pgd.json'
-var vulnerability_data_path = data_dir + 'neuron_vulnerabilities/neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
-var top_neuron_data_path = data_dir + 'top_neurons/top_neurons-giant_panda-armadillo-pgd.json'
-// var activation_data_path = data_dir + 'neuron_data/neuron_data-brown_bear-american_black_bear-pgd.json'
-// var vulnerability_data_path = data_dir + 'neuron_vulnerabilities/neuron_vulnerabilities-giant_panda-armadillo-pgd.json'
-// var top_neuron_data_path = data_dir + 'top_neurons/top_neurons-brown_bear-american_black_bear-pgd.json'
-var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -56,41 +48,58 @@ var y_coords = {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
+////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // Read the neuron data
-  activation_data = data[0]
-  vulnerability_data = data[1]
-  top_neuron_data = data[2]
+export function reload_graph() {
+  var file_list = data_file_path()
+  remove_graph()
+  draw_graph(file_list)
 
-  // Get activation scale
-  get_actiavtion_y_scale()
+  function draw_graph(file_list) {
+    Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
 
-  // Parse vulnerability data
-  parse_vulnerability_data()
-  sorted_vulnerability_data = sort_vulnerability_data()
-  extracted_neurons = extract_neurons()
+      // Read the neuron data
+      activation_data = data[0]
+      vulnerability_data = data[1]
+      top_neuron_data = data[2]
+    
+      // Get activation scale
+      get_actiavtion_y_scale()
+    
+      // Parse vulnerability data
+      parse_vulnerability_data()
+      sorted_vulnerability_data = sort_vulnerability_data()
+      extracted_neurons = extract_neurons()
+    
+      // Generate x, y coordinate info
+      gen_x_coords()
+      gen_y_coords()
+    
+      // Draw nodes
+      write_layers()
+      draw_neurons()
+    
+      window.activation_data = activation_data
+      window.vulnerability_data = vulnerability_data
+      window.top_neuron_data = top_neuron_data
+      window.sorted_vulnerability_data = sorted_vulnerability_data
+      window.extracted_neurons = extracted_neurons
+      window.node_size = node_size
+      window.node_group_x = node_group_x
+      window.y_coords = y_coords
+      window.activation_range = activation_range
+    
+    })
+  }
 
-  // Generate x, y coordinate info
-  gen_x_coords()
-  gen_y_coords()
+}
 
-  // Draw nodes
-  write_layers()
-  draw_neurons()
+export function remove_graph() {
+  d3.selectAll('.layer-text').remove()
+  d3.selectAll('.g-node').remove()
+  d3.selectAll('.node-box').remove()
+}
 
-  window.activation_data = activation_data
-  window.vulnerability_data = vulnerability_data
-  window.top_neuron_data = top_neuron_data
-  window.sorted_vulnerability_data = sorted_vulnerability_data
-  window.extracted_neurons = extracted_neurons
-  window.node_size = node_size
-  window.node_group_x = node_group_x
-  window.y_coords = y_coords
-  window.activation_range = activation_range
-
-})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Parse dataset
@@ -224,6 +233,22 @@ function get_actiavtion_y_scale() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // General functions
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+function data_file_path() {
+  var data_dir = '../../data/'
+  var original_class = selected_class['original']
+  var target_class = selected_class['target']
+  // console.log(selected_attack_info)
+  var attack_type = 'pgd'
+  // var attack_type = selected_attack_info['attack_type']
+  
+  var class_info = [original_class, target_class].join('-')
+  var activation_data_path = data_dir + ['neuron_data/neuron_data', class_info, attack_type + '.json'].join('-')
+  var vulnerability_data_path = data_dir + ['neuron_vulnerabilities/neuron_vulnerabilities', class_info, attack_type + '.json'].join('-')
+  var top_neuron_data_path = data_dir + ['top_neurons/top_neurons', class_info, attack_type + '.json'].join('-')
+  var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
+  return file_list
+}
 
 function get_value_key(graph_key, attack_type, strength) {
   var value_key = graph_key
@@ -428,7 +453,7 @@ function draw_neurons() {
       .on('mouseout', function(neuron) { return mouseout_node(neuron) })
   }
 
-  function draw_neuron_id(graph_key) {
+  function draw_neuron_id() {
     var ns = node_size[selected_attack_info['attack_type']]
 
     d3.selectAll('.g-node')
@@ -501,6 +526,7 @@ function draw_neurons() {
       d3.select('#g-ag')
         .append('g')
         .attr('id', node_box_id)
+        .attr('class', 'node-box')
         .attr('transform', function() {
           var x = node_x + node_box_style['left']
           var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2

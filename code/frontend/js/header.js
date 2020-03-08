@@ -11,6 +11,11 @@ import {
   option_box_style
 } from './style.js'
 
+import {
+  remove_graph,
+  reload_graph
+} from './attribution_graph.js'
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +185,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
           show_available_target_classes()
         }
       }
-      
+
     }
 
     function get_all_target_classes() {
@@ -316,6 +321,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
         if (class_name != selected_class['original']) {
           selected_class['target'] = '-'
           d3.select('#class-dropdown-text-target').text('- - - Select - - -')
+          remove_graph()
         }
       }
 
@@ -326,6 +332,9 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       var dropdown_icon = document.getElementById('class-dropdown-icon-' + original_or_target)
       dropdown_icon.innerHTML = '<i class="fas fa-angle-down"></i>'
 
+      if (original_or_target == 'target') {
+        reload_graph()
+      }
       
     }
   }
