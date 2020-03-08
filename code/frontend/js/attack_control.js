@@ -232,8 +232,8 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
 
 }
 
-// Round by a specific unit
 function round_unit(n, unit) {
+  // Round by a specific unit
   var new_unit = 1 / unit
   return Math.round(n * new_unit) / new_unit;
 }

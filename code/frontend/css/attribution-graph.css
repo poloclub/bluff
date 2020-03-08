@@ -32,3 +32,11 @@
 .node-box-scatter-circle {
   fill: gray;
 }
+
+.neuron-id {
+  fill: gray;
+}
+
+.layer-text {
+  fill: gray;
+}
