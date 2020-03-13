@@ -66,9 +66,9 @@
 }
 
 .class-option-box {
-  width: 180px;
-  font-size: 15px;
+  width: 160px;
   y: 3;
+  font-size: 15px;
   stroke: lightgray;
   stroke-width: 1px;
   rx: 5px;
@@ -77,7 +77,7 @@
 }
 
 .class-option-hl-box {
-  width: 180px;
+  width: 160px;
 }
 
 .class-option-text {

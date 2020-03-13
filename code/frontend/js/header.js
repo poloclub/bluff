@@ -144,9 +144,6 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
     dropdown.onmouseout = dropdown_mouseout
     dropdown.onclick = dropdown_click
 
-    // Get x for option box
-    var [x, d1, d2, y] = get_absolute_position('class-dropdown-' + original_or_target)
-
     // Generate option box
     if (original_or_target == 'original') {
       var original_classes = Object.keys(class_pairs)
@@ -170,6 +167,14 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
     }
 
     function dropdown_click() {
+      
+      // Make dropdown option g be in the right position
+      var dropdown_id = 'class-dropdown-text-' + original_or_target
+      var [left, top, right, bottom] = get_absolute_position(dropdown_id)
+      d3.select('#g-class-option-box-' + original_or_target)
+        .attr('transform', 'translate(' + left + ',0)')
+      console.log(left)
+
       var dropdown_icon = document.getElementById('class-dropdown-icon-' + original_or_target)
 
       // Double click -> no change
@@ -241,13 +246,21 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       d3.select('#svg-class-option-box-' + original_or_target)
         .append('g')
         .attr('id', 'g-class-option-box-' + original_or_target)
+        .attr('transform', g_option_transform())
+
+      d3.select('#g-class-option-box-' + original_or_target)
         .append('rect')
         .attr('id', 'class-option-box-' + original_or_target)
         .attr('class', 'class-option-box')
-        .attr('x', x + 2)
 
       d3.select('#class-option-box-' + original_or_target)
         .attr('height', get_option_box_height(lst))
+
+      function g_option_transform() {
+        var option_div = 'header-subtitle-class-dropdown-' + original_or_target
+        var [left, top, right, bottom] = get_absolute_position(option_div)
+        return 'translate(' + left + ',0)'
+      }
     }
 
     function gen_option_highlight_box(lst) {
@@ -258,7 +271,6 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
         .append('rect')
         .attr('id', function(class_name) { return get_hl_box_id(class_name) })
         .attr('class', get_hl_box_class())
-        .attr('x', x + 2)
         .attr('y', function(class_name, i) { return option_y(i) })
         .attr('height', option_box_style['option-height'])
         .style('opacity', function(class_name) { return get_hl_box_opacity(class_name) })
@@ -290,8 +302,8 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
         .attr('id', function(d) { return ['class-option-text', original_or_target, d].join('-')})
         .attr('class', get_text_class())
         .text(function(d) { return class_name_for_display(d) })
-        .attr('x', x + 15)
-        .attr('y', function(d, i) { return 20 + option_y(i) })
+        .attr('x', 15)
+        .attr('y', function(d, i) { return 17 + option_y(i)})
         .on('mouseover', function(class_name) { return option_mouseover(class_name) })
         .on('click', function(class_name) { return option_click(class_name) })
       
@@ -326,9 +338,18 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       // If a new original class selected, Unselect target class
       if (original_or_target == 'original') {
         if (class_name != selected_class['original']) {
+
+          // Reset class selectionss
           selected_class['target'] = '-'
           d3.select('#class-dropdown-text-target').text('- - - Select - - -')
           remove_graph()
+
+          // Make target option box be in the right position
+          var target_subtitle_div = 'header-subtitle-class-dropdown-target'
+          var [left, top, right, bottom] = get_absolute_position(target_subtitle_div)
+          d3.select('#g-class-option-box-target')
+            .attr('transform', 'translate(' + left + ',0)')
+
         }
       }
 
