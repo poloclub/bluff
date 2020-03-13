@@ -28,7 +28,6 @@ export var selected_class = {'original': '-', 'target': '-'}
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate header template
-// draw_horizontal_line()
 draw_title('Bluff')
 draw_subtitle()
 

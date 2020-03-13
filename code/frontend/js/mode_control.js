@@ -8,34 +8,36 @@ import {
   selected_attack_info
 } from './attack_control.js'
 
+import {
+  write_mode_option_title,
+  write_mode_option_help
+} from './filter_pathways.js'
+
 import { 
   go_comparison_mode
 } from './attribution_graph.js'
 
 import {
-  round_unit,
   gen_strength_bar_length_scale
 } from './attack_control.js'
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Global variables
+//////////////////////////////////////////////////////////////////////////////////////////
 
 export var comp_attack = {
   'weak': 0.05,
   'strong': 0.45
 }
 
+var bar_length_scale_cmp = {} 
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Make mode control
 //////////////////////////////////////////////////////////////////////////////////////////
 
 gen_mode_option_g()
-
-// Filter pathways
-write_mode_option_title('filter', 'FILTER PATHWAYS')
-write_mode_option_help('filter', ['Which pathways', 'do you want to see?'])
-add_what_to_see_options()
-
-// Comparison mode
-var bar_length_scale_cmp = {} 
 write_mode_option_title('compare', 'COMPARISON MODE')
 add_on_off_icon()
 write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
@@ -48,96 +50,7 @@ add_compare_strength_bar()
 function gen_mode_option_g() {
   d3.select('#svg-mode-option')
     .append('g')
-    .attr('id', 'g-filter-option')
-
-  d3.select('#svg-mode-option')
-    .append('g')
     .attr('id', 'g-compare-option')
-}
-
-function write_mode_option_title(type, title) {
-  d3.select('#' + ['g', type, 'option'].join('-'))
-    .append('text')
-    .attr('id', [type, 'option', 'title'].join('-'))
-    .attr('class', 'option-title')
-    .text(title)
-}
-
-function write_mode_option_help(type, lines) {
-  d3.select('#' + ['g', type, 'option'].join('-'))
-    .selectAll('help')
-    .data(lines)
-    .enter()
-    .append('text')
-    .attr('class', 'option-help')
-    .attr('id', [type, 'option', 'help'].join('-'))
-    .text(function(d) { return d })
-    .attr('y', function(d, i) {return i * 17})
-}
-
-function add_what_to_see_options() {
-  
-  gen_option_g('activated')
-  gen_option_g('changed')
-  gen_option_title('activated')
-  gen_option_title('changed')
-  gen_sub_option('changed', ['Largest increased', 'Largest decreased'])
-
-  function gen_option_g(option) { 
-    d3.select('#g-filter-option')
-      .append('g')
-      .attr('id', 'g-most-' + option)
-      .attr('transform', function() {
-        var x = what_to_see['most-option-x']
-        var y = what_to_see['most-' + option + '-y']
-        return 'translate(' + x + ',' + y + ')'
-      })
-  }
-
-  function gen_option_title(option) {
-    d3.select('#g-most-' + option)
-      .append('rect')
-      .attr('class', 'what-to-see-option-checkbox')
-      .attr('width', what_to_see['bt-width'])
-      .attr('height', what_to_see['bt-height'])
-      
-    d3.select('#g-most-' + option)
-      .append('text')
-      .text('Most ' + option + ' by attack')
-      .attr('class', 'what-to-see-option-text')
-      .attr('x', what_to_see['most-option-text-x'])
-      .attr('y', what_to_see['most-option-text-y'])
-  }
-
-  function gen_sub_option(option, suboptions) {
-    d3.select('#g-most-' + option)
-      .selectAll('suboptions')
-      .data(suboptions)
-      .enter()
-      .append('rect')  
-      .attr('class', 'what-to-see-option-checkbox')
-      .attr('width', what_to_see['bt-width'])
-      .attr('height', what_to_see['bt-height'])
-      .attr('x', what_to_see['most-changed-suboption-x'])
-      .attr('y', function(d, i) { 
-        return what_to_see['most-changed-suboption-t'] + i * what_to_see['most-changed-suboption-h'] 
-      })
-
-    d3.select('#g-most-' + option)
-      .selectAll('suboptions')
-      .data(suboptions)
-      .enter()
-      .append('text')
-      .attr('class', 'what-to-see-option-text')
-      .attr('x', what_to_see['most-changed-suboption-x'] + what_to_see['most-option-text-x'])
-      .attr('y', function(d, i) { 
-        var start_y = what_to_see['most-changed-suboption-t'] + what_to_see['most-option-text-y']
-        return start_y + i * what_to_see['most-changed-suboption-h'] 
-      })
-      .text(function(d) { return d })
-
-  }
-
 }
 
 function add_on_off_icon() {

@@ -1,35 +1,3 @@
-/* Options general */
-.option-title {
-  fill: black;
-  font-weight: bolder;
-}
-
-.option-help {
-  font-size: 15px;
-  transform: translate(0px, 20px);
-  fill: gray;
-}
-
-/* Filter pathways */
-#g-filter-option {
-  font-size: 15px;
-  transform: translate(100px, 210px);
-}
-
-.what-to-see-option-checkbox {
-  fill: white;
-  stroke: lightgray;
-  stroke-width: 1px;
-  transform: translate(0px, -3px);
-  rx: 1px;
-  ry: 1px;
-}
-
-.what-to-see-option-text {
-  fill: lightgray;
-  font-size: 15px;
-}
-
 /* Comparison mode */
 #g-compare-option {
   font-size: 15px;

@@ -92,7 +92,12 @@ export var icons = {
   'check-circle': '\uf058',
   'check-square': '\uf14a',
   'toggle-on': '\uf205',
-  'toggle-off': '\uf204'
+  'toggle-off': '\uf204',
+  'user-secret': '\uf21b',
+  'skull': '\uf54c',
+  'skull-crossbones': '\uf714',
+  'filter': '\uf0b0',
+  'balance-scale-left': '\uf515'
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
