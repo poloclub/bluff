@@ -8,14 +8,47 @@ export var main_view_size = {
   'height': 1000
 }
 
+// How to attack
+export var how_to_attack = {
+  'method-icon-x': 90,
+  'method-val-y': 20,
+  'method-line-x': 100,
+  'method-line-y': 24
+}
+
 // Attribution graph group
 export var graph_margin = {
-  'start_x': 100,
-  'end_x': 1000,
-  'start_y': 100,
-  'end_y': 500,
+  'start_x': 200,
+  'end_x': 1200,
+  'start_y': 300,
+  'end_y': 700,
   'group_lr': 50,
   'node_lr': 5
+}
+
+// What to see option
+export var what_to_see = {
+  'most-option-x': 2,
+  'most-option-text-x': 15,
+  'most-option-text-y': 7,
+  'most-activated-y': 65,
+  'most-changed-y': 90,
+  'most-changed-suboption-x': 15,
+  'most-changed-suboption-t': 25,
+  'most-changed-suboption-h': 22,
+  'bt-width': 10,
+  'bt-height': 10
+}
+
+// Size info of filter bar
+export var filter_bar = {
+  'bar_length': 100,
+  'cmp_bar_length': 150,
+  'cmp_pointer_line_length': 10,
+  'outer_rect': 15,
+  'inner_rect': 7,
+  'outer_rx': 3,
+  'inner_rx': 1.5,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,21 +56,25 @@ export var graph_margin = {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Color for dropdown menu
-export var dropdown_color = {'mouseover': '#EEEEEE', 'mouseout': '#FFFFFF'}
+export var dropdown_color = {
+  'mouseover': '#EEEEEE', 
+  'mouseout': '#FFFFFF'
+}
+
 export var option_box_style = {
-  'option-height': 30,
+  'option-height': 25,
   'option-tb-margin': 0,
-  'option-top': 12,
-  'option-bot': 8,
+  'option-top': 8,
+  'option-bot': 3,
   'highlight-opacity': 0.2
 }
 
 // Node colors
 export var node_color = {
-  'original': '#2b83ba',
-  'original-and-target': '#abdda4',
-  'attack-only': '#d7191c',
-  'target': '#fdae61'
+  'original': '#abdda4', // green
+  'original-and-target': '#fdae61', // orange
+  'target': '#2b83ba', // blue
+  'attack-only': '#d7191c' // red
 }
 
 // Node opacity
@@ -47,7 +84,16 @@ export var node_opacity = {
 }
 
 // Fontawsome icon (https://fontawesome.com/cheatsheet?from=io)
-export var icons = {'angle-up': '\uf106', 'angle-down': '\uf107'}
+export var icons = {
+  'angle-up': '\uf106', 
+  'angle-down': '\uf107',
+  'caret-up': '\uf0d8',
+  'caret-down': '\uf0d7',
+  'check-circle': '\uf058',
+  'check-square': '\uf14a',
+  'toggle-on': '\uf205',
+  'toggle-off': '\uf204'
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Nodes

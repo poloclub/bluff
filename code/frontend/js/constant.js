@@ -1,7 +1,10 @@
 // Class
 export var class_pairs = {
+  'ambulance': ['street_sign'],
   'brown_bear': ['american_black_bear'],
-  'giant_panda': ['armadillo']
+  'diamondback': ['vine_snake'],
+  'giant_panda': ['armadillo'],
+  'vine_snake': ['green_snake']
 }
 
 // Attack
@@ -12,7 +15,7 @@ export var attack_strengths = {
 }
 
 // Top_k for extracting interesting neurons
-export var top_k = 6
+export var top_k = 10
 export var rough_top_k = 10
 export var highlight_top_k = rough_top_k
 
@@ -50,8 +53,6 @@ export var graph_key_to_buckets = {
 export var x_domain_keys = ['median_activation', 'median_activation_percentile']
 export var vulnerability_domain_keys = ['overall_vulnerability', 'strengthwise_vulnerability']
 
-// Size info of filter bar
-export var filter_bar_length = 150
 
 // Layer
 export var layers = ['mixed5b', 'mixed5a', 'mixed4e', 'mixed4d', 'mixed4c', 'mixed4b', 'mixed4a', 'mixed3b', 'mixed3a']

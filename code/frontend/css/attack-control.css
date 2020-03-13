@@ -1,71 +1,90 @@
 #top-control {
-  height: 70px;
+  height: 100px;
 }
 
+/* How to attack */
 #attack-option-title {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(100px, 31px);
+  font-size: 15px;
+  transform: translate(100px, 30px);
+  fill: black;
+  font-weight: bolder;
 }
 
-#attack-dropdown-title {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(320px, 31px);
+#attack-option-help {
+  font-size: 15px;
+  transform: translate(100px, 50px);
+  fill: gray;
+}
+
+/* Attack type */
+#g-attack-type {
+  transform: translate(100px, 80px);
+  font-size: 15px;
 }
 
 #attack-dropdown-box {
-  stroke-width: 1px;
-  stroke: lightgray;
   fill: white;
-  rx: 10px;
-  ry: 10px;
   display: inline-block;
-  width: 200px;
-  height: 30px;
-  transform: translate(455px, 10px);
+  width: 100px;
+  height: 23px;
+  transform: translate(0px, 3px);
+}
+
+#attack-dropdown-text {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: bold;
 }
 
 #attack-dropdown-icon {
   display: inline-block;
-  float: right;
-  transform: translate(630px, 33px);
   fill: gray;
-  font-size: 25px;
+  font-size: 15px;
   font-weight: bold;
 } 
 
-#attack-dropdown-text {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(475px, 32px);
-  font-weight: bold;
+/* Attack strength */
+#g-strength-bar {
+  transform: translate(100px, 130px);
+  font-size: 15px;
 }
 
 #strength-bar-title {
   display: inline-block;
-  font-size: 20px;
-  transform: translate(720px, 31px);
+  font-size: 15px;
+}
+
+.filter-bar-rect {
+  height: 2px;
+}
+
+.filter-bar-circle {
+  r: 6px;
+  fill: white;
+  stroke: gray;
+  stroke-width: 1.5px;
+}
+
+.filter-bar-text {
+  font-size: 15px;
+  fill: gray;
 }
 
 #filter-bar-background-strength {
-  display: inline-block;
-  transform: translate(870px, 23px);
+  transform: translate(0px, 15px);
 }
 
 #filter-bar-front-strength {
-  display: inline-block;
-  transform: translate(870px, 23px);
+  transform: translate(0px, 15px);
 }
 
 #filter-bar-circle-strength {
-  display: inline-block;
-  transform: translate(870px, 23px);
+  transform: translate(0px, 15px);
 }
 
 #filter-bar-text-strength {
   display: inline-block;
-  transform: translate(1043px, 30px);
+  transform: translate(109px, 20px);
 }
 
 .filter-bar-title {
@@ -73,140 +92,12 @@
   fill: gray;
 }
 
-.filter-bar-rect {
-  height: 3px;
-}
-
 .filter-bar-background {
   fill: lightgray;
+  stroke-width: 1px;
 }
 
 .filter-bar-front {
   fill: gray;
 }
 
-.filter-bar-circle {
-  r: 10px;
-  fill: white;
-  stroke: gray;
-  stroke-width: 2.5px;
-}
-
-.filter-bar-text {
-  font-size: 18px;
-  fill: gray;
-}
-
-/* 
-
-
-.top-control-dropdown {
-  border: 1px lightgray solid;
-  border-radius: 10px;
-  display: inline-block;
-  height: 30px;
-}
-
-.top-control-dropdown-title {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(10px, 1px);
-  color: gray;
-}
-
-.top-control-dropdown-val {
-  display: inline-block;
-  font-size: 20px;
-  transform: translate(15px, 1px);
-  font-weight: bold;
-}
-
-.top-control-dropdown-icon {
-  display: inline-block;
-  float: right;
-  transform: translate(-7px, -2px);
-  color: gray;
-  font-size: 25px;
-}
-
-#top-control-attack-dropdown {
-  width: 200px;
-  transform: translate(320px, -38px);
-}
-
-#filter-bar-front-attack {
-  transform: translate(175px, 15px);
-}
-
-#filter-bar-background-attack {
-  transform: translate(175px, 15px);
-}
-
-#filter-bar-circle-attack {
-  transform: translate(175px, 15px);
-}
-
-#filter-bar-text-attack {
-  transform: translate(345px, 23px);
-}
-
-#filter-bar-front-vulnerability {
-  transform: translate(150px, 15px);
-}
-
-#filter-bar-background-vulnerability {
-  transform: translate(150px, 15px);
-}
-
-#filter-bar-circle-vulnerability {
-  transform: translate(150px, 15px);
-}
-
-#filter-bar-text-vulnerability {
-  transform: translate(325px, 23px);
-} 
-
-#filter-bar-front-topK {
-  transform: translate(90px, 15px);
-}
-
-#filter-bar-background-topK {
-  transform: translate(90px, 15px);
-}
-
-#filter-bar-circle-topK {
-  transform: translate(90px, 15px);
-}
-
-#filter-bar-text-topK {
-  transform: translate(260px, 23px);
-}
-
-/* 
-
-.attack-strength-slidebar {
-  height: 3px;
-  transform: translate(165px, 15px);
-}
-
-#attack-strength-slidebar-background{
-  width: 150px;
-  fill: lightgray;
-}
-
-#attack-strength-slidebar-front{
-  fill: gray;
-}
-
-#attack-strength-circle{
-  transform: translate(155px, 16px);
-  fill: white;
-  stroke: gray;
-  stroke-width: 2px;
-  r: 8px;
-}
-
-#attack-strength-val{
-  font-size: 15px;
-} */
- */

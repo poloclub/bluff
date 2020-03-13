@@ -34,14 +34,18 @@ d3.select('#svg-main')
 
 d3.select('#svg-main')  
   .append('rect')
+  .attr('id', 'option-bg')
   .attr('class', 'main-bg')
-  .style('width', width)
-  .style('height', 50)
   
 // Generate svg for attack option
 d3.select('#svg-main')
   .append('svg')
   .attr('id', 'svg-attack-option')
+
+// Generate svg for mode option
+d3.select('#svg-main')
+  .append('svg')
+  .attr('id', 'svg-mode-option')
 
 // Generate svg for class option box
 d3.select('#svg-main')

@@ -8,7 +8,8 @@ import {
 
 import {
   dropdown_color,
-  option_box_style
+  option_box_style,
+  node_color
 } from './style.js'
 
 import {
@@ -27,7 +28,7 @@ export var selected_class = {'original': '-', 'target': '-'}
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate header template
-draw_horizontal_line()
+// draw_horizontal_line()
 draw_title('Bluff')
 draw_subtitle()
 
@@ -62,32 +63,32 @@ function draw_subtitle() {
   var sub_title = document.createElement('div')
   var sub_title_1 = document.createElement('div')
   var sub_title_2 = document.createElement('div')
-  var sub_title_2_1 = document.createElement('div')
-  var sub_title_2_2 = document.createElement('div')
-  var sub_title_2_3 = document.createElement('div')
-  var sub_title_2_4 = document.createElement('div')
+  var sub_title_3 = document.createElement('div')
+  var sub_title_4 = document.createElement('div')
   sub_title.setAttribute('id', 'sub-title')
-  sub_title_1.innerText = 'Understand how an attack make a model'
-  sub_title_2_1.innerText = 'misclassify'
-  sub_title_2_3.innerText = 'into'
+  sub_title_1.innerText = 'Understand how to attack a model to misclassify'
+  sub_title_3.innerText = 'into'
+  sub_title_3.style.paddingLeft = '5px'
+  sub_title_3.style.paddingRight = '5px'
 
   // Append the subtitle
   var header_title = document.getElementById('header-title')
   header_title.appendChild(sub_title)
   sub_title.appendChild(sub_title_1)
   sub_title.appendChild(sub_title_2)
-  sub_title_2.appendChild(sub_title_2_1)
-  sub_title_2.appendChild(sub_title_2_2)
-  sub_title_2.appendChild(sub_title_2_3)
-  sub_title_2.appendChild(sub_title_2_4)
-  sub_title_1.setAttribute('id', 'header-sub-title-1')
-  sub_title_2.setAttribute('id', 'header-sub-title-2')
-  sub_title_2_1.setAttribute('class', 'header-sub-title')
-  sub_title_2_2.setAttribute('class', 'header-sub-title')
-  sub_title_2_3.setAttribute('class', 'header-sub-title')
-  sub_title_2_4.setAttribute('class', 'header-sub-title')
-  sub_title_2_2.setAttribute('id', 'header-subtitle-class-dropdown-original')
-  sub_title_2_4.setAttribute('id', 'header-subtitle-class-dropdown-target')
+  sub_title.appendChild(sub_title_3)
+  sub_title.appendChild(sub_title_3)
+  sub_title.appendChild(sub_title_4)
+  sub_title.setAttribute('id', 'sub-title')
+  sub_title.setAttribute('class', 'header-sub-title')
+  sub_title_1.setAttribute('class', 'header-sub-title')
+  sub_title_2.setAttribute('class', 'header-sub-title header-option-title')
+  sub_title_3.setAttribute('class', 'header-sub-title')
+  sub_title_4.setAttribute('class', 'header-sub-title header-option-title')
+  sub_title_2.setAttribute('id', 'header-subtitle-class-dropdown-original')
+  sub_title_4.setAttribute('id', 'header-subtitle-class-dropdown-target')
+  sub_title_2.style.color = node_color['original']
+  sub_title_4.style.color = node_color['target']
 }
 
 
@@ -118,19 +119,21 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
     var dropdown_icon = document.createElement('div')
     dropdown_icon.setAttribute('id', 'class-dropdown-icon-' + original_or_target)
     dropdown_icon.setAttribute('class', 'class-dropdown-icon')
-    dropdown_icon.innerHTML = '<i class="fas fa-angle-down class-dropdown-icon-unfolded"></i>'
+    dropdown_icon.innerHTML = '<i class="fas fa-sort-down"></i>'
+    dropdown_icon.style.transform = 'translate(3px, -5px)'
 
     // Define display value, and show default value
     var display_val = document.createElement('div')
     display_val.setAttribute('id', 'class-dropdown-text-' + original_or_target)
     display_val.setAttribute('class', 'class-dropdown-text')
     display_val.innerText = get_default_class_name()
-    
+
     // Append the element to the document
     var parent = document.getElementById(parent_id)
     parent.appendChild(dropdown)
+    parent.appendChild(dropdown_icon)
     dropdown.appendChild(display_val)
-    dropdown.appendChild(dropdown_icon)
+    
   }
 
   function create_dropdown_options() {
@@ -160,7 +163,6 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
 
     function dropdown_mouseover() {
       this.style.cursor = 'pointer'
-      this.style['background-color'] = dropdown_color['mouseover']
     }
 
     function dropdown_mouseout() {
@@ -173,12 +175,14 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       // Double click -> no change
       if (dropdown_icon.innerHTML.includes('up')) {
         d3.select('#svg-class-option-box-' + original_or_target).style('display', 'none')
-        dropdown_icon.innerHTML = '<i class="fas fa-angle-down"></i>'
+        dropdown_icon.innerHTML = '<i class="fas fa-sort-down"></i>'
+        dropdown_icon.style.transform = 'translate(3px, -5px)'
       } 
       // One click -> show options
       else {
         d3.select('#svg-class-option-box-' + original_or_target).style('display', 'block')
-        dropdown_icon.innerHTML = '<i class="fas fa-angle-up"></i>'
+        dropdown_icon.innerHTML = '<i class="fas fa-sort-up"></i>'
+        dropdown_icon.style.transform = 'translate(5px, 3px)'
 
         // Show only available target class
         if (original_or_target == 'target') { 
@@ -222,7 +226,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
             .attr('y', option_y(i))
           d3.select('#class-option-text-' + original_or_target + '-' + target_class)
             .style('display', 'block')
-            .attr('y', 20 + option_y(i))
+            .attr('y', option_y(i) + 20)
         })
       }
     }
@@ -235,16 +239,19 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
 
     function gen_option_box(lst) {
       d3.select('#svg-class-option-box-' + original_or_target)
+        .append('g')
+        .attr('id', 'g-class-option-box-' + original_or_target)
         .append('rect')
         .attr('id', 'class-option-box-' + original_or_target)
         .attr('class', 'class-option-box')
         .attr('x', x + 2)
+
       d3.select('#class-option-box-' + original_or_target)
         .attr('height', get_option_box_height(lst))
     }
 
     function gen_option_highlight_box(lst) {
-      d3.select('#svg-class-option-box-' + original_or_target)
+      d3.select('#g-class-option-box-' + original_or_target)
         .selectAll('target-classes')
         .data(lst)
         .enter()
@@ -275,7 +282,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
     }
 
     function gen_option_text(lst) {
-      d3.select('#svg-class-option-box-' + original_or_target)
+      d3.select('#g-class-option-box-' + original_or_target)
         .selectAll('target-classes')
         .data(lst)
         .enter()
@@ -330,7 +337,8 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       selected_class[original_or_target] = class_name
       d3.select('#' + 'svg-class-option-box-' + original_or_target).style('display', 'none')
       var dropdown_icon = document.getElementById('class-dropdown-icon-' + original_or_target)
-      dropdown_icon.innerHTML = '<i class="fas fa-angle-down"></i>'
+      dropdown_icon.innerHTML = '<i class="fas fa-sort-down"></i>'
+      dropdown_icon.style.transform = 'translate(5px, -5px)'
 
       if (original_or_target == 'target') {
         reload_graph()

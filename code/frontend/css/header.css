@@ -1,40 +1,46 @@
 #header {
-  height: 80px;
+  height: 45px;
+  border-bottom: 1px solid lightgray;
 }
 
 #header-horizontal-line {
   width: 5000px;
-  transform: translate(0px, 80px);
+  transform: translate(0px, 35px);
   border-color: lightgray;
-  /* border-width: 0px; */
   border-width: 0.5px;
 }
 
 #main-title {
   font-weight: bolder;
   display: inline-block;
-  transform: translate(100px, -10px);
-  font-size: 45px;  
+  transform: translate(100px, 6px);
+  font-size: 25px;  
 }
 
 #sub-title {
   display: inline-block;
-  transform: translate(230px, -3px);
-  font-size: 25px;
+  transform: translate(300px, 3px);
+  font-size: 23px;
   color:gray;
 }
 
 .header-sub-title {
   display: inline-block;
   margin-right: 10px;
+  font-size: 20px;
+  color: gray;
+  transform: translate(0px, 2px);
+}
+
+.header-option-title {
+  border-bottom: 1px solid gray;
+  height: 23px;
+  transform: translate(0px, 4px);
 }
 
 .class-dropdown {
-  border: 1px lightgray solid;
-  border-radius: 10px;
   display: inline-block;
-  width: 200px;
-  height: 30px;
+  height: 20px;
 }
 
 #class-dropdown-original {
@@ -48,33 +54,33 @@
 .class-dropdown-icon {
   display: inline-block;
   float: right;
-  transform: translate(-7px, 0px);
   color: gray;
-  font-size: 25px;
+  font-size: 20px;
 } 
 
 .class-dropdown-text {
   display: inline-block;
   font-size: 15px;
-  transform: translate(13px, -5px);
+  transform: translate(0px, -5px);
   font-weight: bold;
 }
 
 .class-option-box {
-  width: 200px;
+  width: 180px;
+  font-size: 15px;
   y: 3;
   stroke: lightgray;
   stroke-width: 1px;
-  rx: 10px;
-  ry: 10px;
+  rx: 5px;
+  ry: 5px;
   fill: white;
 }
 
 .class-option-hl-box {
-  width: 200px;
+  width: 180px;
 }
 
 .class-option-text {
-  font-size: 15px;
+  font-size: 12px;
 }
 

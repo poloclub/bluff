@@ -1,0 +1,75 @@
+/* Options general */
+.option-title {
+  fill: black;
+  font-weight: bolder;
+}
+
+.option-help {
+  font-size: 15px;
+  transform: translate(0px, 20px);
+  fill: gray;
+}
+
+/* Filter pathways */
+#g-filter-option {
+  font-size: 15px;
+  transform: translate(100px, 210px);
+}
+
+.what-to-see-option-checkbox {
+  fill: white;
+  stroke: lightgray;
+  stroke-width: 1px;
+  transform: translate(0px, -3px);
+  rx: 1px;
+  ry: 1px;
+}
+
+.what-to-see-option-text {
+  fill: lightgray;
+  font-size: 15px;
+}
+
+/* Comparison mode */
+#g-compare-option {
+  font-size: 15px;
+  transform: translate(100px, 420px);
+}
+
+#compare-on-off-icon {
+  transform: translate(130px, 0px);
+}
+
+#g-compare-bar {
+  transform: translate(0px, 70px);
+  fill: gray;
+}
+
+#g-compare-filter-bar {
+  transform: translate(0px, 30px);
+}
+
+#filter-bar-compare {
+  fill: gray;
+  stroke-width: 1px;
+  height: 2px;
+}
+
+.attack-pointer-line {
+  stroke: gray;
+  stroke-width: 2px;
+}
+
+#outer-rect-weak {
+  fill: gray;
+  fill-opacity: 0.3;
+}
+
+#inner-rect-strong {
+  fill: white;
+  fill-opacity: 0.8;
+}
+
+.compare-strength-val {
+  font-size: 13px;
+}
