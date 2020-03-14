@@ -13,7 +13,6 @@ import {
   node_color,
   node_opacity,
   node_box_style,
-  filter_bar
 } from './style.js';
 
 import {
@@ -31,6 +30,11 @@ import {
 import {
   comp_attack
 } from './mode_control.js'
+
+import {
+  update_column_title
+} from './statistics.js'
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +57,7 @@ var sorted_vulnerability_data = {}
 var vul_type = 'strengthwise_vulnerability'
 
 var node_size = {}
-var node_group_x = {}
+export var node_group_x = {}
 var y_coords = {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +93,9 @@ export function reload_graph() {
       // Draw nodes
       write_layers()
       draw_neurons()
+
+      // Update the column labels
+      update_column_title()
 
       window.activation_data = activation_data
       window.vulnerability_data = vulnerability_data

@@ -379,10 +379,6 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
     }
   }
 
-  function class_name_for_display(class_name) {
-    return class_name.replace(/_/g, ' ').toUpperCase()
-  }
-
   function curr_class_display_name(original_or_target) {
     var curr_class = document.getElementById('class-dropdown-text-' + original_or_target).innerText
     return curr_class
@@ -390,7 +386,11 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
   
 }
 
-function get_absolute_position(element_id) {
+export function class_name_for_display(class_name) {
+  return class_name.replace(/_/g, ' ').toUpperCase()
+}
+
+export function get_absolute_position(element_id) {
   var element = document.getElementById(element_id)
   var rect = element.getBoundingClientRect();
   return [rect.left, rect.top, rect.right, rect.bottom]

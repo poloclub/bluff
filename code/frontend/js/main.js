@@ -1,4 +1,7 @@
-import { main_view_size } from './style.js';
+import { 
+  main_view_size,
+  g_main
+} from './style.js';
 
 // Add header
 var header = document.createElement('div')
@@ -28,7 +31,16 @@ d3.select('#svg-ag')
   .style('width', width)
   .style('height', height)
 
-d3.select('#svg-main')  
+d3.select('#svg-main')
+  .append('g')
+  .attr('id', 'g-main')
+  .attr('transform', 'translate(' + g_main['x'] + ',' + g_main['y'] + ')')
+
+d3.select('#g-main')
+  .append('g')
+  .attr('id', 'g-column-title')
+
+d3.select('#g-main')
   .append('g')
   .attr('id', 'g-ag')
 
@@ -57,8 +69,8 @@ d3.select('#svg-ag')
   .call(
     d3.zoom()
       .on('zoom', function(){
-        d3.select('#g-ag')
-          .attr('transform', d3.event.transform)
+        d3.select('#g-ag').attr('transform', d3.event.transform)
+        d3.select('#g-column-title').attr('transform', d3.event.transform)
       })
   )
 

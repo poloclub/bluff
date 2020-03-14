@@ -8,6 +8,12 @@ export var main_view_size = {
   'height': 1000
 }
 
+// g-main
+export var g_main = {
+  'x': 250,
+  'y': 50
+}
+
 // How to attack
 export var how_to_attack = {
   'method-icon-x': 90,
