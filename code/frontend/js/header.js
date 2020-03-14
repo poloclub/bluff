@@ -21,7 +21,10 @@ import {
 // Global variables
 //////////////////////////////////////////////////////////////////////////////////////////
 
-export var selected_class = {'original': '-', 'target': '-'}
+export var selected_class = {
+  'original': '-', 
+  'target': '-'
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Generate header
@@ -172,7 +175,6 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       var [left, top, right, bottom] = get_absolute_position(dropdown_id)
       d3.select('#g-class-option-box-' + original_or_target)
         .attr('transform', 'translate(' + left + ',0)')
-      console.log(left)
 
       var dropdown_icon = document.getElementById('class-dropdown-icon-' + original_or_target)
 

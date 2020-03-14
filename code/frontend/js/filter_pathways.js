@@ -2,6 +2,10 @@ import {
   what_to_see, icons
 } from './style.js'
 
+import {
+  update_node_opacity
+} from './attribution_graph.js'
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -116,9 +120,9 @@ function add_what_to_see_options() {
         filter_pathways['sub-selected'] = '-'
       }
       update_bottons()
+      update_node_opacity()
     }
   }
-
 
   function gen_sub_option(option, suboptions) {
     gen_suboption_botton_rect()
@@ -181,6 +185,7 @@ function add_what_to_see_options() {
       filter_pathways['selected'] = 'changed'
       filter_pathways['sub-selected'] = suboption
       update_bottons()
+      update_node_opacity()
     }
 
   }

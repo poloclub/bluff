@@ -43,7 +43,7 @@ export var what_to_see = {
 // Size info of filter bar
 export var filter_bar = {
   'bar_length': 100,
-  'cmp_bar_length': 150,
+  'cmp_bar_length': 130,
   'cmp_pointer_line_length': 10,
   'outer_rect': 15,
   'inner_rect': 7,
