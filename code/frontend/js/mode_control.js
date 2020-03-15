@@ -1,11 +1,15 @@
 import {
-  what_to_see,
   icons,
   filter_bar
 } from './style.js'
 
 import {
-  selected_attack_info
+  attack_strengths
+} from './constant.js'
+
+import {
+  selected_attack_info,
+  round_unit
 } from './attack_control.js'
 
 import {
@@ -27,6 +31,7 @@ import {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 export var comp_attack = {
+  'on': false,
   'weak': 0.05,
   'strong': 0.45
 }
@@ -72,17 +77,22 @@ function add_on_off_icon() {
   }
 
   function turn_on_comparison_mode() {
+    comp_attack['on'] = true
+
     // Icon on
     d3.select('#compare-on-off-icon').text(icons['toggle-on'])
 
     // Option on
     d3.select('#g-compare-bar').style('opacity', 1)
+    go_comparison_mode()
 
     // Attack strength off
     d3.select('#g-strength-bar').style('opacity', 0.3)
   }
 
   function turn_off_comparison_mode() {
+    comp_attack['on'] = false
+
     // Icon off
     d3.select('#compare-on-off-icon').text(icons['toggle-off'])
 
@@ -98,7 +108,7 @@ function add_compare_strength_bar() {
   bar_length_scale_cmp = gen_strength_bar_length_scale(filter_bar['cmp_bar_length'])
   create_bar_g()
   create_bar_title('Strengths')
-  gen_bar('compare', [0.05, 0.45])
+  gen_bar('compare', [comp_attack['weak'], comp_attack['strong']])
 
   function create_bar_g() {
     d3.select('#g-compare-option')
@@ -115,41 +125,34 @@ function add_compare_strength_bar() {
 
   function gen_bar(filter_type, default_vals) {
     var bar_len = bar_length_scale_cmp[selected_attack_info['attack_type']]
-
-    // Background bar
-    d3.select('#g-compare-bar')
-      .append('g')
-      .attr('id', 'g-compare-filter-bar')
-
-    d3.select('#g-compare-filter-bar')
-      .append('rect')
-      .attr('id', 'filter-bar-' + filter_type)
-      .style('width', filter_bar['cmp_bar_length'])
-
-    // Add weak strength
+    
+    gen_horizontal_bar()
     gen_pointer('weak')
-
-    // Add strong strength
     gen_pointer('strong')
+
+    function gen_horizontal_bar() {
+      d3.select('#g-compare-bar')
+        .append('g')
+        .attr('id', 'g-compare-filter-bar')
+
+      d3.select('#g-compare-filter-bar')
+        .append('rect')
+        .attr('id', 'filter-bar-' + filter_type)
+        .style('width', filter_bar['cmp_bar_length'])
+    }
 
     function gen_pointer(weak_or_strong) {
 
-      // Generate g
-      d3.select('#g-compare-filter-bar')
-        .append('g')
-        .attr('id', 'g-attack-' + weak_or_strong)
-
-      // Add pointer vertical line
-      d3.select('#g-attack-' + weak_or_strong)
-        .append('line')
-        .attr('class', 'attack-pointer-line')
-        .attr('x1', get_x())
-        .attr('x2', get_x())
-        .attr('y1', 0)
-        .attr('y2', get_y2())
-
-      // Add pointer
+      gen_g_slider()
+      gen_pointer_vertical_line()
       add_pointer()
+
+      function gen_g_slider() {
+        d3.select('#g-compare-filter-bar')
+          .append('g')
+          .attr('id', 'g-attack-' + weak_or_strong)
+          .attr('transform', 'translate(' + get_x() + ',' + get_y() + ')')
+      }
 
       function get_x() {
         var x = 0
@@ -161,7 +164,7 @@ function add_compare_strength_bar() {
         return x
       }
 
-      function get_y2() {
+      function get_y() {
         var y2 = 0
         if (weak_or_strong == 'weak') {
           y2 = filter_bar['cmp_pointer_line_length'] + 2
@@ -171,82 +174,180 @@ function add_compare_strength_bar() {
         return y2
       }
 
-      function add_pointer() {
-        // Add outer rect
+      function gen_pointer_vertical_line() {
         d3.select('#g-attack-' + weak_or_strong)
-          .append('rect')
-          .attr('id', 'outer-rect-' + weak_or_strong)
-          .attr('x', get_x() - filter_bar['outer_rect'] / 2)
-          .attr('y', outer_y())
-          .attr('width', filter_bar['outer_rect'])
-          .attr('height', filter_bar['outer_rect'])
-          .style('rx', filter_bar['outer_rx'])
-
-        // Add inner rect 
-        d3.select('#g-attack-' + weak_or_strong)
-          .append('rect')
-          .attr('id', 'inner-rect-' + weak_or_strong)
-          .attr('x', get_x() - filter_bar['inner_rect'] / 2)
-          .attr('y', inner_y())
-          .attr('width', filter_bar['inner_rect'])
-          .attr('height', filter_bar['inner_rect'])
-          .style('rx', filter_bar['inner_rx'])
-
-        // Add strength
-        d3.select('#g-attack-' + weak_or_strong)
-          .append('text')
-          .attr('id', 'strength-' + weak_or_strong)
-          .text(weak_or_strong)
-          .attr('x', get_x() + filter_bar['outer_rect'] / 2 + 5)
-          .attr('y', text_y())
-
-        // Add strength text
-        d3.select('#g-attack-' + weak_or_strong)
-          .append('text')
-          .attr('id', 'strength-val-' + weak_or_strong)
-          .attr('class', 'compare-strength-val')
-          .text(strength_val())
-          .attr('x', val_x())
-          .attr('y', text_y())
-
-
-        function outer_y() {
-          if (weak_or_strong == 'weak') {
-            return get_y2()
-          } else {
-            return get_y2() - filter_bar['outer_rect']
-          }
-        }
-
-        function inner_y() {
-          if (weak_or_strong == 'weak') {
-            return get_y2() + (filter_bar['outer_rect'] - filter_bar['inner_rect']) / 2
-          } else {
-            return get_y2() - (filter_bar['outer_rect'] + filter_bar['inner_rect']) / 2
-          }
-        }
-
-        function text_y() {
-          return inner_y() + 8
-        }
-
-        function val_x() {
-          if (weak_or_strong == 'weak') {
-            return get_x() + filter_bar['outer_rect'] / 2 + 43
-          } else {
-            return get_x() + filter_bar['outer_rect'] / 2 + 50
-          }
-        }
-
-        function strength_val() {
-          if (weak_or_strong == 'weak') {
-            return default_vals[0]
-          } else {
-            return default_vals[1]
-          }
-        }
+          .append('line')
+          .attr('class', 'attack-pointer-line')
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('y1', -get_y())
+          .attr('y2', 0)
       }
 
+      function add_pointer() {
+        gen_outer_rect()
+        gen_inner_rect()
+        gen_pointer_circle()
+        gen_strength_txt()
+
+        function gen_outer_rect() {
+          d3.select('#g-attack-' + weak_or_strong)
+            .append('rect')
+            .attr('id', 'outer-rect-' + weak_or_strong)
+            .attr('x', outer_delta_x())
+            .attr('y', outer_delta_y())
+            .attr('width', filter_bar['outer_rect'])
+            .attr('height', filter_bar['outer_rect'])
+            .style('rx', filter_bar['outer_rx'])
+            .on('mouseover', function() { this.style.cursor = 'pointer' })
+            .call(gen_slider_drag())
+
+            function outer_delta_x() {
+              return -filter_bar['outer_rect'] / 2
+            }
+
+            function outer_delta_y() {
+              if (weak_or_strong == 'weak') {
+                return 0
+              } else {
+                return -filter_bar['outer_rect']
+              }
+            }
+        }
+
+        function gen_inner_rect() {
+          d3.select('#g-attack-' + weak_or_strong)
+            .append('rect')
+            .attr('id', 'inner-rect-' + weak_or_strong)
+            .attr('x', inner_delta_x())
+            .attr('y', inner_delta_y())
+            .attr('width', filter_bar['inner_rect'])
+            .attr('height', filter_bar['inner_rect'])
+            .style('rx', filter_bar['inner_rx'])
+            .on('mouseover', function() { this.style.cursor = 'pointer' })
+            .call(gen_slider_drag())
+
+          function inner_delta_x() {
+            return -filter_bar['inner_rect'] / 2
+          }
+
+          function inner_delta_y() {
+            if (weak_or_strong == 'weak') {
+              return (filter_bar['outer_rect'] - filter_bar['inner_rect']) / 2
+            } else {
+              return -(filter_bar['outer_rect'] + filter_bar['inner_rect']) / 2
+            }
+          }
+        }
+        
+        function gen_pointer_circle() {
+          d3.select('#g-attack-' + weak_or_strong)
+            .append('circle')
+            .attr('id', 'circle-' + weak_or_strong)
+            .attr('r', 4)
+            .attr('cx', 0)
+            .attr('cy', -get_y())
+            .style('display', 'none')
+        }
+
+        function gen_strength_txt() {
+
+          // Weak or strong label
+          d3.select('#g-attack-' + weak_or_strong)
+            .append('text')
+            .attr('id', 'strength-' + weak_or_strong)
+            .text(weak_or_strong)
+            .attr('x', label_delta_x())
+            .attr('y', text_delta_y())
+
+          // Strength value
+          d3.select('#g-attack-' + weak_or_strong)
+            .append('text')
+            .attr('id', 'strength-val-' + weak_or_strong)
+            .attr('class', 'compare-strength-val')
+            .text(strength_val())
+            .attr('x', val_delta_x())
+            .attr('y', text_delta_y())
+
+          function label_delta_x() {
+            return filter_bar['outer_rect'] / 2 + 5
+          }
+
+          function val_delta_x() {
+            if (weak_or_strong == 'weak') {
+              return filter_bar['outer_rect'] / 2 + 43
+            } else {
+              return filter_bar['outer_rect'] / 2 + 50
+            }
+          }
+
+          function text_delta_y() {
+            if (weak_or_strong == 'weak') {
+              return (filter_bar['outer_rect'] - filter_bar['inner_rect']) / 2 + 8
+            } else {
+              return -(filter_bar['outer_rect'] + filter_bar['inner_rect']) / 2 + 8
+            }
+          }
+
+          function strength_val() {
+            if (weak_or_strong == 'weak') {
+              return default_vals[0]
+            } else {
+              return default_vals[1]
+            }
+          }
+        }
+
+        function gen_slider_drag() {
+          var slider_drag = d3
+            .drag()
+            .on('start', function() { slider_drag_start() })
+            .on('drag', function() { slider_drag_ing() })
+            .on('end', function() { slider_drag_end() })
+  
+          return slider_drag
+  
+          function slider_drag_start() { 
+            d3.select('#circle-' + weak_or_strong).style('display', 'block')
+          }
+  
+          function slider_drag_ing() {
+            // Get the position of pointer
+            var mouse_x = d3.mouse(document.getElementById('filter-bar-compare'))[0]
+            mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['cmp_bar_length']])
+            
+            // Domains
+            var domains = attack_strengths[selected_attack_info['attack_type']]
+            var max_domain_val = d3.max(domains)
+            var domain_unit = max_domain_val / domains.length
+        
+            // Update the selected value
+            comp_attack[weak_or_strong] = bar_len['len_to_val'](mouse_x)
+            comp_attack[weak_or_strong] = round_unit(comp_attack[weak_or_strong], domain_unit)
+            d3.select('#strength-val-' + weak_or_strong).text(comp_attack[weak_or_strong])
+  
+            // Position pointer
+            d3.select('#g-attack-' + weak_or_strong)
+              .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+            
+          }
+  
+          function slider_drag_end() {
+            d3.select('#circle-' + weak_or_strong).style('display', 'none')
+        
+            // Get the position of the circle and the front bar
+            var mouse_x = d3.mouse(document.getElementById('filter-bar-compare'))[0]
+            mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['cmp_bar_length']])
+        
+            // Sticky movement
+            var domains = attack_strengths[selected_attack_info['attack_type']]
+            var bar_length_unit = filter_bar['cmp_bar_length'] / domains.length
+            mouse_x = round_unit(mouse_x, bar_length_unit)
+            d3.select('#g-attack-' + weak_or_strong)
+              .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+          }
+        } 
+      } 
     }
   }
 }

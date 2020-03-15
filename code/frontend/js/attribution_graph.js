@@ -97,6 +97,11 @@ export function reload_graph() {
       // Update the column labels
       update_column_title()
 
+      // Go comparison mode if needed
+      if (comp_attack['on']) {
+        go_comparison_mode()
+      }
+
       window.activation_data = activation_data
       window.vulnerability_data = vulnerability_data
       window.top_neuron_data = top_neuron_data
