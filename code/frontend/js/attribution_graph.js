@@ -526,10 +526,12 @@ function draw_neurons() {
 
     d3.selectAll('.g-node')
       .append('text')
+      .attr('id', function(neuron_id) { return 'neuron-id-' + neuron_id })
       .attr('class', 'neuron-id')
       .text(function(neuron_id) { return neuron_id.split('-')[1] })
-      .style('font-size', function() { return ns * 0.6 })
       .attr('y', -3)
+      .style('font-size', function() { return ns * 0.6 })
+      .style('display', 'none')
   }
   
   function get_node_id(neuron_id) {
@@ -566,6 +568,9 @@ function draw_neurons() {
     // Mouse pointer
     var node_id = get_node_id(neuron)
     d3.select('#' + node_id).style('cursor', 'pointer')
+
+    // Show neuron's id
+    d3.select('#neuron-id-' + neuron).style('display', 'block')
 
     // Add node box if it does not exist
     var node_box_id = get_node_box_id(neuron)
@@ -854,6 +859,7 @@ function draw_neurons() {
   function mouseout_node(neuron) {
     var node_box_id = get_node_box_id(neuron)
     d3.select('#' + node_box_id).style('display', 'none')
+    d3.select('#neuron-id-' + neuron).style('display', 'none')
   }
 
   function get_node_box_id(neuron) {

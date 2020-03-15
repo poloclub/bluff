@@ -15,8 +15,8 @@ export var attack_strengths = {
 }
 
 // Top_k for extracting interesting neurons
-export var top_k = 10
-export var rough_top_k = 10
+export var top_k = 8
+export var rough_top_k = 8
 export var highlight_top_k = rough_top_k
 
 // Feature vis / example patches

@@ -5,20 +5,20 @@
 /* How to attack */
 #attack-option-title {
   font-size: 15px;
-  transform: translate(100px, 30px);
+  transform: translate(50px, 30px);
   fill: black;
   font-weight: bolder;
 }
 
 #attack-option-help {
   font-size: 15px;
-  transform: translate(100px, 50px);
+  transform: translate(50px, 50px);
   fill: gray;
 }
 
 /* Attack type */
 #g-attack-type {
-  transform: translate(100px, 80px);
+  transform: translate(50px, 80px);
   font-size: 15px;
 }
 
@@ -45,7 +45,7 @@
 
 /* Attack strength */
 #g-strength-bar {
-  transform: translate(100px, 130px);
+  transform: translate(50px, 130px);
   font-size: 15px;
 }
 

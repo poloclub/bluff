@@ -42,13 +42,6 @@ gen_class_dropdown(class_pairs, 'header-subtitle-class-dropdown-target', 'target
 // Main division
 //////////////////////////////////////////////////////////////////////////////////////////
 
-function draw_horizontal_line() {
-  var header_horizontal_line = document.createElement('hr')
-  header_horizontal_line.setAttribute('id', 'header-horizontal-line')
-  header_horizontal_line.setAttribute('noshade', 'true')
-  header.appendChild(header_horizontal_line)
-}
-
 function draw_title(title) {
   var header_title = document.createElement('div')
   var main_title = document.createElement('div') 
@@ -344,6 +337,8 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
           selected_class['target'] = '-'
           d3.select('#class-dropdown-text-target').text('- - - Select - - -')
           remove_graph()
+          remove_column_labels()
+          
 
           // Make target option box be in the right position
           var target_subtitle_div = 'header-subtitle-class-dropdown-target'
@@ -367,6 +362,13 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       }
       
     }
+  }
+
+  function remove_column_labels() {
+    d3.select('#column-original').remove()
+    d3.select('#column-original-and-target').remove()
+    d3.select('#column-target').remove()
+    d3.select('#column-attack-only').remove()
   }
 
   function get_default_class_name() {

@@ -17,7 +17,6 @@ import {
 } from './style.js';
 
 export function update_column_title() {
-  console.log(node_color)
 
   // Remove all column labels
   d3.selectAll('.column-title').remove()

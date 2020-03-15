@@ -60,15 +60,37 @@ function add_on_off_icon() {
     .attr('font-family', 'FontAwesome')
     .text(icons['toggle-off'])
     .on('mouseover', function() { this.style.cursor = 'pointer' })
-    .on('click', function() { return toggle_icon() })
+    .on('click', function() { return toggle_on_off() })
 
-  function toggle_icon() {
+  function toggle_on_off() {
     var icon = d3.select('#compare-on-off-icon').text()
     if (icon == icons['toggle-off']) {
-      d3.select('#compare-on-off-icon').text(icons['toggle-on'])
+      turn_on_comparison_mode()
     } else {
-      d3.select('#compare-on-off-icon').text(icons['toggle-off'])
+      turn_off_comparison_mode()
     }
+  }
+
+  function turn_on_comparison_mode() {
+    // Icon on
+    d3.select('#compare-on-off-icon').text(icons['toggle-on'])
+
+    // Option on
+    d3.select('#g-compare-bar').style('opacity', 1)
+
+    // Attack strength off
+    d3.select('#g-strength-bar').style('opacity', 0.3)
+  }
+
+  function turn_off_comparison_mode() {
+    // Icon off
+    d3.select('#compare-on-off-icon').text(icons['toggle-off'])
+
+    // Option off
+    d3.select('#g-compare-bar').style('opacity', 0.3)
+
+    // Attack strength on
+    d3.select('#g-strength-bar').style('opacity', 1)
   }
 }
 
@@ -82,6 +104,7 @@ function add_compare_strength_bar() {
     d3.select('#g-compare-option')
       .append('g')
       .attr('id', 'g-compare-bar')
+      .style('opacity', 0.3)
   }
 
   function create_bar_title(title) {
