@@ -18,7 +18,8 @@ import {
 } from './filter_pathways.js'
 
 import { 
-  go_comparison_mode
+  go_comparison_mode,
+  update_node_opacity
 } from './attribution_graph.js'
 
 import {
@@ -84,10 +85,11 @@ function add_on_off_icon() {
 
     // Option on
     d3.select('#g-compare-bar').style('opacity', 1)
-    go_comparison_mode()
 
     // Attack strength off
     d3.select('#g-strength-bar').style('opacity', 0.3)
+
+    go_comparison_mode()
   }
 
   function turn_off_comparison_mode() {
@@ -101,6 +103,8 @@ function add_on_off_icon() {
 
     // Attack strength on
     d3.select('#g-strength-bar').style('opacity', 1)
+
+    update_node_opacity()
   }
 }
 
@@ -313,9 +317,8 @@ function add_compare_strength_bar() {
   
           function slider_drag_ing() {
             // Get the position of pointer
-            var mouse_x = d3.mouse(document.getElementById('filter-bar-compare'))[0]
-            mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['cmp_bar_length']])
-            
+            var mouse_x = get_mouse_x()
+          
             // Domains
             var domains = attack_strengths[selected_attack_info['attack_type']]
             var max_domain_val = d3.max(domains)
@@ -330,14 +333,14 @@ function add_compare_strength_bar() {
             d3.select('#g-attack-' + weak_or_strong)
               .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
             
+            go_comparison_mode()
           }
   
           function slider_drag_end() {
             d3.select('#circle-' + weak_or_strong).style('display', 'none')
         
             // Get the position of the circle and the front bar
-            var mouse_x = d3.mouse(document.getElementById('filter-bar-compare'))[0]
-            mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['cmp_bar_length']])
+            var mouse_x = get_mouse_x()
         
             // Sticky movement
             var domains = attack_strengths[selected_attack_info['attack_type']]
@@ -345,6 +348,26 @@ function add_compare_strength_bar() {
             mouse_x = round_unit(mouse_x, bar_length_unit)
             d3.select('#g-attack-' + weak_or_strong)
               .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+          }
+
+          function get_mouse_x() {
+            var mouse_x = d3.mouse(document.getElementById('filter-bar-compare'))[0]
+            var [min_mouse_x, max_mouse_x] = [0, filter_bar['cmp_bar_length']]
+            if (weak_or_strong == 'weak') {
+              var [x, y] = extract_translate('g-attack-strong')
+              max_mouse_x = x 
+            } else {
+              var [x, y] = extract_translate('g-attack-weak')
+              min_mouse_x = x
+            }
+            mouse_x = d3.min([d3.max([min_mouse_x, mouse_x]), max_mouse_x])
+            return mouse_x
+
+            function extract_translate(id) {
+              var t = d3.select('#' + id).attr('transform')
+              var [x, y] = t.match(/\d+/g).map(Number)
+              return [x, y]
+            }
           }
         } 
       } 

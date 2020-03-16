@@ -98,9 +98,7 @@ export function reload_graph() {
       update_column_title()
 
       // Go comparison mode if needed
-      if (comp_attack['on']) {
-        go_comparison_mode()
-      }
+      go_comparison_mode()
 
       window.activation_data = activation_data
       window.vulnerability_data = vulnerability_data
@@ -573,6 +571,7 @@ function draw_neurons() {
     // Mouse pointer
     var node_id = get_node_id(neuron)
     d3.select('#' + node_id).style('cursor', 'pointer')
+    d3.select('#inner-node-' + neuron).style('cursor', 'pointer')
 
     // Show neuron's id
     d3.select('#neuron-id-' + neuron).style('display', 'block')
@@ -875,7 +874,7 @@ function draw_neurons() {
 
 export function update_node_opacity() {
 
-  deactivate_all_nodes()
+  off_all_node()
 
   if (filter_pathways['selected'] == 'activated') {
     update_opacity_most_activated()
@@ -889,11 +888,6 @@ export function update_node_opacity() {
     }
   }
 
-  function deactivate_all_nodes() {
-    d3.selectAll('.node')
-      .style('fill-opacity', node_opacity['deactivated'])
-  }
-
   function update_opacity_most_activated() {
     if (selected_attack_info['attack_strength'] == 0) {
       d3.selectAll('.node-original')
@@ -904,10 +898,7 @@ export function update_node_opacity() {
     else {
       d3.selectAll('.node')
         .style('fill-opacity', function(neuron) {
-          var layer = neuron.split('-')[0]
-          var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], selected_attack_info['attack_strength'])
-          var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-          if (top_neurons_to_highlight.includes(neuron)) {
+          if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } else {
             return node_opacity['deactivated']
@@ -919,10 +910,7 @@ export function update_node_opacity() {
   function update_opacity_most_increased() {
     d3.selectAll('.node')
       .style('fill-opacity', function(neuron) {
-        var layer = neuron.split('-')[0]
-        var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], selected_attack_info['attack_strength'])
-        var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(-highlight_top_k)
-        if (top_neurons_to_highlight.includes(neuron)) {
+        if (is_most_increased(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
         } else {
           return node_opacity['deactivated']
@@ -933,10 +921,7 @@ export function update_node_opacity() {
   function update_opacity_most_decreased() {
     d3.selectAll('.node')
       .style('fill-opacity', function(neuron) {
-        var layer = neuron.split('-')[0]
-        var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], selected_attack_info['attack_strength'])
-        var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(0, highlight_top_k)
-        if (top_neurons_to_highlight.includes(neuron)) {
+        if (is_most_decreased(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
         } else {
           return node_opacity['deactivated']
@@ -944,7 +929,39 @@ export function update_node_opacity() {
       })
   }
   
-  
+}
+
+function is_most_activated(neuron, strength) {
+  var layer = neuron.split('-')[0]
+    var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+    var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
+    if (top_neurons_to_highlight.includes(neuron)) {
+      return true
+    } else {
+      return false
+    }
+}
+
+function is_most_increased(neuron, strength) {
+  var layer = neuron.split('-')[0]
+  var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+  var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(-highlight_top_k)
+  if (top_neurons_to_highlight.includes(neuron)) {
+    return true
+  } else {
+    return false
+  }
+}
+
+function is_most_decreased(neuron, strength) {
+  var layer = neuron.split('-')[0]
+  var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+  var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(0, highlight_top_k)
+  if (top_neurons_to_highlight.includes(neuron)) {
+    return true
+  } else {
+    return false
+  }
 }
 
 export function update_scatter_circle() {
@@ -967,103 +984,86 @@ export function update_scatter_circle() {
 }
 
 export function go_comparison_mode() {
-  var weak = comp_attack['weak']
-  var strong = comp_attack['strong']
+  if (comp_attack['on']) {
 
+    off_all_node()
+
+    var weak = comp_attack['weak']
+    var strong = comp_attack['strong']
+
+    if (filter_pathways['selected'] == 'activated') {
+      update_opacity_compare_mode(filter_pathways['selected'])
+    } else if (filter_pathways['selected'] == 'changed') {
+      update_opacity_compare_mode(filter_pathways['sub-selected'])
+    }
+
+    function update_opacity_compare_mode(filter_method) {
+      update_opacity_outer_rect(filter_method)
+      update_opacity_inner_rect(filter_method)
+    }
+
+    function update_opacity_outer_rect(filter_method) {
+
+      var f = filter_function(filter_method)
+
+      d3.selectAll('.node')
+        .style('fill-opacity', function(neuron) {
+          if (f(neuron, strong)) {
+            return node_opacity['activated']
+          } else {
+            return node_opacity['deactivated']
+          }
+        })
+    }
+
+    function update_opacity_inner_rect(filter_method) {
+      var f = filter_function(filter_method)
+
+      var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
+      graph_keys.forEach(graph_key => {
+        d3.selectAll('.inner-node-' + graph_key)
+          .style('display', 'block')
+          .style('fill', function(neuron) {
+            if (f(neuron, weak)) {
+              return node_color[graph_key]
+            } else {
+              return 'white'
+            }
+          })
+          .style('fill-opacity', function(neuron) {
+            if (f(neuron, weak)) {
+              return node_opacity['activated']
+            } else {
+              return 1 - node_opacity['deactivated']
+            }
+          })
+          .style('display', function(neuron) {
+            if (!(f(neuron, weak)) && !(f(neuron, strong))) {
+              return 'none'
+            } else {
+              return 'block'
+            }
+          })
+      })
+
+    }
+
+    function filter_function(filter_method) {
+      if (filter_method == 'activated') {
+        return is_most_activated
+      } else if (filter_method == 'increased') {
+        return is_most_increased
+      } else if (filter_method == 'decreased') {
+        return is_most_decreased
+      } 
+    }
+  }
+
+}
+
+function off_all_node() {
   d3.selectAll('.node')
-    .style('fill-opacity', function(neuron) {
-      var layer = neuron.split('-')[0]
-      var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strong)
-      var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-      if (top_neurons_to_highlight.includes(neuron)) {
-        return node_opacity['activated']
-      } else {
-        return node_opacity['deactivated']
-      }
-    })
-
-
-  var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
-  graph_keys.forEach(graph_key => {
-    d3.selectAll('.inner-node-' + graph_key)
-    .style('display', 'block')
-    .style('fill', function(neuron) {
-      var layer = neuron.split('-')[0]
-      var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], weak)
-      var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-      if (top_neurons_to_highlight.includes(neuron)) {
-        return node_color[graph_key]
-      } else {
-        return 'white'
-      }
-    })
-    .style('fill-opacity', function(neuron) {
-      var layer = neuron.split('-')[0]
-      var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], weak)
-      var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-      if (top_neurons_to_highlight.includes(neuron)) {
-        return node_opacity['activated']
-      } else {
-        return 1 - node_opacity['deactivated']
-      }
-    })
-    .style('display', function(neuron) {
-      var layer = neuron.split('-')[0]
-      var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], weak)
-      var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-
-
-      var strong_attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strong)
-      var top_neurons_strong = top_neuron_data[layer][strong_attack_key].slice(0, highlight_top_k)
-      
-
-
-      if (top_neurons_to_highlight.includes(neuron)) {
-        return 'block'
-      } else {
-        if (top_neurons_strong.includes(neuron)) {
-          return 'block'
-        } else {
-          return 'none'
-        }
-      }
-    })
-  })
-
-
-  // d3.selectAll('.inner-node')
-  //   .style('display', function(neuron) {
-  //     var layer = neuron.split('-')[0]
-  //     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], weak)
-  //     var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-  //     if (top_neurons_to_highlight.includes(neuron)) {
-  //       return 'block'
-  //     } else {
-  //       return 'none'
-  //     }
-  //   })
-  //   // .style('display', 'block')
-  //   .style('fill', function(neuron) {
-  //     var original_color = d3.select(this)
-  //     console.log(original_color)
-  //     var layer = neuron.split('-')[0]
-  //     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], weak)
-  //     var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-  //     if (top_neurons_to_highlight.includes(neuron)) {
-  //       // return node_opacity['activated']
-  //     } else {
-  //       return 'white'
-  //     }
-  //   })
-  //   .style('fill-opacity', function(neuron) {
-  //     var layer = neuron.split('-')[0]
-  //     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], weak)
-  //     var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-  //     if (top_neurons_to_highlight.includes(neuron)) {
-  //       return node_opacity['activated']
-  //     } else {
-  //       return node_opacity['deactivated']
-  //     }
-  //   })
-
+    .style('fill-opacity', node_opacity['deactivated'])
+  d3.selectAll('.inner-node')
+    .style('display', 'none')
 }

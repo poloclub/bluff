@@ -1,9 +1,11 @@
 import {
-  what_to_see, icons
+  what_to_see, 
+  icons
 } from './style.js'
 
 import {
-  update_node_opacity
+  update_node_opacity,
+  go_comparison_mode
 } from './attribution_graph.js'
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +188,7 @@ function add_what_to_see_options() {
       filter_pathways['sub-selected'] = suboption
       update_bottons()
       update_node_opacity()
+      go_comparison_mode()
     }
 
   }
