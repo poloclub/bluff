@@ -933,19 +933,13 @@ export function update_node_opacity() {
 
 function is_most_activated(neuron, strength) {
   var layer = neuron.split('-')[0]
-    var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = top_neuron_data[layer][attack_key].slice(0, highlight_top_k)
-    if (top_neurons_to_highlight.includes(neuron)) {
-      return true
-    } else {
-      return false
-    }
-}
 
-function is_most_increased(neuron, strength) {
-  var layer = neuron.split('-')[0]
-  var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-  var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(-highlight_top_k)
+  var key = 'original'
+  if (strength > 0) {
+    var key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+  }
+
+  var top_neurons_to_highlight = top_neuron_data[layer][key].slice(0, highlight_top_k)
   if (top_neurons_to_highlight.includes(neuron)) {
     return true
   } else {
@@ -953,14 +947,33 @@ function is_most_increased(neuron, strength) {
   }
 }
 
-function is_most_decreased(neuron, strength) {
-  var layer = neuron.split('-')[0]
-  var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-  var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(0, highlight_top_k)
-  if (top_neurons_to_highlight.includes(neuron)) {
-    return true
-  } else {
+function is_most_increased(neuron, strength) {
+  if (strength == 0) {
     return false
+  } else {
+    var layer = neuron.split('-')[0]
+    var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+    var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(-highlight_top_k)
+    if (top_neurons_to_highlight.includes(neuron)) {
+      return true
+    } else {
+      return false
+    }
+  }
+}
+
+function is_most_decreased(neuron, strength) {
+  if (strength == 0) {
+    return false
+  } else {
+    var layer = neuron.split('-')[0]
+    var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+    var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(0, highlight_top_k)
+    if (top_neurons_to_highlight.includes(neuron)) {
+      return true
+    } else {
+      return false
+    }
   }
 }
 
