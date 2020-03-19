@@ -44,6 +44,7 @@ var activation_data = {}
 var vulnerability_data = {}
 var top_neuron_data = {}
 var extracted_neurons = {}
+var edge_data = {}
 var most_decreased_data = {}
 
 var unique_attack_only_neurons = {}
@@ -68,14 +69,18 @@ export function reload_graph() {
   var file_list = data_file_path()
   remove_graph()
   draw_graph(file_list)
-  
+
   function draw_graph(file_list) {
     Promise.all(file_list.map(file => d3.json(file))).then(function(data) { 
-
+      
       // Read the neuron data
       activation_data = data[0]
       vulnerability_data = data[1]
       top_neuron_data = data[2]
+      extracted_neurons = extract_neurons()
+      edge_data = read_and_parse_edge_data(data, 3, extracted_neurons)
+
+      // Parse most decreased data
       most_decreased_data = parse_most_changed_data()  
     
       // Get activation scale
@@ -84,7 +89,6 @@ export function reload_graph() {
       // Parse vulnerability data
       parse_vulnerability_data()
       sorted_vulnerability_data = sort_vulnerability_data()
-      extracted_neurons = extract_neurons()
     
       // Generate x, y coordinate info
       gen_x_coords()
@@ -93,6 +97,9 @@ export function reload_graph() {
       // Draw nodes
       write_layers()
       draw_neurons()
+
+      // Draw edges
+      update_edges(selected_attack_info['attack_strength'])
 
       // Update the column labels
       update_column_title()
@@ -109,6 +116,7 @@ export function reload_graph() {
       window.node_group_x = node_group_x
       window.y_coords = y_coords
       window.activation_range = activation_range
+      window.edge_data = edge_data
       window.most_decreased_data = most_decreased_data
     
     })
@@ -126,6 +134,67 @@ export function remove_graph() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Parse dataset
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+function read_and_parse_edge_data(data, i, neuron_data) {
+  var edge_data = {}
+  attack_strengths[selected_attack_info['attack_type']].forEach((s, j) => {
+    if (s == selected_attack_info['attack_strength']) {
+      // edge_data[s] = data[i + j]
+      edge_data = data[i + j]
+    }
+  })
+
+  edge_data = filter_parse_edge_data(edge_data)
+
+  return edge_data
+
+  function filter_parse_edge_data(edge_data) {
+
+    var new_edge_data = {}
+  
+    for (var strength in edge_data) {
+      
+      new_edge_data[strength] = {}
+  
+      for (var layer in edge_data[strength]) {
+        new_edge_data[strength][layer] = []
+  
+        for (var neuron in edge_data[strength][layer]) {
+          
+          if (is_in_neuron_data(neuron)) {
+            
+            for (var next_neuron in edge_data[strength][layer][neuron]) {
+              if (is_in_neuron_data(next_neuron)) {
+                var inf = edge_data[strength][layer][neuron][next_neuron]['influence']
+                if (inf > 0) {
+                  new_edge_data[strength][layer].push({
+                    'curr': neuron,
+                    'next': next_neuron,
+                    'influence': inf
+                  })
+                }
+              }
+            }
+          }
+        }
+  
+      }
+    }
+  
+    return new_edge_data
+  }
+
+  function is_in_neuron_data(neuron) {
+    var layer = neuron.split('-')[0]
+    var is_in = false
+    for (var graph_key in neuron_data[layer]) {
+      if (!is_in) {
+        is_in = neuron_data[layer][graph_key].includes(neuron)
+      }
+    }
+    return is_in
+  }
+}
 
 function parse_most_changed_data() {
   var most_decreased_data = {}
@@ -283,14 +352,28 @@ function data_file_path() {
   var data_dir = '../../data/'
   var original_class = selected_class['original']
   var target_class = selected_class['target']
-  var attack_type = 'pgd'
-  // var attack_type = selected_attack_info['attack_type']
+  var attack_type = selected_attack_info['attack_type']
   
   var class_info = [original_class, target_class].join('-')
   var activation_data_path = data_dir + ['neuron_data/neuron_data', class_info, attack_type + '.json'].join('-')
   var vulnerability_data_path = data_dir + ['neuron_vulnerabilities/neuron_vulnerabilities', class_info, attack_type + '.json'].join('-')
   var top_neuron_data_path = data_dir + ['top_neurons/top_neurons', class_info, attack_type + '.json'].join('-')
   var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
+
+  
+  var fileName = data_dir + "inf/sample-edge-panda-armadillo-0.05.json";
+  file_list.push(fileName)
+
+  // var st = selected_attack_info['attack_strength'].toFixed(4)
+  // var edge_data_path = data_dir + ['inf/edg_inf_parsed', 'attacked', class_info, attack_type, st + '.json'].join('-')
+  // file_list.push(edge_data_path)
+
+  // attack_strengths[attack_type].forEach(strength => {
+  //   var st = strength.toFixed(4)
+  //   var edge_data_path = data_dir + ['inf/edg_inf_parsed', 'attacked', class_info, attack_type, st + '.json'].join('-')
+  //   file_list.push(edge_data_path)
+  // })
+  
   return file_list
 }
 
@@ -1079,4 +1162,15 @@ function off_all_node() {
     .style('fill-opacity', node_opacity['deactivated'])
   d3.selectAll('.inner-node')
     .style('display', 'none')
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for drawing edges
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+function update_edges(strength) {
+  d3.selectAll('.edge').remove()
+  // layers.slice(1).forEach(layer => {
+  //   edge_data[strength][layer]
+  // })
 }
