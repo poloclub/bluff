@@ -44,6 +44,18 @@ d3.select('#g-main')
   .append('g')
   .attr('id', 'g-ag')
 
+d3.select('#g-ag')
+  .append('g')
+  .attr('id', 'g-edge')
+
+d3.select('#g-ag')
+  .append('g')
+  .attr('id', 'g-node')
+
+d3.select('#g-ag')
+  .append('g')
+  .attr('id', 'g-layer')
+
 d3.select('#svg-main')  
   .append('rect')
   .attr('id', 'option-bg')
