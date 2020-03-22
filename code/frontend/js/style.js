@@ -137,5 +137,7 @@ export var edge_style = {
   'min-stroke': 0.1,
   'max-stroke': 5,
   'edge-color': 'lightgray',
-  'edge-highlight-color': 'gray'
+  'edge-highlight-color': 'gray',
+  'min-opacity': 0.3,
+  'max-opacity': 1
 }

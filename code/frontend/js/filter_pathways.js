@@ -31,7 +31,7 @@ update_bottons()
 //////////////////////////////////////////////////////////////////////////////////////////
 
 function gen_filter_pathways_option_g() {
-  d3.select('#svg-mode-option')
+  d3.select('#svg-pathway-option')
     .append('g')
     .attr('id', 'g-filter-option')
 }

@@ -30,7 +30,7 @@ import {
 
 import {
   comp_attack
-} from './mode_control.js'
+} from './attack_compare.js'
 
 import {
   update_column_title
@@ -51,7 +51,6 @@ var most_decreased_data = {}
 var unique_attack_only_neurons = {}
 
 var act_type = 'median_activation'
-// var act_type = 'median_activation_percentile'
 var activation_range = {}
 var activation_y_scale = {}
 
@@ -62,7 +61,7 @@ var node_size = {}
 export var node_group_x = {}
 var y_coords = {}
 
-var edge_scale = {}
+var edge_stroke_scale = {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
@@ -114,7 +113,7 @@ export function reload_graph() {
       draw_neurons()
 
       // Draw edges
-      update_edge_scale()
+      update_edge_stroke_scale()
       update_edges(selected_attack_info['attack_strength'])
 
       // Update the column labels
@@ -533,73 +532,111 @@ function write_layers() {
 }
 
 function draw_neurons() {
-  // Draw neurons in original, original & target, target graph
-  var graph_keys = ['original', 'original-and-target', 'target']
-  graph_keys.forEach(graph_key => {
-    layers.forEach(layer => {
-      var neuron_data = extracted_neurons[layer][graph_key]
-      var sorted_neurons = sorted_vulnerability_data[selected_attack_info['attack_type']][layer].map(x => x[0])
-      var sorted_neruon_data = neuron_data.sort(function(a, b) {
-        return sorted_neurons.indexOf(a) - sorted_neurons.indexOf(b)
-      })
-      
-      append_nodes(graph_key, sorted_neruon_data)
-    })
-    append_comp_nodes(graph_key)
-  })
 
-  // Draw neurons of the current attack, of all strength first
-  layers.forEach(layer => {
-    var neuron_data = unique_attack_only_neurons[selected_attack_info['attack_type']][layer]
-    append_nodes('attack-only', neuron_data) 
+  // Define clip-path for rounded feature vis
+  def_rounded_image_filter()
+
+  // Draw neurons in original, original & target, target graph
+  var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
+  graph_keys.forEach(graph_key => {
+    append_node(graph_key)
   })
-  append_comp_nodes('attack-only')
 
   // Update nodes' visibilities
-  update_node_opacity()  
+  update_node_opacity()
+
+  // Write neuron id
+  draw_neuron_id()
 
   // Functions
-  function append_nodes(graph_key, neuron_data) {
-    d3.select('#g-node')
-      .selectAll('nodes')
-      .data(neuron_data)
-      .enter()
-      .append('g')
-      .attr('id', function(neuron) { return 'g-' + get_node_id(neuron) })
-      .attr('class', function(neuron) { return 'g-node g-node-' + graph_key })
-      .attr('transform', function(neuron, i) { return g_transform(graph_key, neuron, i) })
+  function def_rounded_image_filter() {
+    // Define clip path
+    var clip_path_def = d3
+      .select('#svg-ag')
+      .append('defs')
+      .attr('id', 'clip-path-def')
+  
+    clip_path_def
+      .append('clipPath')
+      .attr('id', 'rounded-edge')
       .append('rect')
-      .attr('id', function(neuron) { return get_node_id(neuron) })
-      .attr('class', function(neuron) { return get_node_class(graph_key, neuron) })
       .attr('width', node_size[selected_attack_info['attack_type']])
       .attr('height', node_size[selected_attack_info['attack_type']])
       .attr('rx', 0.2 * node_size[selected_attack_info['attack_type']])
       .attr('ry', 0.2 * node_size[selected_attack_info['attack_type']])
-      .style('fill', node_color[graph_key])
-      .on('mouseover', function(neuron) { return mouseover_node(neuron) })
-      .on('mouseout', function(neuron) { return mouseout_node(neuron) })
   }
 
-  function append_comp_nodes(graph_key) {
+  function append_node(graph_key) {
 
-    d3.selectAll('.g-node-' + graph_key)
-      .append('rect')
-      .attr('id', function(neuron) { return 'inner-' + get_node_id(neuron) })
-      .attr('class', 'inner-node inner-node-' + graph_key)
-      .attr('width', 0.5 * node_size[selected_attack_info['attack_type']])
-      .attr('height', 0.5 * node_size[selected_attack_info['attack_type']])
-      .attr('rx', 0.1 * node_size[selected_attack_info['attack_type']])
-      .attr('ry', 0.1 * node_size[selected_attack_info['attack_type']])
-      .attr('x', 0.25 * node_size[selected_attack_info['attack_type']])
-      .attr('y', 0.25 * node_size[selected_attack_info['attack_type']])
-      .style('fill', node_color[graph_key])
-      .style('display', 'none')
-      .on('mouseover', function(neuron) { return mouseover_node(neuron) })
-      .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+    layers.forEach(layer => {
+      var neuron_data = get_neuron_data(graph_key, layer)
+      append_node_rect(graph_key, neuron_data)
+    })
+    append_feature_vis(graph_key)
+    append_comp_nodes(graph_key)
+
+    function get_neuron_data(graph_key, layer) {
+      var neuron_data = ''
+      if (graph_key == 'attack-only') {
+        neuron_data = unique_attack_only_neurons[selected_attack_info['attack_type']][layer]
+      } else {
+        neuron_data = extracted_neurons[layer][graph_key]
+      }
+      return neuron_data
+    }
+
+    function append_node_rect(graph_key, neuron_data) {
+      d3.select('#g-node')
+        .selectAll('nodes')
+        .data(neuron_data)
+        .enter()
+        .append('g')
+        .attr('id', function(neuron) { return 'g-' + get_node_id(neuron) })
+        .attr('class', function(neuron) { return 'g-node g-node-' + graph_key })
+        .attr('transform', function(neuron, i) { return g_transform(graph_key, neuron, i) })
+        .append('rect')
+        .attr('id', function(neuron) { return get_node_id(neuron) })
+        .attr('class', function(neuron) { return get_node_class(graph_key, neuron) })
+        .attr('width', node_size[selected_attack_info['attack_type']])
+        .attr('height', node_size[selected_attack_info['attack_type']])
+        .attr('rx', 0.2 * node_size[selected_attack_info['attack_type']])
+        .attr('ry', 0.2 * node_size[selected_attack_info['attack_type']])
+        .style('fill', node_color[graph_key])
+        .on('mouseover', function(neuron) { return mouseover_node(neuron) })
+        .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+    }
+  
+    function append_feature_vis(graph_key) {
+      d3.selectAll('.g-node-' + graph_key)
+        .append('image')
+        .attr('id', function(neuron) { return 'fv-' + neuron })
+        .attr('class', 'fv fv-' + graph_key)
+        .attr('width', node_size[selected_attack_info['attack_type']])
+        .attr('height', node_size[selected_attack_info['attack_type']])
+        .attr('xlink:href', function(neuron) { return vis_filename(neuron, 'channel') })
+        .attr('clip-path', 'url(#rounded-edge)')
+        .style('display', 'none')
+        .on('mouseover', function(neuron) { return mouseover_node(neuron) })
+        .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+    }
+  
+    function append_comp_nodes(graph_key) {
+      d3.selectAll('.g-node-' + graph_key)
+        .append('rect')
+        .attr('id', function(neuron) { return 'inner-' + get_node_id(neuron) })
+        .attr('class', 'inner-node inner-node-' + graph_key)
+        .attr('width', 0.5 * node_size[selected_attack_info['attack_type']])
+        .attr('height', 0.5 * node_size[selected_attack_info['attack_type']])
+        .attr('rx', 0.1 * node_size[selected_attack_info['attack_type']])
+        .attr('ry', 0.1 * node_size[selected_attack_info['attack_type']])
+        .attr('x', 0.25 * node_size[selected_attack_info['attack_type']])
+        .attr('y', 0.25 * node_size[selected_attack_info['attack_type']])
+        .style('fill', node_color[graph_key])
+        .style('display', 'none')
+        .on('mouseover', function(neuron) { return mouseover_node(neuron) })
+        .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+    }
   }
-
-  // Write neuron id
-  draw_neuron_id()
   
   function draw_neuron_id() {
     var ns = node_size[selected_attack_info['attack_type']]
@@ -649,6 +686,7 @@ function draw_neurons() {
     var node_id = get_node_id(neuron)
     d3.select('#' + node_id).style('cursor', 'pointer')
     d3.select('#inner-node-' + neuron).style('cursor', 'pointer')
+    d3.select('#fv-' + neuron).style('cursor', 'pointer')
 
     // Show edgees
     d3.selectAll('.edge-from-' + neuron).style('display', 'block')
@@ -1168,13 +1206,10 @@ function off_all_node() {
 // Functions for drawing edges
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-function update_edge_scale() {
-  edge_scale = {}
+function update_edge_stroke_scale() {
+  edge_stroke_scale = {}
 
-  // attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-  var dummy = [0.05]
-  dummy.forEach(strength => {
-
+  attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
     var min_inf = 10000
     var max_inf = 0
 
@@ -1186,7 +1221,7 @@ function update_edge_scale() {
       })
     })
     
-    edge_scale[strength] = d3
+    edge_stroke_scale[strength] = d3
       .scaleLinear()
       .domain([min_inf, max_inf])
       .range([edge_style['min-stroke'], edge_style['max-stroke']])
@@ -1204,9 +1239,9 @@ function update_edges(strength) {
       .append('path')
       .attr('id', function(d) { return get_edge_id(d, layer) })
       .attr('class', function(d) { return get_edge_class(d) })
-      .attr('stroke-width', function(d) { return edge_scale[strength](d['influences']) })
-      .attr('stroke', edge_style['edge-color'])
-      .attr('fill', 'none')
+      .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['influence']) })
+      .style('stroke', edge_style['edge-color'])
+      .style('fill', 'none')
       .attr('d', function(d) { return gen_curve(d) })
       .style('display', 'none')
   })

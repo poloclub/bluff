@@ -66,10 +66,15 @@ d3.select('#svg-main')
   .append('svg')
   .attr('id', 'svg-attack-option')
 
-// Generate svg for mode option
+// Generate svg for attack comparison option
 d3.select('#svg-main')
   .append('svg')
-  .attr('id', 'svg-mode-option')
+  .attr('id', 'svg-attack-comparison-option')
+
+// Generate svg for pathway options
+d3.select('#svg-main')
+  .append('svg')
+  .attr('id', 'svg-pathway-option')
 
 // Generate svg for class option box
 d3.select('#svg-main')
