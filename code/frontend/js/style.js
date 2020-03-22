@@ -26,8 +26,8 @@ export var how_to_attack = {
 export var graph_margin = {
   'start_x': 150,
   'end_x': 1100,
-  'start_y': 300,
-  'end_y': 700,
+  'start_y': 50,
+  'end_y': 500,
   'group_lr': 30,
   'node_lr': 5
 }

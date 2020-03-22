@@ -63,6 +63,8 @@ var y_coords = {}
 
 var edge_stroke_scale = {}
 
+var clicked_neurons = {}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,6 +404,14 @@ function vis_filename(neuron_id, type) {
   return filename
 }
 
+function get_translate_coords(id) {
+  var transform = d3.select('#' + id).attr('transform')
+  var [x, y]  = transform.split(',')
+  x = parseFloat(x.slice(10))
+  y = parseFloat(y.slice(0, -1))
+  return [x, y]
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions for generating x, y scales
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -533,6 +543,9 @@ function write_layers() {
 
 function draw_neurons() {
 
+  // Initialize clicked neurons
+  clicked_neurons = {}
+
   // Define clip-path for rounded feature vis
   def_rounded_image_filter()
 
@@ -604,6 +617,7 @@ function draw_neurons() {
         .style('fill', node_color[graph_key])
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+        .on('click', function(neuron) { return click_node(neuron) })
     }
   
     function append_feature_vis(graph_key) {
@@ -618,6 +632,7 @@ function draw_neurons() {
         .style('display', 'none')
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+        .on('click', function(neuron) { return click_node(neuron) })
     }
   
     function append_comp_nodes(graph_key) {
@@ -635,6 +650,7 @@ function draw_neurons() {
         .style('display', 'none')
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+        .on('click', function(neuron) { return click_node(neuron) })
     }
   }
   
@@ -682,6 +698,7 @@ function draw_neurons() {
   }
 
   function mouseover_node(neuron) {
+
     // Mouse pointer
     var node_id = get_node_id(neuron)
     d3.select('#' + node_id).style('cursor', 'pointer')
@@ -708,16 +725,14 @@ function draw_neurons() {
     function add_node_box() {
       mk_node_box_g()
       mk_node_box_bg()
-      draw_fv()
+      draw_node_box_fv()
       draw_examples() 
       draw_activation_plot()
     }
 
     function mk_node_box_g() {
-      var node_transform = d3.select('#g-' + node_id).attr('transform')
-      var [node_x, node_y]  = node_transform.split(',')
-      node_x = parseInt(node_x.match(/\d/g).join(''))
-      node_y = parseInt(node_y.match(/\d/g).join(''))
+
+      var [node_x, node_y]  = get_translate_coords('g-' + node_id)
       
       d3.select('#g-node')
         .append('g')
@@ -739,7 +754,7 @@ function draw_neurons() {
         .attr('height', node_box_style['height'])
     }
     
-    function draw_fv() {
+    function draw_node_box_fv() {
       d3.select('#' + node_box_id)
         .append('image')
         .attr('id', node_box_id + '-fv')
@@ -982,15 +997,63 @@ function draw_neurons() {
   function mouseout_node(neuron) {
     var node_box_id = get_node_box_id(neuron)
     d3.select('#' + node_box_id).style('display', 'none')
-    d3.select('#neuron-id-' + neuron).style('display', 'none')
     d3.selectAll('.edge-from-' + neuron).style('display', 'none')
     d3.selectAll('.edge-into-' + neuron).style('display', 'none')
+    if (!is_clicked_on(neuron)) {
+      d3.select('#neuron-id-' + neuron).style('display', 'none')
+    }
+  }
+
+  function click_node(neuron) {
+    if (is_clicked_on(neuron)) {
+      // Turn off the neuron
+      d3.select('#neuron-id-' + neuron).style('display', 'none')
+      d3.select('#fv-' + neuron).style('display', 'none')
+    } else {
+      // Turn on the neuron
+      d3.select('#neuron-id-' + neuron).style('display', 'block')
+      d3.select('#fv-' + neuron).style('display', 'block')
+    }
   }
 
   function get_node_box_id(neuron) {
     return ['node-box', neuron].join('-')
   }
 
+}
+
+function add_clicked_neuron(neuron) {
+  var layer = neuron.split('-')[0]
+  if (!(layer in clicked_neurons)) {
+    clicked_neurons[layer] = {}
+  }
+  clicked_neurons[layer][neuron] = true
+}
+
+function remove_clicked_neuron(neuron) {
+  var layer = neuron.split('-')[0]
+  if (neuron in clicked_neurons[layer])  {
+    clicked_neurons[layer][neuron] = false
+  }
+}
+
+function is_clicked_on(neuron) {
+  var layer = neuron.split('-')[0]
+  if (!(layer in clicked_neurons)) {
+    return false
+  } 
+
+  if (!(neuron in clicked_neurons[layer])) {
+    return false
+  }
+
+  return clicked_neurons[layer][neuron]
+  // if (neuron in clicked)
+  // if (d3.select('#fv-' + neuron).style('display') == 'none') {
+  //   return false
+  // } else {
+  //   return true
+  // }
 }
 
 export function update_node_opacity() {
@@ -1265,7 +1328,7 @@ function update_edges(strength) {
     var x1 = curr_node_coords[0] + node_size[selected_attack_info['attack_type']] / 2
     var y1 = curr_node_coords[1]
     var x2 = next_node_coords[0] + node_size[selected_attack_info['attack_type']] / 2
-    var y2 = next_node_coords[1] + + node_size[selected_attack_info['attack_type']]
+    var y2 = next_node_coords[1] + node_size[selected_attack_info['attack_type']]
 
     var c1_x = (3 * x1 + x2) / 4
     var c1_y = (3 * y1 + y2) / 4 - (y1 - y2) * 0.6
@@ -1279,11 +1342,4 @@ function update_edges(strength) {
     return path
   }
 
-  function get_translate_coords(id) {
-    var transform = d3.select('#' +id).attr('transform')
-    var [x, y]  = transform.split(',')
-    x = parseInt(x.match(/\d/g).join(''))
-    y = parseInt(y.match(/\d/g).join(''))
-    return [x, y]
-  }
 }

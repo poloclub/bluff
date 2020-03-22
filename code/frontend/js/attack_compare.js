@@ -45,7 +45,7 @@ var bar_length_scale_cmp = {}
 
 gen_mode_option_g()
 write_mode_option_title('compare', 'COMPARISON MODE')
-add_on_off_icon()
+add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
 write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
 add_compare_strength_bar()
 
@@ -59,53 +59,57 @@ function gen_mode_option_g() {
     .attr('id', 'g-compare-option')
 }
 
-function add_on_off_icon() {
-  d3.select('#g-compare-option')
+export function add_on_off_icon(option, turn_on_function, turn_off_function) {
+  d3.select('#' + ['g', option, 'option'].join('-'))
     .append('text')
-    .attr('id', 'compare-on-off-icon')
+    .attr('id', option + '-on-off-icon')
     .attr('font-family', 'FontAwesome')
     .text(icons['toggle-off'])
     .on('mouseover', function() { this.style.cursor = 'pointer' })
     .on('click', function() { return toggle_on_off() })
 
   function toggle_on_off() {
-    var icon = d3.select('#compare-on-off-icon').text()
+    var icon = d3.select('#' + option + '-on-off-icon').text()
     if (icon == icons['toggle-off']) {
-      turn_on_comparison_mode()
+      turn_on_icon()
+      turn_on_function()
     } else {
-      turn_off_comparison_mode()
+      turn_off_icon()
+      turn_off_function()
     }
   }
 
-  function turn_on_comparison_mode() {
-    comp_attack['on'] = true
-
-    // Icon on
-    d3.select('#compare-on-off-icon').text(icons['toggle-on'])
-
-    // Option on
-    d3.select('#g-compare-bar').style('opacity', 1)
-
-    // Attack strength off
-    d3.select('#g-strength-bar').style('opacity', 0.3)
-
-    go_comparison_mode()
+  function turn_on_icon() {
+    d3.select('#' + option + '-on-off-icon').text(icons['toggle-on'])
   }
 
-  function turn_off_comparison_mode() {
-    comp_attack['on'] = false
-
-    // Icon off
-    d3.select('#compare-on-off-icon').text(icons['toggle-off'])
-
-    // Option off
-    d3.select('#g-compare-bar').style('opacity', 0.3)
-
-    // Attack strength on
-    d3.select('#g-strength-bar').style('opacity', 1)
-
-    update_node_opacity()
+  function turn_off_icon() {
+    d3.select('#' + option + '-on-off-icon').text(icons['toggle-off'])
   }
+}
+
+function turn_on_comparison_mode() {
+  comp_attack['on'] = true
+
+  // Option on
+  d3.select('#g-compare-bar').style('opacity', 1)
+
+  // Attack strength off
+  d3.select('#g-strength-bar').style('opacity', 0.3)
+
+  go_comparison_mode()
+}
+
+function turn_off_comparison_mode() {
+  comp_attack['on'] = false
+
+  // Option off
+  d3.select('#g-compare-bar').style('opacity', 0.3)
+
+  // Attack strength on
+  d3.select('#g-strength-bar').style('opacity', 1)
+
+  update_node_opacity()
 }
 
 function add_compare_strength_bar() {

@@ -21,8 +21,8 @@ export var filter_pathways = {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 gen_filter_pathways_option_g()
-write_mode_option_title('filter', 'FILTER PATHWAYS')
-write_mode_option_help('filter', ['Which pathways', 'do you want to see?'])
+write_mode_option_title('filter', 'FILTER NEURONS')
+write_mode_option_help('filter', ['Which neurons', 'do you want to see?'])
 add_what_to_see_options()
 update_bottons()
 
