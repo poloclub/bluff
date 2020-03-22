@@ -64,6 +64,7 @@ var y_coords = {}
 var edge_stroke_scale = {}
 
 var clicked_neurons = {}
+var highlighted_edges = {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
@@ -997,10 +998,22 @@ function draw_neurons() {
   function mouseout_node(neuron) {
     var node_box_id = get_node_box_id(neuron)
     d3.select('#' + node_box_id).style('display', 'none')
-    d3.selectAll('.edge-from-' + neuron).style('display', 'none')
-    d3.selectAll('.edge-into-' + neuron).style('display', 'none')
+    d3.selectAll('.edge-from-' + neuron)
+      .style('display', function(d) { return edge_display(d) })
+    d3.selectAll('.edge-into-' + neuron)
+      .style('display', function(d) { return edge_display(d) })
+
     if (!is_clicked_on(neuron)) {
-      d3.select('#neuron-id-' + neuron).style('display', 'none')
+      d3.select('#neuron-id-' + neuron)
+        .style('display', 'none')
+    }
+
+    function edge_display(d) {
+      if (is_highlighted_edge(d['curr'], d['next'])) {
+        return 'block'
+      } else {
+        return 'none'
+      }
     }
   }
 
@@ -1009,10 +1022,14 @@ function draw_neurons() {
       // Turn off the neuron
       d3.select('#neuron-id-' + neuron).style('display', 'none')
       d3.select('#fv-' + neuron).style('display', 'none')
+      remove_clicked_neuron(neuron)
+      dehighlight_edges_of_clicked_neuron(neuron)
     } else {
       // Turn on the neuron
       d3.select('#neuron-id-' + neuron).style('display', 'block')
       d3.select('#fv-' + neuron).style('display', 'block')
+      add_clicked_neuron(neuron)
+      highlight_edges_of_clicked_neuron(neuron)
     }
   }
 
@@ -1048,12 +1065,86 @@ function is_clicked_on(neuron) {
   }
 
   return clicked_neurons[layer][neuron]
-  // if (neuron in clicked)
-  // if (d3.select('#fv-' + neuron).style('display') == 'none') {
-  //   return false
-  // } else {
-  //   return true
-  // }
+}
+
+function add_highlighted_edges(neuron, next_neuron) {
+  var edge_pair = [neuron, next_neuron].join('_')
+  highlighted_edges[edge_pair] = true
+}
+
+function remove_highlighted_edges(neuron, next_neuron) {
+  var edge_pair = [neuron, next_neuron].join('_')
+  highlighted_edges[edge_pair] = false
+}
+
+function is_highlighted_edge(neuron, next_neuron) {
+  var edge_pair = [neuron, next_neuron].join('_')
+  if (!(edge_pair in highlighted_edges)) {
+    return false
+  }
+  return highlighted_edges[edge_pair]
+}
+
+function highlight_edges_of_clicked_neuron(neuron) {
+
+  var layer = neuron.split('-')[0]
+
+  // Highlight edges with previous layer
+  if (layer != 'mixed3a') {
+    var prev_layer = layers[layers.indexOf(layer) + 1]
+    if (prev_layer in clicked_neurons) {
+      for (var prev_neuron in clicked_neurons[prev_layer]) {
+        if (clicked_neurons[prev_layer][prev_neuron]) {
+          add_highlighted_edges(prev_neuron, neuron)
+          var edge_id = ['edge', prev_neuron, neuron].join('-')
+          d3.select('#' + edge_id).style('display', 'block')
+        }
+      }
+    }
+  }
+  
+  // Highlight edges with next layer
+  if (layer != 'mixed5b') {
+    var next_layer = layers[layers.indexOf(layer) - 1]
+    if (next_layer in clicked_neurons) {
+      for (var next_neuron in clicked_neurons[next_layer]) {
+        if (clicked_neurons[next_layer][next_neuron]) {
+          add_highlighted_edges(neuron, next_neuron)
+          var edge_id = ['edge', neuron, next_neuron].join('-')
+          d3.select('#' + edge_id).style('display', 'block')
+        }
+      }
+    }
+  }
+
+}
+
+function dehighlight_edges_of_clicked_neuron(neuron) {
+  
+  d3.selectAll('.node-from-' + neuron).style('display', 'none')
+  d3.selectAll('.node-into-' + neuron).style('display', 'none')
+
+  
+  // Remove edges with previous layer
+  var layer = neuron.split('-')[0]
+  if (layer != 'mixed3a') {
+    var prev_layer = layers[layers.indexOf(layer) + 1]
+    if (prev_layer in clicked_neurons) {
+      for (var prev_neuron in clicked_neurons[prev_layer]) {
+        remove_highlighted_edges(prev_neuron, neuron)
+      }
+    }
+  }
+  
+  // Highlight edges with next layer
+  if (layer != 'mixed5b') {
+    var next_layer = layers[layers.indexOf(layer) - 1]
+    if (next_layer in clicked_neurons) {
+      for (var next_neuron in clicked_neurons[next_layer]) {
+        remove_highlighted_edges(neuron, next_neuron)
+      }
+    }
+  }
 }
 
 export function update_node_opacity() {
@@ -1300,7 +1391,7 @@ function update_edges(strength) {
       .data(edge_data[strength][layer])
       .enter()
       .append('path')
-      .attr('id', function(d) { return get_edge_id(d, layer) })
+      .attr('id', function(d) { return get_edge_id(d) })
       .attr('class', function(d) { return get_edge_class(d) })
       .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['influence']) })
       .style('stroke', edge_style['edge-color'])
@@ -1309,8 +1400,8 @@ function update_edges(strength) {
       .style('display', 'none')
   })
 
-  function get_edge_id(d, layer) {
-    return ['edge', strength, layer, d['curr'], d['next']].join('-')
+  function get_edge_id(d) {
+    return ['edge', d['curr'], d['next']].join('-')
   }
 
   function get_edge_class(d) {
