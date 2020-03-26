@@ -31,7 +31,7 @@ d3.select('#svg-ag')
   .style('width', width)
   .style('height', height)
 
-d3.select('#svg-main')
+d3.select('#svg-ag')
   .append('g')
   .attr('id', 'g-main')
   .attr('transform', 'translate(' + g_main['x'] + ',' + g_main['y'] + ')')
@@ -90,4 +90,5 @@ d3.select('#svg-ag')
         d3.select('#g-column-title').attr('transform', d3.event.transform)
       })
   )
+
 

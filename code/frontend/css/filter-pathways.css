@@ -16,6 +16,12 @@
   transform: translate(50px, 400px);
 }
 
+/* Highlight pathways */
+#g-highlight-option {
+  font-size: 15px;
+  transform: translate(50px, 550px);
+}
+
 .what-to-see-option-checkbox {
   fill: white;
   stroke: lightgray;

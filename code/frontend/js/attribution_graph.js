@@ -11,6 +11,7 @@ import {
 import {
   graph_margin,
   node_color,
+  node_hue_color,
   node_opacity,
   node_box_style,
   edge_style
@@ -25,7 +26,8 @@ import {
 } from './attack_control.js'
 
 import {
-  filter_pathways
+  filter_pathways,
+  highlight_pathways
 } from './filter_pathways.js'
 
 import {
@@ -110,6 +112,12 @@ export function reload_graph() {
       // Generate x, y coordinate info
       gen_x_coords()
       gen_y_coords()
+
+      // Define filters
+      d3.select('#clip-path-def').remove()
+      d3.select('#filter-defs').remove()
+      def_rounded_image_filter()
+      gen_hue_filter()
     
       // Draw nodes
       write_layers()
@@ -124,8 +132,6 @@ export function reload_graph() {
 
       // Go comparison mode if needed
       go_comparison_mode()
-
-      
     
     })
   }
@@ -136,6 +142,9 @@ export function remove_graph() {
   d3.selectAll('.layer-text').remove()
   d3.selectAll('.g-node').remove()
   d3.selectAll('.node-box').remove()
+  d3.selectAll('.edge').remove()
+  clicked_neurons = {}
+  highlighted_edges = {}
 }
 
 
@@ -546,10 +555,7 @@ function draw_neurons() {
 
   // Initialize clicked neurons
   clicked_neurons = {}
-
-  // Define clip-path for rounded feature vis
-  def_rounded_image_filter()
-
+  
   // Draw neurons in original, original & target, target graph
   var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
   graph_keys.forEach(graph_key => {
@@ -563,23 +569,6 @@ function draw_neurons() {
   draw_neuron_id()
 
   // Functions
-  function def_rounded_image_filter() {
-    // Define clip path
-    var clip_path_def = d3
-      .select('#svg-ag')
-      .append('defs')
-      .attr('id', 'clip-path-def')
-  
-    clip_path_def
-      .append('clipPath')
-      .attr('id', 'rounded-edge')
-      .append('rect')
-      .attr('width', node_size[selected_attack_info['attack_type']])
-      .attr('height', node_size[selected_attack_info['attack_type']])
-      .attr('rx', 0.2 * node_size[selected_attack_info['attack_type']])
-      .attr('ry', 0.2 * node_size[selected_attack_info['attack_type']])
-  }
-
   function append_node(graph_key) {
 
     layers.forEach(layer => {
@@ -630,6 +619,7 @@ function draw_neurons() {
         .attr('height', node_size[selected_attack_info['attack_type']])
         .attr('xlink:href', function(neuron) { return vis_filename(neuron, 'channel') })
         .attr('clip-path', 'url(#rounded-edge)')
+        .attr('filter', 'url(#filter-' + graph_key + ')')
         .style('display', 'none')
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
@@ -699,19 +689,23 @@ function draw_neurons() {
   }
 
   function mouseover_node(neuron) {
-
     // Mouse pointer
     var node_id = get_node_id(neuron)
     d3.select('#' + node_id).style('cursor', 'pointer')
     d3.select('#inner-node-' + neuron).style('cursor', 'pointer')
     d3.select('#fv-' + neuron).style('cursor', 'pointer')
 
-    // Show edgees
+    // Node feature vis full color, full opacity
+    d3.select('#fv-' + neuron)
+      .attr('filter', 'url(#filter-identity)')
+      .style('opacity', node_opacity['activated'])
+
+    // Hightlight neuron
+    highlight_neuron(neuron)
+
+    // Show edges
     d3.selectAll('.edge-from-' + neuron).style('display', 'block')
     d3.selectAll('.edge-into-' + neuron).style('display', 'block')
-
-    // Show neuron's id
-    d3.select('#neuron-id-' + neuron).style('display', 'block')
 
     // Add node box if it does not exist
     var node_box_id = get_node_box_id(neuron)
@@ -997,15 +991,27 @@ function draw_neurons() {
 
   function mouseout_node(neuron) {
     var node_box_id = get_node_box_id(neuron)
-    d3.select('#' + node_box_id).style('display', 'none')
+    d3.select('#' + node_box_id)
+      .style('display', 'none')
     d3.selectAll('.edge-from-' + neuron)
       .style('display', function(d) { return edge_display(d) })
     d3.selectAll('.edge-into-' + neuron)
       .style('display', function(d) { return edge_display(d) })
+    d3.select('#fv-' + neuron)
+      .attr('filter', function() {
+        var graph_key = d3.select(this).attr('class').split('fv-').slice(-1)
+        return 'url(#filter-' + graph_key + ')'
+      })
+      .style('opacity', function(neuron) {
+        if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
+          return node_opacity['activated']
+        } else {
+          return node_opacity['fv-deactivated']
+        }
+      })
 
     if (!is_clicked_on(neuron)) {
-      d3.select('#neuron-id-' + neuron)
-        .style('display', 'none')
+      dehighlight_neuron(neuron)
     }
 
     function edge_display(d) {
@@ -1020,14 +1026,12 @@ function draw_neurons() {
   function click_node(neuron) {
     if (is_clicked_on(neuron)) {
       // Turn off the neuron
-      d3.select('#neuron-id-' + neuron).style('display', 'none')
-      d3.select('#fv-' + neuron).style('display', 'none')
+      dehighlight_neuron(neuron)
       remove_clicked_neuron(neuron)
       dehighlight_edges_of_clicked_neuron(neuron)
     } else {
       // Turn on the neuron
-      d3.select('#neuron-id-' + neuron).style('display', 'block')
-      d3.select('#fv-' + neuron).style('display', 'block')
+      highlight_neuron(neuron)
       add_clicked_neuron(neuron)
       highlight_edges_of_clicked_neuron(neuron)
     }
@@ -1035,6 +1039,24 @@ function draw_neurons() {
 
   function get_node_box_id(neuron) {
     return ['node-box', neuron].join('-')
+  }
+
+  function highlight_neuron(neuron) {
+    d3.select('#neuron-id-' + neuron)
+      .style('display', 'block')
+    d3.select('#fv-' + neuron)
+      .style('display', 'block')
+    d3.select('#node-' + neuron)
+      .style('display', 'none')
+  }
+
+  function dehighlight_neuron(neuron) {
+    d3.select('#neuron-id-' + neuron)
+      .style('display', 'none')
+    d3.select('#fv-' + neuron)
+      .style('display', 'none')
+    d3.select('#node-' + neuron)
+      .style('display', 'block')
   }
 
 }
@@ -1151,13 +1173,13 @@ export function update_node_opacity() {
 
   off_all_node()
 
-  if (filter_pathways['selected'] == 'activated') {
+  if (highlight_pathways['selected'] == 'most-activated') {
     update_opacity_most_activated()
-  } else if (filter_pathways['selected'] == 'changed') {
+  } else if (highlight_pathways['selected'] == 'most-changed') {
     if (selected_attack_info['attack_strength'] > 0) {
-      if (filter_pathways['sub-selected'] == 'increased') {
+      if (highlight_pathways['sub-selected'] == 'increased') {
         update_opacity_most_increased()
-      } else if (filter_pathways['sub-selected'] == 'decreased') {
+      } else if (highlight_pathways['sub-selected'] == 'decreased') {
         update_opacity_most_decreased()
       }
     }
@@ -1169,6 +1191,10 @@ export function update_node_opacity() {
         .style('fill-opacity', node_opacity['activated'])  
       d3.selectAll('.node-original-and-target')
         .style('fill-opacity', node_opacity['activated'])  
+      d3.selectAll('.fv-original')
+        .style('opacity', node_opacity['activated'])  
+      d3.selectAll('.fv-original-and-target')
+        .style('opacity', node_opacity['activated'])  
     }
     else {
       d3.selectAll('.node')
@@ -1177,6 +1203,14 @@ export function update_node_opacity() {
             return node_opacity['activated']
           } else {
             return node_opacity['deactivated']
+          }
+        })
+      d3.selectAll('.fv')
+        .style('opacity', function(neuron) {
+          if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
+            return node_opacity['activated']
+          } else {
+            return node_opacity['fv-deactivated']
           }
         })
     }
@@ -1191,6 +1225,14 @@ export function update_node_opacity() {
           return node_opacity['deactivated']
         }
       })
+    d3.selectAll('.fv')
+      .style('opacity', function(neuron) {
+        if (is_most_increased(neuron, selected_attack_info['attack_strength'])) {
+          return node_opacity['activated']
+        } else {
+          return node_opacity['fv-deactivated']
+        }
+      })
   }
 
   function update_opacity_most_decreased() {
@@ -1200,6 +1242,14 @@ export function update_node_opacity() {
           return node_opacity['activated']
         } else {
           return node_opacity['deactivated']
+        }
+      })
+    d3.selectAll('.fv')
+      .style('opacity', function(neuron) {
+        if (is_most_decreased(neuron, selected_attack_info['attack_strength'])) {
+          return node_opacity['activated']
+        } else {
+          return node_opacity['fv-deactivated']
         }
       })
   }
@@ -1252,6 +1302,80 @@ function is_most_decreased(neuron, strength) {
   }
 }
 
+export function update_node_display() {
+  console.log(filter_pathways)
+  if (filter_pathways['filter'] == 'selected') {
+    // XXXXXXXXXXXXXXXXXXX
+    var displayable_neurons = get_displayable_neurons()
+    var node_transforms = get_node_transforms(displayable_neurons)
+  }
+
+  function get_displayable_neurons() {
+    var displayable_neurons = {}
+    for (var layer in clicked_neurons) {
+      displayable_neurons[layer] = {}
+      for (var neuron in clicked_neurons[layer]) {
+        if (clicked_neurons[layer][neuron]) {
+          var graph_key = d3.select('#node-' + neuron).attr('class').split(' ')[1].split('node-')[1]
+          if (!(graph_key in displayable_neurons[layer])) {
+            displayable_neurons[layer][graph_key] = []
+          }
+          displayable_neurons[layer][graph_key].push(neuron)
+
+        }
+      }
+    }
+    return displayable_neurons
+  }
+
+  function get_node_transforms(displayable_neurons) {
+    d3.selectAll('.g-node').style('display', 'none')
+    // d3.selectAll('.edge').style('display', 'none')
+
+    // XXXXXXXX
+    var node_transforms = {}
+    var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
+
+    for (var layer in displayable_neurons) {
+      node_transforms[layer] = {}
+
+      var start_x = 0
+      var end_x = 0
+      var group_lr_p = 20
+      var node_lr_p = 3
+      var ns = node_size[selected_attack_info['attack_type']]
+      console.log(ns)
+
+      graph_keys.forEach(graph_key => {
+        if (graph_key in displayable_neurons[layer]) {
+          displayable_neurons[layer][graph_key].forEach((neuron, i) => {
+            node_transforms[layer][neuron] = start_x + (i * (ns + node_lr_p))
+            end_x = start_x + (i * (ns + node_lr_p))
+          })
+          start_x = end_x + ns + group_lr_p
+        }
+      })
+
+      for (var neuron in node_transforms[layer]) {
+        node_transforms[layer][neuron] = 500 + node_transforms[layer][neuron] - (end_x + ns) / 2
+      }
+
+      for (var neuron in node_transforms[layer]) {
+        var [x, y] = get_translate_coords('g-node-' + neuron)       
+        x = node_transforms[layer][neuron]
+        d3.select('#g-node-' + neuron)
+          .style('display', 'block')
+          .transition()
+          .duration(1500)
+          .attr('transform', 'translate(' + x + ',' + y + ')')
+      }
+
+      console.log(layer, start_x, end_x, node_transforms[layer])
+    }
+  }
+
+}
+
 export function update_scatter_circle() {
 
   d3.selectAll('.node-box-scatter-circle')
@@ -1279,10 +1403,10 @@ export function go_comparison_mode() {
     var weak = comp_attack['weak']
     var strong = comp_attack['strong']
 
-    if (filter_pathways['selected'] == 'activated') {
-      update_opacity_compare_mode(filter_pathways['selected'])
-    } else if (filter_pathways['selected'] == 'changed') {
-      update_opacity_compare_mode(filter_pathways['sub-selected'])
+    if (highlight_pathways['selected'] == 'most-activated') {
+      update_opacity_compare_mode(highlight_pathways['selected'])
+    } else if (highlight_pathways['selected'] == 'most-changed') {
+      update_opacity_compare_mode(highlight_pathways['sub-selected'])
     }
 
     function update_opacity_compare_mode(filter_method) {
@@ -1356,6 +1480,75 @@ function off_all_node() {
     .style('display', 'none')
 }
 
+function def_rounded_image_filter() {
+  // Define clip path
+  var clip_path_def = d3
+    .select('#svg-ag')
+    .append('defs')
+    .attr('id', 'clip-path-def')
+
+  clip_path_def
+    .append('clipPath')
+    .attr('id', 'rounded-edge')
+    .append('rect')
+    .attr('width', node_size[selected_attack_info['attack_type']])
+    .attr('height', node_size[selected_attack_info['attack_type']])
+    .attr('rx', 0.2 * node_size[selected_attack_info['attack_type']])
+    .attr('ry', 0.2 * node_size[selected_attack_info['attack_type']])
+}
+
+function gen_hue_filter() {
+  // Define filter defs
+  d3.select('#svg-ag')
+    .append('defs')
+    .attr('id', 'filter-defs')
+
+  // Define colored filter
+  for (var graph_key in node_hue_color) {
+    var color = node_color[graph_key]
+    var rgb = hex2rgb(color)
+    var r = rgb[0] / 255
+    var g = rgb[1] / 255
+    var b = rgb[2] / 255
+
+    var mat = [r, 0, 0, 0, 0].join(' ') + '\n'
+    mat += [g, 0, 0, 0, 0].join(' ') + '\n'
+    mat += [b, 0, 0, 0, 0].join(' ') + '\n'
+    mat += [-0.1, -0.1, -0.1, 0.7, 0].join(' ') + '\n'
+
+    d3.select('#filter-defs')
+      .append('filter')
+      .attr('id', 'filter-' + graph_key)
+      .attr('color-interpolation-filters', 'sRGB')
+      .append('feColorMatrix')
+      .attr('type', 'matrix')
+      .attr('values', mat)
+  }
+
+  // Define identity filter
+  var mat = '1 0 0 0 0\n'
+  mat += '0 1 0 0 0\n'
+  mat += '0 0 1 0 0\n'
+  mat += '0 0 0 1 0\n'
+  mat += '0 0 0 1 0\n'
+  d3.select('#filter-defs')
+    .append('filter')
+    .attr('id', 'filter-identity')
+    .attr('color-interpolation-filters', 'sRGB')
+    .append('feColorMatrix')
+    .attr('type', 'matrix')
+    .attr('values', mat)
+  
+}
+
+function hex2rgb(hex) {
+  var rgb = hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+          ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+        .substring(1).match(/.{2}/g)
+        .map(x => parseInt(x, 16))
+  return rgb
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions for drawing edges
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1398,6 +1591,7 @@ function update_edges(strength) {
       .style('fill', 'none')
       .attr('d', function(d) { return gen_curve(d) })
       .style('display', 'none')
+      .style('opacity', edge_style['edge-opacity'])
   })
 
   function get_edge_id(d) {

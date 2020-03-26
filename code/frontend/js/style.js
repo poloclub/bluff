@@ -34,14 +34,24 @@ export var graph_margin = {
 
 // What to see option
 export var what_to_see = {
-  'most-option-x': 2,
-  'most-option-text-x': 15,
-  'most-option-text-y': 7,
+  // General x coordinates
+  'option-x': 2,
+  'option-text-x': 15,
+  // y coordinates for filtering pathways
+  'all-y': 60,
+  'selected-y': 80,
+  'all-text-y': 7,
+  'selected-text-y': 7,
+  // y coordinates for highlighting pathways
   'most-activated-y': 65,
   'most-changed-y': 90,
+  'most-activated-text-y': 7,
+  'most-changed-text-y': 7,
+  // Suboptions
   'most-changed-suboption-x': 15,
-  'most-changed-suboption-t': 25,
+  'most-changed-suboption-t': 23,
   'most-changed-suboption-h': 22,
+  // Buttons
   'bt-width': 10,
   'bt-height': 10
 }
@@ -83,10 +93,18 @@ export var node_color = {
   'attack-only': '#d7191c' // red
 }
 
+export var node_hue_color = {
+  'original': '#cbffb4', // green
+  'original-and-target': '#ffbe91', // orange
+  'target': '#8fd8ff', // blue
+  'attack-only': '#ffc2c5' // red
+}
+
 // Node opacity
 export var node_opacity = {
   'activated': 1,
-  'deactivated': 0.1
+  'deactivated': 0.1,
+  'fv-deactivated': 0.3
 }
 
 // Fontawsome icon (https://fontawesome.com/cheatsheet?from=io)
@@ -138,6 +156,7 @@ export var edge_style = {
   'max-stroke': 5,
   'edge-color': 'lightgray',
   'edge-highlight-color': 'gray',
+  'edge-opacity': 0.5,
   'min-opacity': 0.3,
   'max-opacity': 1
 }
