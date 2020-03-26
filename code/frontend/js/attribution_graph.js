@@ -68,9 +68,12 @@ var edge_stroke_scale = {}
 var clicked_neurons = {}
 var highlighted_edges = {}
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main part for drawing the attribution graphs 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+gen_filters()
 
 export function reload_graph() {
   var file_list = data_file_path()
@@ -113,11 +116,8 @@ export function reload_graph() {
       gen_x_coords()
       gen_y_coords()
 
-      // Define filters
-      d3.select('#clip-path-def').remove()
-      d3.select('#filter-defs').remove()
-      def_rounded_image_filter()
-      gen_hue_filter()
+      // Update rounded-node filter
+      update_rounded_image_filter()
     
       // Draw nodes
       write_layers()
@@ -619,7 +619,7 @@ function draw_neurons() {
         .attr('height', node_size[selected_attack_info['attack_type']])
         .attr('xlink:href', function(neuron) { return vis_filename(neuron, 'channel') })
         .attr('clip-path', 'url(#rounded-edge)')
-        .attr('filter', 'url(#filter-' + graph_key + ')')
+        // .attr('filter', 'url(#filter-' + graph_key + ')')
         .style('display', 'none')
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
@@ -800,10 +800,9 @@ function draw_neurons() {
       draw_axis()
       draw_class_line()
       draw_lines()
-      draw_dots()
+      draw_dots()   
       
-      
-      // Draw lines
+      // Functions
       function draw_class_line() {
         var start_x = get_start_x()
         var end_x = start_x + node_box_style['act-plot-width']
@@ -998,10 +997,10 @@ function draw_neurons() {
     d3.selectAll('.edge-into-' + neuron)
       .style('display', function(d) { return edge_display(d) })
     d3.select('#fv-' + neuron)
-      .attr('filter', function() {
-        var graph_key = d3.select(this).attr('class').split('fv-').slice(-1)
-        return 'url(#filter-' + graph_key + ')'
-      })
+      // .attr('filter', function() {
+      //   var graph_key = d3.select(this).attr('class').split('fv-').slice(-1)
+      //   return 'url(#filter-' + graph_key + ')'
+      // })
       .style('opacity', function(neuron) {
         if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
@@ -1481,28 +1480,131 @@ function off_all_node() {
     .style('display', 'none')
 }
 
-function def_rounded_image_filter() {
-  // Define clip path
-  var clip_path_def = d3
-    .select('#svg-ag')
-    .append('defs')
-    .attr('id', 'clip-path-def')
+function update_rounded_image_filter() {
 
-  clip_path_def
-    .append('clipPath')
-    .attr('id', 'rounded-edge')
-    .append('rect')
+  d3.select('#rounded-edge-rect')
     .attr('width', node_size[selected_attack_info['attack_type']])
     .attr('height', node_size[selected_attack_info['attack_type']])
     .attr('rx', 0.2 * node_size[selected_attack_info['attack_type']])
     .attr('ry', 0.2 * node_size[selected_attack_info['attack_type']])
 }
 
-function gen_hue_filter() {
-  // Define filter defs
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for drawing edges
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+function update_edge_stroke_scale() {
+  edge_stroke_scale = {}
+
+  attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+    var min_inf = 10000
+    var max_inf = 0
+
+    layers.slice(1).forEach(layer => {
+      edge_data[strength][layer].forEach(d => {
+        var inf = d['influence']
+        min_inf = d3.min([min_inf, inf])
+        max_inf = d3.max([max_inf, inf])
+      })
+    })
+    
+    edge_stroke_scale[strength] = d3
+      .scaleLinear()
+      .domain([min_inf, max_inf])
+      .range([edge_style['min-stroke'], edge_style['max-stroke']])
+  })
+}
+
+function update_edges(strength) {
+
+  // Remove the previous edges
+  d3.selectAll('.edge').remove()
+
+  // Add new edges
+  layers.slice(1).forEach(layer => {
+    d3.select('#g-edge')
+      .selectAll('edges')
+      .data(edge_data[strength][layer])
+      .enter()
+      .append('path')
+      .attr('id', function(d) { return get_edge_id(d) })
+      .attr('class', function(d) { return get_edge_class(d) })
+      .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['influence']) })
+      .style('stroke', edge_style['edge-color'])
+      .style('fill', 'none')
+      .style('stroke', function(d) {
+        var curr = d['curr']
+        var next = d['next']
+        var curr_key = d3.select('#node-' + curr).attr('class').split(' ')[1].split('node-')[1]
+        var next_key = d3.select('#node-' + next).attr('class').split(' ')[1].split('node-')[1]
+        return ['url(#color-gradient', next_key, curr_key].join('-') + ')'
+      })
+      .attr('d', function(d) { return gen_curve(d) })
+      .style('display', 'none')
+      .style('opacity', edge_style['edge-opacity'])
+  })
+
+  function get_edge_id(d) {
+    return ['edge', d['curr'], d['next']].join('-')
+  }
+
+  function get_edge_class(d) {
+    var c1 = 'edge'
+    var c2 = 'edge-from-' + d['curr']
+    var c3 = 'edge-into-' + d['next']
+    return [c1, c2, c3].join(' ')
+  }
+
+  function gen_curve(d) {
+
+    var curr_node_coords = get_translate_coords('g-node-' + d['curr'])
+    var next_node_coords = get_translate_coords('g-node-' + d['next'])
+
+    var x1 = curr_node_coords[0] + node_size[selected_attack_info['attack_type']] / 2
+    var y1 = curr_node_coords[1]
+    var x2 = next_node_coords[0] + node_size[selected_attack_info['attack_type']] / 2
+    var y2 = next_node_coords[1] + node_size[selected_attack_info['attack_type']]
+
+    var c1_x = (3 * x1 + x2) / 4
+    var c1_y = (3 * y1 + y2) / 4 - (y1 - y2) * 0.6
+    var c2_x = (x1 + 3 * x2) / 4
+    var c2_y = (y1 + 3 * y2) / 4 + (y1 - y2) * 0.6
+  
+    var path = 'M ' + x1 + ',' + y1
+    path += ' C ' + c1_x + ' ' + c1_y
+    path += ' ' + c2_x + ' ' + c2_y + ','
+    path += ' ' + x2 + ' ' + y2
+    return path
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions for generating filters
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+function gen_filters() {
   d3.select('#svg-ag')
     .append('defs')
     .attr('id', 'filter-defs')
+
+  gen_hue_filter()
+  gen_clip_path_filter()
+  gen_edge_gradient_filter()
+
+}
+
+function gen_clip_path_filter() {
+  d3.select('#svg-ag')
+    .append('defs')
+    .attr('id', 'clip-path-def')
+    .append('clipPath')
+    .attr('id', 'rounded-edge')
+    .append('rect')
+    .attr('id', 'rounded-edge-rect')
+}
+
+function gen_hue_filter() {
 
   // Define colored filter
   for (var graph_key in node_hue_color) {
@@ -1550,82 +1652,34 @@ function hex2rgb(hex) {
   return rgb
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// Functions for drawing edges
-////////////////////////////////////////////////////////////////////////////////////////////////
+function gen_edge_gradient_filter() {
+  d3.select('#svg-ag')
+    .append('defs')
+    .attr('id', 'edge-color-gradient')
 
-function update_edge_stroke_scale() {
-  edge_stroke_scale = {}
+  for (var key1 in node_color) {
+    for (var key2 in node_color) {
 
-  attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-    var min_inf = 10000
-    var max_inf = 0
+      d3.select('#edge-color-gradient')
+        .append('linearGradient')
+        .attr('id', ['color-gradient', key1, key2].join('-'))
+        .attr('x1', '0%')
+        .attr('x2', '0%')
+        .attr('y1', '0%')
+        .attr('y2', '100%')
+      
+      d3.select('#' + ['color-gradient', key1, key2].join('-'))
+        .append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', node_color[key1])
 
-    layers.slice(1).forEach(layer => {
-      edge_data[strength][layer].forEach(d => {
-        var inf = d['influence']
-        min_inf = d3.min([min_inf, inf])
-        max_inf = d3.max([max_inf, inf])
-      })
-    })
+      d3.select('#' + ['color-gradient', key1, key2].join('-'))
+        .append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', node_color[key2])
+    } 
+  }
     
-    edge_stroke_scale[strength] = d3
-      .scaleLinear()
-      .domain([min_inf, max_inf])
-      .range([edge_style['min-stroke'], edge_style['max-stroke']])
-  })
-}
 
-function update_edges(strength) {
-
-  d3.selectAll('.edge').remove()
-  layers.slice(1).forEach(layer => {
-    d3.select('#g-edge')
-      .selectAll('edges')
-      .data(edge_data[strength][layer])
-      .enter()
-      .append('path')
-      .attr('id', function(d) { return get_edge_id(d) })
-      .attr('class', function(d) { return get_edge_class(d) })
-      .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['influence']) })
-      .style('stroke', edge_style['edge-color'])
-      .style('fill', 'none')
-      .attr('d', function(d) { return gen_curve(d) })
-      .style('display', 'none')
-      .style('opacity', edge_style['edge-opacity'])
-  })
-
-  function get_edge_id(d) {
-    return ['edge', d['curr'], d['next']].join('-')
-  }
-
-  function get_edge_class(d) {
-    var c1 = 'edge'
-    var c2 = 'edge-from-' + d['curr']
-    var c3 = 'edge-into-' + d['next']
-    return [c1, c2, c3].join(' ')
-  }
-
-  function gen_curve(d) {
-
-    var curr_node_coords = get_translate_coords('g-node-' + d['curr'])
-    var next_node_coords = get_translate_coords('g-node-' + d['next'])
-
-    var x1 = curr_node_coords[0] + node_size[selected_attack_info['attack_type']] / 2
-    var y1 = curr_node_coords[1]
-    var x2 = next_node_coords[0] + node_size[selected_attack_info['attack_type']] / 2
-    var y2 = next_node_coords[1] + node_size[selected_attack_info['attack_type']]
-
-    var c1_x = (3 * x1 + x2) / 4
-    var c1_y = (3 * y1 + y2) / 4 - (y1 - y2) * 0.6
-    var c2_x = (x1 + 3 * x2) / 4
-    var c2_y = (y1 + 3 * y2) / 4 + (y1 - y2) * 0.6
-  
-    var path = 'M ' + x1 + ',' + y1
-    path += ' C ' + c1_x + ' ' + c1_y
-    path += ' ' + c2_x + ' ' + c2_y + ','
-    path += ' ' + x2 + ' ' + y2
-    return path
-  }
 
 }
