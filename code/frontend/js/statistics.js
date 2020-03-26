@@ -13,7 +13,7 @@ import {
 } from './attack_control.js'
 
 import {
-  node_color
+  text_color
 } from './style.js';
 
 export function update_column_title() {
@@ -43,7 +43,7 @@ export function update_column_title() {
       .text(label)
       .attr('id', 'column-' + column)
       .attr('class', 'column-title')
-      .style('fill', node_color[column])
+      .style('fill', text_color[column])
 
     var [l, t, r, b] = get_absolute_position('column-' + column)
     var len_txt = r - l

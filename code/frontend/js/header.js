@@ -9,7 +9,7 @@ import {
 import {
   dropdown_color,
   option_box_style,
-  node_color
+  text_color
 } from './style.js'
 
 import {
@@ -82,8 +82,8 @@ function draw_subtitle() {
   sub_title_4.setAttribute('class', 'header-sub-title header-option-title')
   sub_title_2.setAttribute('id', 'header-subtitle-class-dropdown-original')
   sub_title_4.setAttribute('id', 'header-subtitle-class-dropdown-target')
-  sub_title_2.style.color = node_color['original']
-  sub_title_4.style.color = node_color['target']
+  sub_title_2.style.color = text_color['original']
+  sub_title_4.style.color = text_color['target']
 }
 
 
