@@ -35,6 +35,11 @@
 
 .neuron-id {
   fill: gray;
+  stroke: white;
+  paint-order: stroke;
+  stroke-width: 2px;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
 }
 
 .layer-text {
