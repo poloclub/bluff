@@ -38,13 +38,13 @@ export var what_to_see = {
   'option-x': 2,
   'option-text-x': 15,
   // y coordinates for filtering pathways
-  'all-y': 60,
-  'selected-y': 80,
+  'all-y': 20,
+  'selected-y': 45,
   'all-text-y': 7,
   'selected-text-y': 7,
   // y coordinates for highlighting pathways
-  'most-activated-y': 65,
-  'most-changed-y': 90,
+  'most-activated-y': 20,
+  'most-changed-y': 45,
   'most-activated-text-y': 7,
   'most-changed-text-y': 7,
   // Suboptions

@@ -27,8 +27,8 @@ export var highlight_pathways = {
 // Filter pathways
 //////////////////////////////////////////////////////////////////////////////////////////
 gen_pathways_option_g('filter')
-write_mode_option_title('filter', 'FILTER PATHWAYS')
-write_mode_option_help('filter', ['Which pathways', 'do you want to see?'])
+write_mode_option_title('filter', 'FILTER GRAPH')
+// write_mode_option_help('filter', ['Which pathways', 'do you want to see?'])
 add_what_to_filter_options('filter')
 update_filter_bottons()
 
@@ -38,7 +38,7 @@ update_filter_bottons()
 
 gen_pathways_option_g('highlight')
 write_mode_option_title('highlight', 'HIGHLIGHT PATHWAYS')
-write_mode_option_help('highlight', ['Which pathways', 'do you want to highlight?'])
+// write_mode_option_help('highlight', ['Which pathways', 'do you want to highlight?'])
 add_what_to_highlight_options('highlight')
 update_highlight_bottons()
 
@@ -83,8 +83,8 @@ function add_what_to_highlight_options(type) {
 function add_what_to_filter_options(type) {
   gen_option_g('all', type)
   gen_option_g('selected', type)
-  gen_option(type, 'all', 'See all')
-  gen_option(type, 'selected', 'See only clicked')
+  gen_option(type, 'all', 'Show full graph')
+  gen_option(type, 'selected', 'Show selected only')
 }
 
 function gen_option_g(option, type) { 
@@ -228,14 +228,8 @@ function update_highlight_bottons() {
   d3.selectAll('.what-to-see-option-checkbox-icon-highlight')
     .style('display', 'none')
 
-  d3.selectAll('.what-to-see-option-text-highlight')
-    .style('fill', 'lightgray')
-
   d3.select('#what-to-see-icon-' + highlight_pathways['selected'])
     .style('display', 'block')
-
-  d3.select('#what-to-see-option-text-' + highlight_pathways['selected'])
-    .style('fill', 'gray')
 
   if (highlight_pathways['selected'] == 'most-changed') {
     d3.select('#what-to-see-icon-sub-' + highlight_pathways['sub-selected'])
@@ -261,19 +255,12 @@ function update_filter_bottons() {
   d3.selectAll('.what-to-see-option-checkbox-icon-filter')
     .style('display', 'none')
 
-  d3.selectAll('.what-to-see-option-text-filter')
-    .style('fill', 'lightgray')
-
   d3.select('#what-to-see-icon-' + filter_pathways['filter'])
     .style('display', 'block')
-
-  d3.select('#what-to-see-option-text-' + filter_pathways['filter'])
-    .style('fill', 'gray')
 
 }
 
 function click_filter_option(option) {
-  console.log('click filter option')
   
   filter_pathways['filter'] = option
   update_filter_bottons()

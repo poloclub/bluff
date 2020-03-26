@@ -33,8 +33,8 @@ var strength_bar_scale = {}
 // Generate attack options
 //////////////////////////////////////////////////////////////////////////////////////////
 
-write_attack_option_title('ATTACK')
-write_attack_help_text('How to manipulate?')
+write_attack_option_title('ADVERSARIAL ATTACK')
+// write_attack_help_text('How to manipulate?')
 gen_attack_dropdown()
 strength_bar_scale = gen_strength_bar_length_scale(filter_bar['bar_length'])
 gen_filter_bar(
@@ -74,9 +74,9 @@ function gen_attack_dropdown() {
     d3.select('#svg-attack-option')
       .append('g')
       .attr('id', 'g-attack-type')
-      .append('text')
-      .attr('id', 'attack-dropdown-title')
-      .text(title)
+      // .append('text')
+      // .attr('id', 'attack-dropdown-title')
+      // .text(title)
   }
 
   function create_dropdown_menu() {

@@ -44,9 +44,9 @@ var bar_length_scale_cmp = {}
 //////////////////////////////////////////////////////////////////////////////////////////
 
 gen_mode_option_g()
-write_mode_option_title('compare', 'COMPARISON MODE')
+write_mode_option_title('compare', 'COMPARE ATTACK STRENGTHS')
 add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
-write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
+// write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
 add_compare_strength_bar()
 
 //////////////////////////////////////////////////////////////////////////////////////////

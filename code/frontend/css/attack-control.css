@@ -18,7 +18,7 @@
 
 /* Attack type */
 #g-attack-type {
-  transform: translate(50px, 80px);
+  transform: translate(50px, 40px);
   font-size: 15px;
 }
 
@@ -45,7 +45,7 @@
 
 /* Attack strength */
 #g-strength-bar {
-  transform: translate(50px, 130px);
+  transform: translate(50px, 90px);
   font-size: 15px;
 }
 

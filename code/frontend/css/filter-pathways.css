@@ -13,13 +13,13 @@
 /* Filter pathways */
 #g-filter-option {
   font-size: 15px;
-  transform: translate(50px, 400px);
+  transform: translate(50px, 180px);
 }
 
 /* Highlight pathways */
 #g-highlight-option {
   font-size: 15px;
-  transform: translate(50px, 550px);
+  transform: translate(50px, 300px);
 }
 
 .what-to-see-option-checkbox {
@@ -32,7 +32,7 @@
 }
 
 .what-to-see-option-text {
-  fill: lightgray;
+  fill: gray;
   font-size: 15px;
 }
 

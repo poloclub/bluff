@@ -1415,8 +1415,9 @@ export function go_comparison_mode() {
     }
 
     function update_opacity_outer_rect(filter_method) {
-
+      
       var f = filter_function(filter_method)
+      console.log(filter_method, f)
 
       d3.selectAll('.node')
         .style('fill-opacity', function(neuron) {
@@ -1461,7 +1462,7 @@ export function go_comparison_mode() {
     }
 
     function filter_function(filter_method) {
-      if (filter_method == 'activated') {
+      if (filter_method == 'most-activated') {
         return is_most_activated
       } else if (filter_method == 'increased') {
         return is_most_increased

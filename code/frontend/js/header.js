@@ -60,11 +60,15 @@ function draw_subtitle() {
   var sub_title_2 = document.createElement('div')
   var sub_title_3 = document.createElement('div')
   var sub_title_4 = document.createElement('div')
+  var sub_title_5 = document.createElement('div')
   sub_title.setAttribute('id', 'sub-title')
-  sub_title_1.innerText = 'Understand how to attack a model to misclassify'
+  sub_title_1.innerText = 'Understand how neural networks misclassify'
   sub_title_3.innerText = 'into'
+  sub_title_5.innerText = 'when attacked'
   sub_title_3.style.paddingLeft = '5px'
   sub_title_3.style.paddingRight = '5px'
+  sub_title_5.style.paddingLeft = '5px'
+  sub_title_5.style.paddingRight = '5px'
 
   // Append the subtitle
   var header_title = document.getElementById('header-title')
@@ -74,12 +78,14 @@ function draw_subtitle() {
   sub_title.appendChild(sub_title_3)
   sub_title.appendChild(sub_title_3)
   sub_title.appendChild(sub_title_4)
+  sub_title.appendChild(sub_title_5)
   sub_title.setAttribute('id', 'sub-title')
   sub_title.setAttribute('class', 'header-sub-title')
   sub_title_1.setAttribute('class', 'header-sub-title')
   sub_title_2.setAttribute('class', 'header-sub-title header-option-title')
   sub_title_3.setAttribute('class', 'header-sub-title')
   sub_title_4.setAttribute('class', 'header-sub-title header-option-title')
+  sub_title_5.setAttribute('class', 'header-sub-title')
   sub_title_2.setAttribute('id', 'header-subtitle-class-dropdown-original')
   sub_title_4.setAttribute('id', 'header-subtitle-class-dropdown-target')
   sub_title_2.style.color = text_color['original']

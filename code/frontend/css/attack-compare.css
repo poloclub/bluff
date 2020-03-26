@@ -1,11 +1,11 @@
 /* Comparison mode */
 #g-compare-option {
   font-size: 15px;
-  transform: translate(50px, 210px);
+  transform: translate(50px, 510px);
 }
 
 #compare-on-off-icon {
-  transform: translate(130px, 0px);
+  transform: translate(200px, 0px);
 }
 
 #g-compare-bar {
