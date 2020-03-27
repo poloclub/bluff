@@ -693,10 +693,14 @@ function draw_neurons() {
 
     // Hightlight neuron
     highlight_neuron(neuron)
+    d3.select('#neuron-id-' + neuron).style('display', 'block')
 
-    // Show edges
-    d3.selectAll('.edge-from-' + neuron).style('display', 'block')
-    d3.selectAll('.edge-into-' + neuron).style('display', 'block')
+    // Show edges 
+    if (filter_pathways['filter'] == 'all') {
+      d3.selectAll('.edge-from-' + neuron).style('display', 'block')
+      d3.selectAll('.edge-into-' + neuron).style('display', 'block')
+    }
+    
 
     // Add node box if it does not exist
     var node_box_id = get_node_box_id(neuron)
@@ -1003,6 +1007,9 @@ function draw_neurons() {
       dehighlight_neuron(neuron)
     }
 
+    d3.select('#neuron-id-' + neuron).style('display', 'none')
+    
+
     function edge_display(d) {
       if (is_highlighted_edge(d['curr'], d['next'])) {
         return 'block'
@@ -1023,6 +1030,9 @@ function draw_neurons() {
       highlight_neuron(neuron)
       add_clicked_neuron(neuron)
       highlight_edges_of_clicked_neuron(neuron)
+
+
+      console.log('click neuron', neuron)
     }
   }
 
@@ -1031,8 +1041,6 @@ function draw_neurons() {
   }
 
   function highlight_neuron(neuron) {
-    d3.select('#neuron-id-' + neuron)
-      .style('display', 'block')
     d3.select('#fv-' + neuron)
       .style('display', 'block')
     d3.select('#node-' + neuron)
