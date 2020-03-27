@@ -5,7 +5,7 @@ import {
 
 import {
   update_node_opacity,
-  update_node_display,
+  update_graph_by_filter_graph,
   go_comparison_mode
 } from './attribution_graph.js'
 
@@ -260,10 +260,10 @@ function update_filter_bottons() {
 
 }
 
-function click_filter_option(option) {
+async function click_filter_option(option) {
   
   filter_pathways['filter'] = option
   update_filter_bottons()
-  update_node_display()
+  update_graph_by_filter_graph()
 
 }
