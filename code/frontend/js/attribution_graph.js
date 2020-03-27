@@ -576,6 +576,7 @@ function draw_neurons() {
       append_node_rect(graph_key, neuron_data)
     })
     append_feature_vis(graph_key)
+    append_node_end_circles(graph_key)
     append_comp_nodes(graph_key)
 
     function get_neuron_data(graph_key, layer) {
@@ -608,6 +609,30 @@ function draw_neurons() {
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
         .on('click', function(neuron) { return click_node(neuron) })
+    }
+
+    function append_node_end_circles(graph_key) {
+      var ns = node_size[selected_attack_info['attack_type']]
+      var r = 0.1 * ns
+
+      d3.selectAll('.g-node-' + graph_key)
+        .append('circle')
+        .attr('id', function(neuron) { return 'node-circle-curr-' + neuron })
+        .attr('class', 'node-circle')
+        .attr('cx', ns / 2)
+        .attr('r', r)
+        .attr('fill', node_color[graph_key])
+        .style('display', 'none')
+
+      d3.selectAll('.g-node-' + graph_key)
+        .append('circle')
+        .attr('id', function(neuron) { return 'node-circle-next-' + neuron })
+        .attr('class', 'node-circle')
+        .attr('cx', ns / 2)
+        .attr('cy', ns)
+        .attr('r', r)
+        .attr('fill', node_color[graph_key])
+        .style('display', 'none')
     }
   
     function append_feature_vis(graph_key) {
@@ -1030,9 +1055,6 @@ function draw_neurons() {
       highlight_neuron(neuron)
       add_clicked_neuron(neuron)
       highlight_edges_of_clicked_neuron(neuron)
-
-
-      console.log('click neuron', neuron)
     }
   }
 
@@ -1056,6 +1078,24 @@ function draw_neurons() {
       .style('display', 'block')
   }
 
+}
+
+function get_cx(neuron) {
+  var ns = node_size[selected_attack_info['attack_type']]
+  var coords = get_translate_coords('g-node-' + neuron)
+  var [x, y] = coords
+  x = x + (ns / 2)
+  return x
+}
+
+function get_cy(neuron, curr_or_next) {
+  var ns = node_size[selected_attack_info['attack_type']]
+  var coords = get_translate_coords('g-node-' + neuron)
+  var [x, y] = coords
+  if (curr_or_next == 'next') {
+    y = y + ns
+  }
+  return y
 }
 
 function g_transform(graph_key, neuron, i) {
@@ -1137,6 +1177,10 @@ function highlight_edges_of_clicked_neuron(neuron) {
           d3.select('#' + edge_id)
             .style('display', 'block')
             .classed('edge-shown', true)
+          d3.select('#node-circle-curr-' + prev_neuron)
+            .style('display', 'block')
+          d3.select('#node-circle-next-' + neuron)
+            .style('display', 'block')
         }
       }
     }
@@ -1158,6 +1202,7 @@ function highlight_edges_of_clicked_neuron(neuron) {
     }
   }
 
+  update_node_circle_display()
 }
 
 function dehighlight_edges_of_clicked_neuron(neuron) {
@@ -1187,6 +1232,20 @@ function dehighlight_edges_of_clicked_neuron(neuron) {
       for (var next_neuron in clicked_neurons[next_layer]) {
         remove_highlighted_edges(neuron, next_neuron)
       }
+    }
+  }
+
+  update_node_circle_display()
+}
+
+function update_node_circle_display() {
+  d3.selectAll('.node-circle').style('display', 'none')
+
+  for (var edge in highlighted_edges) {
+    var [curr, next] = edge.split('_')
+    if (highlighted_edges[edge]) {
+      d3.select('#node-circle-curr-' + curr).style('display', 'block')
+      d3.select('#node-circle-next-' + next).style('display', 'block')
     }
   }
 }
@@ -1619,15 +1678,22 @@ function update_edges(strength) {
   // Remove the previous edges
   d3.selectAll('.edge').remove()
 
+  // Circle size
+  var ns = node_size[selected_attack_info['attack_type']]
+  var r = ns * 0.2
+
   // Add new edges
   layers.slice(1).forEach(layer => {
     d3.select('#g-edge')
       .selectAll('edges')
       .data(edge_data[strength][layer])
       .enter()
+      .append('g')
+      .attr('id', function(d) { return 'g-' + get_edge_id(d)})
+      .attr('class', 'g-edge')
       .append('path')
       .attr('id', function(d) { return get_edge_id(d) })
-      .attr('class', function(d) { return get_edge_class(d) })
+      .attr('class', function(d) { return get_edge_class(d, layer) })
       .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['influence']) })
       .style('stroke', edge_style['edge-color'])
       .style('fill', 'none')
@@ -1641,11 +1707,12 @@ function update_edges(strength) {
     return ['edge', d['curr'], d['next']].join('-')
   }
 
-  function get_edge_class(d) {
+  function get_edge_class(d, layer) {
     var c1 = 'edge'
     var c2 = 'edge-from-' + d['curr']
     var c3 = 'edge-into-' + d['next']
-    return [c1, c2, c3].join(' ')
+    var c4 = 'edge-' + layer
+    return [c1, c2, c3, c4].join(' ')
   }
 
   function edge_stroke(d) {
