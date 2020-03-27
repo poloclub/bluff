@@ -595,7 +595,7 @@ function draw_neurons() {
         .enter()
         .append('g')
         .attr('id', function(neuron) { return 'g-' + get_node_id(neuron) })
-        .attr('class', function(neuron) { return 'g-node g-node-' + graph_key })
+        .attr('class', function(neuron) { return g_node_class(neuron, graph_key) })
         .attr('transform', function(neuron, i) { return g_transform(graph_key, neuron, i) })
         .append('rect')
         .attr('id', function(neuron) { return get_node_id(neuron) })
@@ -643,6 +643,14 @@ function draw_neurons() {
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
         .on('click', function(neuron) { return click_node(neuron) })
     }
+
+    function g_node_class(neuron, graph_key) {
+      var layer = neuron.split('-')[0]
+      var c1 = 'g-node'
+      var c2 = 'g-node-' + graph_key
+      var c3 = 'g-node-' + layer + '-' + graph_key
+      return [c1, c2, c3].join(' ')
+    }
   }
   
   function draw_neuron_id() {
@@ -668,24 +676,6 @@ function draw_neurons() {
     var c2 = ['node', graph_key].join('-')
     var c3 = ['node', layer].join('-')
     return [c1, c2, c3].join(' ')
-  }
-
-  function g_transform(graph_key, neuron, i) {
-    var x = get_node_x(graph_key, i)
-    var y = get_node_y(neuron)
-    return 'translate(' + x + ',' + y + ')'
-  }
-
-  function get_node_x(graph_key, i) {
-    var start_x = node_group_x[selected_attack_info['attack_type']][graph_key]['start_x']
-    var w = node_size[selected_attack_info['attack_type']]
-    var p = graph_margin['node_lr']
-    return start_x + i * (w + p)
-  }
-
-  function get_node_y(neuron_id) {
-    var layer = neuron_id.split('-')[0]
-    return y_coords[layer]
   }
 
   function mouseover_node(neuron) {
@@ -917,7 +907,6 @@ function draw_neurons() {
             return 'translate(' + x + ',' + y + ')'
           })
 
-        // console.log([0].concat(attack_strengths[selected_attack_info['attack_type']]))
         var max_attack_strength = attack_strengths[selected_attack_info['attack_type']].slice(-1)[0]
         var x_scale = d3
           .scaleLinear()
@@ -1058,6 +1047,24 @@ function draw_neurons() {
       .style('display', 'block')
   }
 
+}
+
+function g_transform(graph_key, neuron, i) {
+  var x = get_node_x(graph_key, i)
+  var y = get_node_y(neuron)
+  return 'translate(' + x + ',' + y + ')'
+}
+
+function get_node_x(graph_key, i) {
+  var start_x = node_group_x[selected_attack_info['attack_type']][graph_key]['start_x']
+  var w = node_size[selected_attack_info['attack_type']]
+  var p = graph_margin['node_lr']
+  return start_x + i * (w + p)
+}
+
+function get_node_y(neuron_id) {
+  var layer = neuron_id.split('-')[0]
+  return y_coords[layer]
 }
 
 function add_clicked_neuron(neuron) {
@@ -1302,11 +1309,13 @@ function is_most_decreased(neuron, strength) {
 }
 
 export function update_node_display() {
-  console.log(filter_pathways)
+  console.log('update node display', filter_pathways)
   if (filter_pathways['filter'] == 'selected') {
-    // XXXXXXXXXXXXXXXXXXX
     var displayable_neurons = get_displayable_neurons()
     var node_transforms = get_node_transforms(displayable_neurons)
+    rearrange_selected_neurons(node_transforms)
+  } else if (filter_pathways['filter'] == 'all') {
+    rearrange_all_neurons()
   }
 
   function get_displayable_neurons() {
@@ -1320,7 +1329,6 @@ export function update_node_display() {
             displayable_neurons[layer][graph_key] = []
           }
           displayable_neurons[layer][graph_key].push(neuron)
-
         }
       }
     }
@@ -1328,10 +1336,7 @@ export function update_node_display() {
   }
 
   function get_node_transforms(displayable_neurons) {
-    d3.selectAll('.g-node').style('display', 'none')
-    // d3.selectAll('.edge').style('display', 'none')
-
-    // XXXXXXXX
+    
     var node_transforms = {}
     var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
 
@@ -1343,7 +1348,6 @@ export function update_node_display() {
       var group_lr_p = 20
       var node_lr_p = 3
       var ns = node_size[selected_attack_info['attack_type']]
-      console.log(ns)
 
       graph_keys.forEach(graph_key => {
         if (graph_key in displayable_neurons[layer]) {
@@ -1358,7 +1362,14 @@ export function update_node_display() {
       for (var neuron in node_transforms[layer]) {
         node_transforms[layer][neuron] = 500 + node_transforms[layer][neuron] - (end_x + ns) / 2
       }
+    }
 
+    return node_transforms
+  }
+
+  function rearrange_selected_neurons(node_transforms) {
+    d3.selectAll('.g-node').style('display', 'none')
+    for (var layer in node_transforms) {
       for (var neuron in node_transforms[layer]) {
         var [x, y] = get_translate_coords('g-node-' + neuron)       
         x = node_transforms[layer][neuron]
@@ -1368,9 +1379,24 @@ export function update_node_display() {
           .duration(1500)
           .attr('transform', 'translate(' + x + ',' + y + ')')
       }
-
-      console.log(layer, start_x, end_x, node_transforms[layer])
     }
+  }
+
+  function rearrange_all_neurons() {
+    
+    d3.selectAll('.g-node').style('display', 'block')
+    
+    var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
+    layers.forEach(layer => {
+      graph_keys.forEach(graph_key => {
+        d3.selectAll('.g-node-' + layer + '-' + graph_key)
+        .transition()
+        .duration(1500)
+        .attr('transform', function(neuron, i) { return g_transform(graph_key, neuron, i) })
+      })
+      
+    })
+
   }
 
 }
