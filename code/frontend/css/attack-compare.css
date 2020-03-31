@@ -1,11 +1,11 @@
 /* Comparison mode */
 #g-compare-option {
   font-size: 15px;
-  transform: translate(50px, 510px);
+  transform: translate(50px, 470px);
 }
 
 #compare-on-off-icon {
-  transform: translate(200px, 0px);
+  transform: translate(130px, 0px);
 }
 
 #g-compare-bar {
@@ -39,5 +39,19 @@
 }
 
 .compare-strength-val {
+  font-size: 13px;
+}
+
+.compare-strength-label-text {
+  font-weight: bolder;
+  stroke-width: 0.4px;
+  font-size: 13px;
+  stroke: gray;
+  fill: gray;
+}
+
+.compare-strength-symbol-text {
+  stroke-width: 0.4px;
+  fill: lightgray;
   font-size: 13px;
 }

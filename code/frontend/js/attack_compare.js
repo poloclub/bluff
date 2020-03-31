@@ -44,7 +44,7 @@ var bar_length_scale_cmp = {}
 //////////////////////////////////////////////////////////////////////////////////////////
 
 gen_mode_option_g()
-write_mode_option_title('compare', 'COMPARE ATTACK STRENGTHS')
+write_mode_option_title('compare', 'COMPARE ATTACKS')
 add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
 // write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
 add_compare_strength_bar()
@@ -115,7 +115,7 @@ function turn_off_comparison_mode() {
 function add_compare_strength_bar() {
   bar_length_scale_cmp = gen_strength_bar_length_scale(filter_bar['cmp_bar_length'])
   create_bar_g()
-  create_bar_title('Strengths')
+  // create_bar_title('Strengths')
   gen_bar('compare', [comp_attack['weak'], comp_attack['strong']])
 
   function create_bar_g() {
@@ -137,6 +137,8 @@ function add_compare_strength_bar() {
     gen_horizontal_bar()
     gen_pointer('weak')
     gen_pointer('strong')
+    gen_strength_txt('weak')
+    gen_strength_txt('strong')
 
     function gen_horizontal_bar() {
       d3.select('#g-compare-bar')
@@ -196,7 +198,6 @@ function add_compare_strength_bar() {
         gen_outer_rect()
         gen_inner_rect()
         gen_pointer_circle()
-        gen_strength_txt()
 
         function gen_outer_rect() {
           d3.select('#g-attack-' + weak_or_strong)
@@ -256,54 +257,6 @@ function add_compare_strength_bar() {
             .attr('cx', 0)
             .attr('cy', -get_y())
             .style('display', 'none')
-        }
-
-        function gen_strength_txt() {
-
-          // Weak or strong label
-          d3.select('#g-attack-' + weak_or_strong)
-            .append('text')
-            .attr('id', 'strength-' + weak_or_strong)
-            .text(weak_or_strong)
-            .attr('x', label_delta_x())
-            .attr('y', text_delta_y())
-
-          // Strength value
-          d3.select('#g-attack-' + weak_or_strong)
-            .append('text')
-            .attr('id', 'strength-val-' + weak_or_strong)
-            .attr('class', 'compare-strength-val')
-            .text(strength_val())
-            .attr('x', val_delta_x())
-            .attr('y', text_delta_y())
-
-          function label_delta_x() {
-            return filter_bar['outer_rect'] / 2 + 5
-          }
-
-          function val_delta_x() {
-            if (weak_or_strong == 'weak') {
-              return filter_bar['outer_rect'] / 2 + 43
-            } else {
-              return filter_bar['outer_rect'] / 2 + 50
-            }
-          }
-
-          function text_delta_y() {
-            if (weak_or_strong == 'weak') {
-              return (filter_bar['outer_rect'] - filter_bar['inner_rect']) / 2 + 8
-            } else {
-              return -(filter_bar['outer_rect'] + filter_bar['inner_rect']) / 2 + 8
-            }
-          }
-
-          function strength_val() {
-            if (weak_or_strong == 'weak') {
-              return default_vals[0]
-            } else {
-              return default_vals[1]
-            }
-          }
         }
 
         function gen_slider_drag() {
@@ -375,6 +328,84 @@ function add_compare_strength_bar() {
           }
         } 
       } 
+    }
+
+    function gen_strength_txt(weak_or_strong) {
+
+      // Weak or strong label
+      d3.select('#g-compare-filter-bar')
+        .append('text')
+        .attr('id', 'strength-' + weak_or_strong)
+        .attr('class', 'compare-strength-label-text')
+        .text(weak_or_strong.charAt(0).toUpperCase() + weak_or_strong.slice(1) + 'er')
+        .attr('x', label_x())
+        .attr('y', text_delta_y())
+
+      // Inner or outer text
+      d3.select('#g-compare-filter-bar')
+        .append('text')
+        .attr('id', 'strength-symbol-' + weak_or_strong)
+        .attr('class', 'compare-strength-symbol-text')
+        .text('(' + symbol_text(weak_or_strong) +'):')
+        .attr('x', symbol_x())
+        .attr('y', text_delta_y())
+  
+      // Strength value
+      d3.select('#g-compare-filter-bar')
+        .append('text')
+        .attr('id', 'strength-val-' + weak_or_strong)
+        .attr('class', 'compare-strength-val')
+        .text(strength_val())
+        .attr('x', val_x())
+        .attr('y', text_delta_y())
+
+      function symbol_text(weak_or_strong) {
+        if (weak_or_strong == 'weak') {
+          return 'inner'
+        } else {
+          return 'outer'
+        }
+      }
+  
+      function label_x() {
+        if (weak_or_strong == 'weak') {
+          return 0
+        } else {
+          return 61
+        }
+      }
+
+      function symbol_x() {
+        if (weak_or_strong == 'weak') {
+          return 45
+        } else {
+          return 112
+        }
+      }
+  
+      function val_x() {
+        if (weak_or_strong == 'weak') {
+          return 90
+        } else {
+          return 158
+        }
+      }
+  
+      function text_delta_y() {
+        if (weak_or_strong == 'weak') {
+          return 2 * filter_bar['outer_rect'] + 8
+        } else {
+          return -2 * filter_bar['outer_rect'] + 3
+        }
+      }
+  
+      function strength_val() {
+        if (weak_or_strong == 'weak') {
+          return default_vals[0]
+        } else {
+          return default_vals[1]
+        }
+      }
     }
   }
 }

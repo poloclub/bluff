@@ -16,9 +16,9 @@ export var g_main = {
 
 // How to attack
 export var how_to_attack = {
-  'method-icon-x': 110,
+  'method-icon-x': 120,
   'method-val-y': 20,
-  'method-line-x': 120,
+  'method-line-x': 130,
   'method-line-y': 24
 }
 
@@ -58,9 +58,9 @@ export var what_to_see = {
 
 // Size info of filter bar
 export var filter_bar = {
-  'bar_length': 100,
-  'cmp_bar_length': 130,
-  'cmp_pointer_line_length': 10,
+  'bar_length': 130,
+  'cmp_bar_length': 180,
+  'cmp_pointer_line_length': 5,
   'outer_rect': 15,
   'inner_rect': 7,
   'outer_rx': 3,
