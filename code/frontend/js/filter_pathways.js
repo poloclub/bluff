@@ -211,7 +211,7 @@ function gen_sub_option(type, option, suboptions) {
       .attr('class', 'what-to-see-option-text what-to-see-option-text-' + type)
       .attr('x', what_to_see['most-changed-suboption-x'] + what_to_see['option-text-x'])
       .attr('y', function(d, i) { return suboption_text_y(i) })
-      .text(function(d) { return 'Largest ' + d })
+      .text(function(d) { return 'Most ' + d })
   }
 
   function click_sub_option(suboption) {

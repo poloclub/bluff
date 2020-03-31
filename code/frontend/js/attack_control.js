@@ -15,7 +15,8 @@ import {
 
 import { 
   update_node_opacity,
-  update_scatter_circle
+  update_scatter_circle,
+  update_edges
 } from './attribution_graph.js';
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +154,7 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       .attr('id', ['g', filter_type, 'bar'].join('-'))
       .append('text')
       .attr('id', filter_type + '-bar-title')
-      .text(title)
+      .text(title + ':')
   }
 
   function gen_bar(filter_type) {
@@ -229,6 +230,8 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       if (filter_type == 'strength') {
         update_node_opacity()
         update_scatter_circle()
+        // XXXXXXXXXXXXX
+        // update_edges(selected_attack_info['attack_strength'])
       } 
       
     }

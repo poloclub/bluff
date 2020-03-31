@@ -153,9 +153,11 @@ export function remove_graph() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 function read_and_parse_edge_data(data, i, neuron_data) {
+  // XXXXXXXXXXXXXX
   var edge_data = {}
+  edge_data[0] = data[i]
   attack_strengths[selected_attack_info['attack_type']].forEach((s, j) => {
-    edge_data[s] = data[i + j]
+    edge_data[s] = data[i + j + 1]
   })
 
   edge_data = filter_parse_edge_data(edge_data)
@@ -373,6 +375,7 @@ function data_file_path() {
   var top_neuron_data_path = data_dir + ['top_neurons/top_neurons', class_info, attack_type + '.json'].join('-')
   var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
 
+  file_list.push(data_dir + ['parsed_inf/edg_inf_parsed', 'benign', class_info.split('-')[0] + '.json'].join('-'))
   attack_strengths[attack_type].forEach(strength => {
     var st = strength.toFixed(4)
     var edge_data_path = data_dir + ['parsed_inf/edg_inf_parsed', 'attacked', class_info, attack_type, st + '.json'].join('-')
@@ -575,8 +578,9 @@ function draw_neurons() {
       var neuron_data = get_neuron_data(graph_key, layer)
       append_node_rect(graph_key, neuron_data)
     })
-    append_feature_vis(graph_key)
     append_node_end_circles(graph_key)
+    append_feature_vis(graph_key)
+    
     append_comp_nodes(graph_key)
 
     function get_neuron_data(graph_key, layer) {
@@ -613,7 +617,7 @@ function draw_neurons() {
 
     function append_node_end_circles(graph_key) {
       var ns = node_size[selected_attack_info['attack_type']]
-      var r = 0.1 * ns
+      var r = 0.13 * ns
 
       d3.selectAll('.g-node-' + graph_key)
         .append('circle')
@@ -622,6 +626,7 @@ function draw_neurons() {
         .attr('cx', ns / 2)
         .attr('r', r)
         .attr('fill', node_color[graph_key])
+        // .attr('stroke', 'white')
         .style('display', 'none')
 
       d3.selectAll('.g-node-' + graph_key)
@@ -632,6 +637,7 @@ function draw_neurons() {
         .attr('cy', ns)
         .attr('r', r)
         .attr('fill', node_color[graph_key])
+        // .attr('stroke', 'white')
         .style('display', 'none')
     }
   
@@ -726,7 +732,6 @@ function draw_neurons() {
       d3.selectAll('.edge-into-' + neuron).style('display', 'block')
     }
     
-
     // Add node box if it does not exist
     var node_box_id = get_node_box_id(neuron)
     if (!does_exist(node_box_id)) {
@@ -734,7 +739,15 @@ function draw_neurons() {
     }
     // Show node box if it exists
     else {
-      d3.select('#' + node_box_id).style('display', 'block')
+      var [node_x, node_y]  = get_translate_coords('g-' + node_id)
+
+      d3.select('#' + node_box_id)
+        .style('display', 'block')
+        .attr('transform', function() {
+          var x = node_x + node_box_style['left']
+          var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2 + 100
+          return 'translate(' + x + ',' + y +')'
+        })
     } 
 
     function add_node_box() {
@@ -1021,11 +1034,23 @@ function draw_neurons() {
       //   return 'url(#filter-' + graph_key + ')'
       // })
       .style('opacity', function(neuron) {
-        if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
-          return node_opacity['activated']
-        } else {
-          return node_opacity['fv-deactivated']
+
+        if (highlight_pathways['selected'] == 'most-activated') {
+          if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
+            return node_opacity['activated']
+          } 
+        } else if (highlight_pathways['sub-selected'] == 'increased') {
+          if (is_most_increased(neuron, selected_attack_info['attack_strength'])) {
+            return node_opacity['activated']
+          } 
+        } else if (highlight_pathways['sub-selected'] == 'decreased') {
+          if (is_most_decreased(neuron, selected_attack_info['attack_strength'])) {
+            return node_opacity['activated']
+          } 
         }
+
+        return node_opacity['fv-deactivated']
+        
       })
 
     if (!is_clicked_on(neuron)) {
@@ -1654,9 +1679,20 @@ function update_rounded_image_filter() {
 function update_edge_stroke_scale() {
   edge_stroke_scale = {}
 
+  var min_inf = 10000
+  var max_inf = 0
+
+
+  layers.slice(1).forEach(layer => {
+    edge_data[0][layer].forEach(d => {
+      var inf = d['influence']
+      min_inf = d3.min([min_inf, inf])
+      max_inf = d3.max([max_inf, inf])
+    })
+  })
+
+
   attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-    var min_inf = 10000
-    var max_inf = 0
 
     layers.slice(1).forEach(layer => {
       edge_data[strength][layer].forEach(d => {
@@ -1666,6 +1702,13 @@ function update_edge_stroke_scale() {
       })
     })
     
+  })
+
+  edge_stroke_scale[0] = d3
+    .scaleLinear()
+    .domain([min_inf, max_inf])
+    .range([edge_style['min-stroke'], edge_style['max-stroke']])
+  attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
     edge_stroke_scale[strength] = d3
       .scaleLinear()
       .domain([min_inf, max_inf])
@@ -1673,14 +1716,10 @@ function update_edge_stroke_scale() {
   })
 }
 
-function update_edges(strength) {
+export function update_edges(strength) {
 
   // Remove the previous edges
   d3.selectAll('.edge').remove()
-
-  // Circle size
-  var ns = node_size[selected_attack_info['attack_type']]
-  var r = ns * 0.2
 
   // Add new edges
   layers.slice(1).forEach(layer => {

@@ -25,7 +25,7 @@
 #attack-dropdown-box {
   fill: white;
   display: inline-block;
-  width: 100px;
+  width: 120px;
   height: 23px;
   transform: translate(0px, 3px);
 }
@@ -84,7 +84,7 @@
 
 #filter-bar-text-strength {
   display: inline-block;
-  transform: translate(109px, 20px);
+  transform: translate(65px, 1px);
 }
 
 .filter-bar-title {

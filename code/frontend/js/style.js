@@ -16,9 +16,9 @@ export var g_main = {
 
 // How to attack
 export var how_to_attack = {
-  'method-icon-x': 90,
+  'method-icon-x': 110,
   'method-val-y': 20,
-  'method-line-x': 100,
+  'method-line-x': 120,
   'method-line-y': 24
 }
 
@@ -49,7 +49,7 @@ export var what_to_see = {
   'most-changed-text-y': 7,
   // Suboptions
   'most-changed-suboption-x': 15,
-  'most-changed-suboption-t': 23,
+  'most-changed-suboption-t': 25,
   'most-changed-suboption-h': 22,
   // Buttons
   'bt-width': 10,
