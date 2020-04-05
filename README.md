@@ -1,6 +1,6 @@
 # Bluff
 
-_**massif**_: *"a compact group of mountains, especially one that is separate from other groups"*
+_
 
 [Summit][summit] follow-up.
 
@@ -11,6 +11,10 @@ _**massif**_: *"a compact group of mountains, especially one that is separate fr
 ```bash
 pip install -r requirements.txt
 ```
+
+### Code, how to run
+- prepare to breifly explain and walk through the code (1-2 min)
+- go to key file
 
 ### Data specification
 - activation_data: neurons' activation. It is a dictionary, where
