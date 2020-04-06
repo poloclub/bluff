@@ -13,24 +13,12 @@ from scipy.stats import rankdata
 import tensorflow as tf
 from tqdm import tqdm
 
+from constants import *
 from massif.attackutils import get_one_hot_encoded_targets
 from massif.data import hdf5utils
 from massif.data import tfutils
 from massif.model import InceptionV1Model
-
-
-IMAGENET_LABELS_PATH = '/raid/home/ndas30/massif/data/imagenet-labels.txt'
-TRAIN_TFRECORDS_DIR = '/raid/massif/data/imagenet-tf-records'
-IMAGES_DIR = '/raid/massif/data/massif/images'
-ACTIVATIONS_DIR = '/raid/massif/data/massif/activations'
-NEURON_IMPORTANCES_DATA_PATH_FORMAT = \
-    '/raid/massif/data/massif/neuron_data-{original}-{target}-{attack}.json'
-
-ATTACK_STRENGTHS = [0.5, 1.0,
-                    1.5, 2.0,
-                    2.5, 3.0,
-                    3.5, 4.0,
-                    4.5, 5.0]
+from paths import DataPaths
 
 
 Label = namedtuple('Label', ['synset',
@@ -44,6 +32,7 @@ def load_all_labels():
     with open(IMAGENET_LABELS_PATH, 'r') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='\t')
         for row in reader:
+            row['name'] = row['name'].lower()
             row['lucid_label'] = int(row['lucid_label'])
             row['tfrecord_label'] = int(row['tfrecord_label'])
             labels.append(Label(**row))
@@ -55,21 +44,22 @@ def load_labels_by_name():
             for label in load_all_labels()}
 
 
-def save_benign_images(label_name:str):
-    output_filename = 'img-benign-%s.h5' % label_name.lower()
-    output_filepath = os.path.join(IMAGES_DIR, output_filename)
-    assert not os.path.exists(output_filepath)
-    print('Saving images for class %s to %s' % (label_name, output_filepath))
+def save_benign_images(class_name: str):
+    output_filepath = DataPaths.get_benign_images_datapath(class_name)
+    if output_filepath.exists():
+        return
+
+    print('Saving images for class %s to %s' % (class_name, output_filepath))
     dataset = hdf5utils.create_image_dataset(
         h5py.File(output_filepath, 'w'),
         dataset_name='images')
 
-    tfrecords_filepaths = glob(os.path.join(TRAIN_TFRECORDS_DIR, '*'))
+    tfrecords_filepaths = DataPaths.imagenet_tfrecords_filepaths
     labels_by_name = load_labels_by_name()
     tf_dataset = tfutils.make_dataset(
         tfrecords_filepaths,
         preprocessing_fn=preprocess_input,
-        filter_label=labels_by_name[label_name].tfrecord_label)
+        filter_label=labels_by_name[class_name].tfrecord_label)
 
     iterator = tf_dataset.make_one_shot_iterator()
     x, _ = iterator.get_next()
@@ -87,30 +77,35 @@ def save_benign_images(label_name:str):
     print(dataset)
 
 
-def save_pgd_attacked_images(original_label_name, target_label_name, eps,
-                             nb_iter=20, eps_iter=0.05, ord=2, seed=1000):
+def save_pgd_attacked_images(original_class,
+                             target_class,
+                             attack_strength,
+                             nb_iter=50, seed=1000):
 
     random.seed(seed)
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
+    eps = attack_strength
     labels_by_name = load_labels_by_name()
-    original_label = labels_by_name[original_label_name].lucid_label
-    target_label = labels_by_name[target_label_name].lucid_label
+    target_label = labels_by_name[target_class].lucid_label
 
-    benign_dataset_path = os.path.join(
-        IMAGES_DIR, 'img-benign-%s.h5' % original_label_name.lower())
-    assert os.path.exists(benign_dataset_path)
+    benign_dataset_path = DataPaths.get_benign_images_datapath(original_class)
+    assert benign_dataset_path.exists()
 
-    attacked_dataset_path = os.path.join(
-        IMAGES_DIR, 'img-attacked-%s-%s-pgd-%0.02f.h5' % (
-            original_label_name.lower(), target_label_name.lower(), eps))
-    assert not os.path.exists(attacked_dataset_path)
+    attacked_dataset_path = DataPaths.get_attacked_images_datapath(
+        original_class, target_class,
+        attack_name='pgd', attack_strength=eps)
+    assert not attacked_dataset_path.exists()
     print('Saving attacked images to %s' % attacked_dataset_path)
 
     img_dataset = hdf5utils.load_image_dataset_from_file(benign_dataset_path)
+
+    output_file = h5py.File(attacked_dataset_path, 'w')
     out_dataset = hdf5utils.create_image_dataset(
-        h5py.File(attacked_dataset_path, 'w'), dataset_name='images')
+        output_file, dataset_name='images')
+    indices_dataset = hdf5utils.create_dataset(
+        output_file, data_shape=(1,), dataset_name='indices')
 
     graph = tf.Graph()
     with graph.as_default():
@@ -124,13 +119,14 @@ def save_pgd_attacked_images(original_label_name, target_label_name, eps,
             x_adv = attack.generate(
                 x, eps=eps,
                 nb_iter=nb_iter,
-                eps_iter=eps_iter,ord=ord,
+                clip_min=-1, clip_max=1,
+                eps_iter=(eps / 5), ord=2,
                 y_target=target_one_hot_encoded)
 
             num_attack_success = 0
             pbar = tqdm(unit='imgs', total=len(img_dataset))
             try:
-                for img in img_dataset:
+                for i, img in enumerate(img_dataset):
                     ben_img = np.array(img)
                     adv_img = sess.run(x_adv, feed_dict={x: [ben_img]})
                     attack_pred = sess.run(y_pred, feed_dict={x: adv_img})
@@ -141,8 +137,10 @@ def save_pgd_attacked_images(original_label_name, target_label_name, eps,
                     assert not np.isnan(attack_pred)
 
                     if attack_pred == target_label:
+                        index = np.array([i])
                         num_attack_success += 1
                         hdf5utils.add_image_to_dataset(adv_img, out_dataset)
+                        hdf5utils.add_item_to_dataset(index, indices_dataset)
 
                     pbar.set_postfix(num_attack_success=num_attack_success)
                     pbar.update()
@@ -150,21 +148,23 @@ def save_pgd_attacked_images(original_label_name, target_label_name, eps,
                 pass
 
 
-def save_activation_scores(image_dataset_filepath:str):
+def save_activation_scores(image_dataset_filepath: str):
     print('Initializing model...')
     model = InceptionV1Model()
 
     output_filename = os.path.basename(image_dataset_filepath)
     if output_filename.startswith('img-'):
         output_filename = 'act-%s' % output_filename[4:]
-    output_filepath = os.path.join(ACTIVATIONS_DIR, output_filename)
-    assert not os.path.exists(output_filepath)
+    output_filepath = DataPaths.massif_activations_dir/output_filename
+    if os.path.exists(output_filepath):
+        return
     print('Saving activation scores to %s' % output_filepath)
     activation_scores_datasets = hdf5utils.create_activation_scores_datasets(
         h5py.File(output_filepath, 'w'), model)
 
     x = model.default_input_placeholder
-    img_dataset = hdf5utils.load_image_dataset_from_file(image_dataset_filepath)
+    img_dataset = hdf5utils.load_image_dataset_from_file(
+        image_dataset_filepath)
     pbar = tqdm(total=len(img_dataset))
     with tf.Session() as sess:
         for img in img_dataset:
@@ -183,9 +183,23 @@ def save_activation_scores(image_dataset_filepath:str):
             pbar.update()
 
 
-def save_neuron_importances_to_db(original_label_name:str,
-                                  target_label_name:str,
-                                  attack_name, attack_strengths):
+def save_benign_activations(class_name):
+    save_activation_scores(
+        str(DataPaths.get_benign_images_datapath(class_name)))
+
+
+def save_attacked_activations(original_class, target_class,
+                              attack_name, attack_strength):
+
+    save_activation_scores(
+        str(DataPaths.get_attacked_images_datapath(
+            original_class, target_class,
+            attack_name, attack_strength)))
+
+
+def save_neuron_importances_to_db(original_class: str,
+                                  target_class: str,
+                                  attack_name: str):
 
     def _calculate_importances_from_scores(scores):
         num_images, num_neurons = scores.shape
@@ -194,19 +208,12 @@ def save_neuron_importances_to_db(original_label_name:str,
             rankdata(median_activations) / num_neurons
         return median_activations, median_activation_percentiles
 
-    original_label_name = original_label_name.lower()
-    target_label_name = target_label_name.lower()
+    attack_strengths = list(ATTACK_STRENGTHS)
 
-    original_activation_scores_filepath = os.path.join(
-        ACTIVATIONS_DIR, 'act-benign-%s.h5' % original_label_name)
-    target_activation_scores_filepath = os.path.join(
-        ACTIVATIONS_DIR, 'act-benign-%s.h5' % target_label_name)
-
-    attacked_activation_scores_filepath = os.path.join(
-        ACTIVATIONS_DIR, 'act-attacked-%s-%s-%s' % (
-            original_label_name, target_label_name, attack_name))
-    attacked_activation_scores_filepath = \
-        attacked_activation_scores_filepath + '-%0.02f.h5'
+    original_activation_scores_filepath = \
+        DataPaths.get_benign_activations_datapath(original_class)
+    target_activation_scores_filepath = \
+        DataPaths.get_benign_activations_datapath(target_class)
 
     data = dict()
     model_klass = InceptionV1Model
@@ -245,44 +252,57 @@ def save_neuron_importances_to_db(original_label_name:str,
 
     # Save attacked neuron importances
     for eps in attack_strengths:
+        attacked_activation_scores_filepath = \
+            DataPaths.get_attacked_activations_datapath(
+                original_class, target_class, attack_name, attack_strength=eps)
         attacked_activation_scores = \
             hdf5utils.load_activation_scores_datasets_from_file(
-                attacked_activation_scores_filepath % eps, model_klass.LAYERS)
+                attacked_activation_scores_filepath, model_klass.LAYERS)
         for layer in model_klass.LAYERS:
             median_activations, median_activation_percentiles = \
                 _calculate_importances_from_scores(
                     attacked_activation_scores[layer])
             for i in range(model_klass.LAYER_SIZES[layer]):
                 neuron = '%s-%d' % (layer, i)
-                data[layer][neuron]['attacked-%s-%0.02f' % (attack_name, eps)] = {
+                key = 'attacked-%s-%0.02f' % (attack_name, eps)
+                data[layer][neuron][key] = {
                     'median_activation': float(median_activations[i]),
                     'median_activation_percentile': \
                         float(median_activation_percentiles[i])}
 
-    with open(NEURON_IMPORTANCES_DATA_PATH_FORMAT.format(
-            original=original_label_name,
-            target=target_label_name,
-            attack=attack_name), 'w') as f:
+    neuron_importances_filepath = DataPaths.get_neuron_data_datapath(
+        original_class, target_class, attack_name)
+    with open(neuron_importances_filepath, 'w') as f:
         json.dump(data, f, indent=2)
 
 
 if __name__ == '__main__':
+    original_class = 'brown_bear'.lower()
+    target_class = 'American_black_bear'.lower()
+
+    ### 1. Save benign images
+    #  save_benign_images(original_class)
+    #  save_benign_images(target_class)
+
     #  dataset = hdf5utils.load_image_dataset_from_file(
-        #  os.path.join(IMAGES_DIR, 'img-benign-giant_panda.h5'))
+    #      os.path.join(IMAGES_DIR, 'img-benign-giant_panda.h5'))
     #  print(dataset)
     #  print(dataset[0])
 
-    # save_activation_scores(os.path.join(IMAGES_DIR, 'img-benign-armadillo.h5'))
+    ### 2. Save attacked images
+    #  for eps in ATTACK_STRENGTHS:
+    #      save_pgd_attacked_images(original_class, target_class, eps)
 
-    #  print(hdf5utils.load_activation_scores_datasets_from_file(
-        #  os.path.join(ACTIVATIONS_DIR, 'act-benign-armadillo.h5'), InceptionV1Model.LAYERS))
+    ### 3. Save activation scores
+    #  save_activation_scores(
+    #      os.path.join(IMAGES_DIR, 'img-benign-%s.h5' % original_class))
+    #  save_activation_scores(
+    #      os.path.join(IMAGES_DIR, 'img-benign-%s.h5' % target_class))
+    #  for eps in ATTACK_STRENGTHS:
+    #      save_activation_scores(
+    #          os.path.join(IMAGES_DIR, 'img-attacked-%s-%s-pgd-%0.02f.h5' % (
+    #              original_class, target_class, eps)))
 
-    #  for eps in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
-        #  save_pgd_attacked_images('giant_panda', 'armadillo', eps)
-
-    #  for eps in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
-        #  save_activation_scores(os.path.join(
-            #  IMAGES_DIR, 'img-attacked-%s-%s-pgd-%0.02f.h5' % (
-                #  'giant_panda', 'armadillo', eps)))
-
-    save_neuron_importances_to_db('giant_panda', 'armadillo', 'pgd', ATTACK_STRENGTHS)
+    ### 4. Save neuron importances
+    #  save_neuron_importances_to_db(
+    #      original_class, target_class, 'pgd', ATTACK_STRENGTHS)

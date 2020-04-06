@@ -136,7 +136,7 @@ class InceptionV1Model(CleverhansModel):
         return tf.placeholder(
             tf.float32, (None, self.IMG_SIZE, self.IMG_SIZE, 3))
 
-    def get_weight_tensors_for_layer(self, layer, x=None):
+    def get_weights_for_layer(self, layer, x=None):
         if x is None:
             x = self.default_input_placeholder
         if x not in self._scope_cache:
@@ -145,13 +145,33 @@ class InceptionV1Model(CleverhansModel):
         graph = x.graph
         scope = self._scope_cache[x]
         t = graph.get_tensor_by_name
-        t_w0 = t('%s/%s_1x1_w:0' % (scope, layer))
-        t_w1 = t('%s/%s_3x3_bottleneck_w:0' % (scope, layer))
-        t_w2 = t('%s/%s_3x3_w:0' % (scope, layer))
-        t_w3 = t('%s/%s_5x5_bottleneck_w:0' % (scope, layer))
-        t_w4 = t('%s/%s_5x5_w:0' % (scope, layer))
-        t_w5 = t('%s/%s_pool_reduce_w:0' % (scope, layer))
-        return t_w0, t_w1, t_w2, t_w3, t_w4, t_w5
+
+        tw_1x1 = t('%s/%s_1x1_w:0' % (scope, layer))
+        tw_3x3_btl = t('%s/%s_3x3_bottleneck_w:0' % (scope, layer))
+        tw_3x3 = t('%s/%s_3x3_w:0' % (scope, layer))
+        tw_5x5_btl = t('%s/%s_5x5_bottleneck_w:0' % (scope, layer))
+        tw_5x5 = t('%s/%s_5x5_w:0' % (scope, layer))
+        tw_pool_reduce = t('%s/%s_pool_reduce_w:0' % (scope, layer))
+        return tw_1x1, tw_3x3_btl, tw_3x3, tw_5x5_btl, tw_5x5, tw_pool_reduce
+
+    def get_block_tensors_for_layer(self, layer, x=None):
+        if x is None:
+            x = self.default_input_placeholder
+        if x not in self._scope_cache:
+            self.fprop(x)
+
+        layer_index = self.LAYERS.index(layer)
+        assert layer_index > 0
+        prev_layer = self.LAYERS[layer_index - 1]
+
+        graph = x.graph
+        scope = self._scope_cache[x]
+        t = graph.get_tensor_by_name
+
+        t_in = t('%s/%s:0' % (scope, prev_layer))
+        t_3x3_btl = t('%s/%s_3x3_bottleneck:0' % (scope, layer))
+        t_5x5_btl = t('%s/%s_5x5_bottleneck:0' % (scope, layer))
+        return t_in, t_3x3_btl, t_5x5_btl
 
     def eval_activation_maps(self, imgs, layer, sess=None):
         sess = sess or tf.get_default_session() or tf.Session()
@@ -171,8 +191,36 @@ class InceptionV1Model(CleverhansModel):
             act_scores = t_act_scores.eval({x: imgs})
         return act_scores
 
+    @classmethod
+    def get_neuron_block(cls, neuron: int, layer: str):
+        concat_blocks = ['%s_concat_%d' % (layer, i)
+                         for i in range(4)]
 
-if __name__ == '__main__':
+        num_neurons = 0
+        for block in concat_blocks:
+            num_neurons += cls.LAYER_BLK_SIZES[block]
+            if neuron < num_neurons:
+                break
+        return block
+
+    @classmethod
+    def get_num_neurons_in_previous_blocks(cls, neuron: int, layer: str):
+        neuron_block =  cls.get_neuron_block(neuron, layer)
+        concat_blocks = ['%s_concat_%d' % (layer, i)
+                         for i in range(4)]
+        num_neurons = 0
+        for block in concat_blocks:
+            if block == neuron_block:
+                break
+            num_neurons += cls.LAYER_BLK_SIZES[block]
+        return num_neurons
+
+    @classmethod
+    def get_neuron_index_in_block(cls, neuron: int, layer: str):
+        return neuron - cls.get_num_neurons_in_previous_blocks(neuron, layer)
+
+
+def main():
     from io import BytesIO
     import numpy as np
     from PIL import Image
@@ -198,3 +246,7 @@ if __name__ == '__main__':
     with tf.Session(graph=g) as sess:
         y_eval = sess.run(y, feed_dict={x: [img]})
     print('%s should be 102 (white_wolf)' % y_eval)
+
+
+if __name__ == "__main__":
+    main()
