@@ -1,0 +1,57 @@
+/* Comparison mode */
+#g-compare-option {
+  font-size: 15px;
+  transform: translate(50px, 470px);
+}
+
+#compare-on-off-icon {
+  transform: translate(130px, 0px);
+}
+
+#g-compare-bar {
+  transform: translate(0px, 70px);
+  fill: gray;
+}
+
+#g-compare-filter-bar {
+  transform: translate(0px, 30px);
+}
+
+#filter-bar-compare {
+  fill: gray;
+  stroke-width: 1px;
+  height: 2px;
+}
+
+.attack-pointer-line {
+  stroke: gray;
+  stroke-width: 2px;
+}
+
+#outer-rect-weak {
+  fill: gray;
+  fill-opacity: 0.3;
+}
+
+#inner-rect-strong {
+  fill: white;
+  fill-opacity: 0.8;
+}
+
+.compare-strength-val {
+  font-size: 13px;
+}
+
+.compare-strength-label-text {
+  font-weight: bolder;
+  stroke-width: 0.4px;
+  font-size: 13px;
+  stroke: gray;
+  fill: gray;
+}
+
+.compare-strength-symbol-text {
+  stroke-width: 0.4px;
+  fill: lightgray;
+  font-size: 13px;
+}

@@ -1,0 +1,16 @@
+#g-build-option {
+  font-size: 15px;
+  transform: translate(50px, 600px);
+}
+
+#build-on-off-icon {
+  transform: translate(120px, 0px);
+}
+
+#g-highlight-what {
+  transform: translate(0px, 25px)
+}
+
+#g-highlight-connections {
+  transform: translate(0px, 155px)
+}

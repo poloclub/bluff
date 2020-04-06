@@ -14,30 +14,31 @@ import {
   node_hue_color,
   node_opacity,
   node_box_style,
-  edge_style
+  edge_style,
+  text_color
 } from './style.js';
 
 import {
-  selected_class
+  selected_class,
+  class_name_for_display,
+  get_absolute_position
 } from './header.js'
 
 import { 
   selected_attack_info
-} from './attack_control.js'
+} from './left_attack_control.js'
 
 import {
-  filter_pathways,
-  highlight_pathways
-} from './filter_pathways.js'
+  filter_pathways
+} from './left_filter_pathways.js'
+
+import {
+    
+} from './left_highlight_pathways.js'
 
 import {
   comp_attack
-} from './attack_compare.js'
-
-import {
-  update_column_title
-} from './statistics.js'
-
+} from './left_attack_compare.js'
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +49,7 @@ var vulnerability_data = {}
 var top_neuron_data = {}
 var extracted_neurons = {}
 var edge_data = {}
-var most_decreased_data = {}
+var most_inhibited_data = {}
 
 var unique_attack_only_neurons = {}
 
@@ -90,8 +91,8 @@ export function reload_graph() {
       extracted_neurons = extract_neurons()
       edge_data = read_and_parse_edge_data(data, 3, extracted_neurons)
 
-      // Parse most decreased data
-      most_decreased_data = parse_most_changed_data()  
+      // Parse most inhibited data
+      most_inhibited_data = parse_most_changed_data()  
     
       // Get activation scale
       get_actiavtion_y_scale()
@@ -110,7 +111,7 @@ export function reload_graph() {
       window.y_coords = y_coords
       window.activation_range = activation_range
       window.edge_data = edge_data
-      window.most_decreased_data = most_decreased_data
+      window.most_inhibited_data = most_inhibited_data
     
       // Generate x, y coordinate info
       gen_x_coords()
@@ -145,6 +146,44 @@ export function remove_graph() {
   d3.selectAll('.edge').remove()
   clicked_neurons = {}
   highlighted_edges = {}
+}
+
+export function update_column_title() {
+
+  // Remove all column labels
+  d3.selectAll('.column-title').remove()
+
+  add_label('original')
+  add_label('original-and-target')
+  add_label('target')
+  add_label('attack-only')
+
+  function add_label(column) {
+    var label_x = node_group_x[selected_attack_info['attack_type']][column]
+
+    var label = ''
+    if ((column == 'original') || (column == 'target')) {
+      label = class_name_for_display(selected_class[column])
+    } else if (column == 'original-and-target') {
+      label = 'BOTH'
+    } else if (column == 'attack-only') {
+      label = 'ATTACK-ONLY'
+    }
+     
+    d3.select('#g-column-title')
+      .append('text')
+      .text(label)
+      .attr('id', 'column-' + column)
+      .attr('class', 'column-title')
+      .style('fill', text_color[column])
+
+    var [l, t, r, b] = get_absolute_position('column-' + column)
+    var len_txt = r - l
+
+    d3.select('#column-' + column)
+      .attr('x', (label_x['start_x'] + label_x['end_x'] - len_txt) / 2)
+  }
+
 }
 
 
@@ -212,9 +251,9 @@ function read_and_parse_edge_data(data, i, neuron_data) {
 }
 
 function parse_most_changed_data() {
-  var most_decreased_data = {}
+  var most_inhibited_data = {}
   layers.forEach(layer => {
-    most_decreased_data[layer] = {}
+    most_inhibited_data[layer] = {}
 
     attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
       var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
@@ -226,10 +265,10 @@ function parse_most_changed_data() {
         return (original_b - attacked_b) - (original_a - attacked_a)
       })
       sorted = sorted.map(x => x[0])
-      most_decreased_data[layer][attack_key] = sorted
+      most_inhibited_data[layer][attack_key] = sorted
     })
   })
-  return most_decreased_data
+  return most_inhibited_data
 }
 
 function parse_vulnerability_data() {
@@ -1035,16 +1074,16 @@ function draw_neurons() {
       // })
       .style('opacity', function(neuron) {
 
-        if (highlight_pathways['selected'] == 'most-activated') {
+        if (highlight_pathways['neurons']['selected'] == 'most-activated') {
           if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
-        } else if (highlight_pathways['sub-selected'] == 'increased') {
-          if (is_most_increased(neuron, selected_attack_info['attack_strength'])) {
+        } else if (highlight_pathways['neurons']['sub-selected'] == 'excited') {
+          if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
-        } else if (highlight_pathways['sub-selected'] == 'decreased') {
-          if (is_most_decreased(neuron, selected_attack_info['attack_strength'])) {
+        } else if (highlight_pathways['neurons']['sub-selected'] == 'inhibited') {
+          if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
         }
@@ -1279,14 +1318,14 @@ export function update_node_opacity() {
 
   off_all_node()
 
-  if (highlight_pathways['selected'] == 'most-activated') {
+  if (highlight_pathways['neurons']['selected'] == 'most-activated') {
     update_opacity_most_activated()
-  } else if (highlight_pathways['selected'] == 'most-changed') {
+  } else if (highlight_pathways['neurons']['selected'] == 'most-changed') {
     if (selected_attack_info['attack_strength'] > 0) {
-      if (highlight_pathways['sub-selected'] == 'increased') {
-        update_opacity_most_increased()
-      } else if (highlight_pathways['sub-selected'] == 'decreased') {
-        update_opacity_most_decreased()
+      if (highlight_pathways['neurons']['sub-selected'] == 'excited') {
+        update_opacity_most_excited()
+      } else if (highlight_pathways['neurons']['sub-selected'] == 'inhibited') {
+        update_opacity_most_inhibited()
       }
     }
   }
@@ -1322,10 +1361,10 @@ export function update_node_opacity() {
     }
   }
 
-  function update_opacity_most_increased() {
+  function update_opacity_most_excited() {
     d3.selectAll('.node')
       .style('fill-opacity', function(neuron) {
-        if (is_most_increased(neuron, selected_attack_info['attack_strength'])) {
+        if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
         } else {
           return node_opacity['deactivated']
@@ -1333,7 +1372,7 @@ export function update_node_opacity() {
       })
     d3.selectAll('.fv')
       .style('opacity', function(neuron) {
-        if (is_most_increased(neuron, selected_attack_info['attack_strength'])) {
+        if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
         } else {
           return node_opacity['fv-deactivated']
@@ -1341,10 +1380,10 @@ export function update_node_opacity() {
       })
   }
 
-  function update_opacity_most_decreased() {
+  function update_opacity_most_inhibited() {
     d3.selectAll('.node')
       .style('fill-opacity', function(neuron) {
-        if (is_most_decreased(neuron, selected_attack_info['attack_strength'])) {
+        if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
         } else {
           return node_opacity['deactivated']
@@ -1352,7 +1391,7 @@ export function update_node_opacity() {
       })
     d3.selectAll('.fv')
       .style('opacity', function(neuron) {
-        if (is_most_decreased(neuron, selected_attack_info['attack_strength'])) {
+        if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
           return node_opacity['activated']
         } else {
           return node_opacity['fv-deactivated']
@@ -1378,13 +1417,13 @@ function is_most_activated(neuron, strength) {
   }
 }
 
-function is_most_increased(neuron, strength) {
+function is_most_excited(neuron, strength) {
   if (strength == 0) {
     return false
   } else {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(-highlight_top_k)
+    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(-highlight_top_k)
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
@@ -1393,13 +1432,13 @@ function is_most_increased(neuron, strength) {
   }
 }
 
-function is_most_decreased(neuron, strength) {
+function is_most_inhibited(neuron, strength) {
   if (strength == 0) {
     return false
   } else {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = most_decreased_data[layer][attack_key].slice(0, highlight_top_k)
+    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(0, highlight_top_k)
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
@@ -1418,6 +1457,8 @@ export function update_graph_by_filter_graph() {
   } else if (filter_pathways['filter'] == 'all') {
     rearrange_all_neurons()
     rearrange_all_edges()
+  } else if (filter_pathways['filter'] == 'highlighted') {
+    console.log('Show highlighted only')
   }
 
   function get_displayable_neurons() {
@@ -1585,10 +1626,10 @@ export function go_comparison_mode() {
     var weak = comp_attack['weak']
     var strong = comp_attack['strong']
 
-    if (highlight_pathways['selected'] == 'most-activated') {
-      update_opacity_compare_mode(highlight_pathways['selected'])
-    } else if (highlight_pathways['selected'] == 'most-changed') {
-      update_opacity_compare_mode(highlight_pathways['sub-selected'])
+    if (highlight_pathways['neurons']['selected'] == 'most-activated') {
+      update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
+    } else if (highlight_pathways['neurons']['selected'] == 'most-changed') {
+      update_opacity_compare_mode(highlight_pathways['neurons']['sub-selected'])
     }
 
     function update_opacity_compare_mode(filter_method) {
@@ -1646,10 +1687,10 @@ export function go_comparison_mode() {
     function filter_function(filter_method) {
       if (filter_method == 'most-activated') {
         return is_most_activated
-      } else if (filter_method == 'increased') {
-        return is_most_increased
-      } else if (filter_method == 'decreased') {
-        return is_most_decreased
+      } else if (filter_method == 'excited') {
+        return is_most_excited
+      } else if (filter_method == 'inhibited') {
+        return is_most_inhibited
       } 
     }
   }

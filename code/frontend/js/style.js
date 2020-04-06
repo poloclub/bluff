@@ -16,9 +16,9 @@ export var g_main = {
 
 // How to attack
 export var how_to_attack = {
-  'method-icon-x': 120,
+  'method-icon-x': 170,
   'method-val-y': 20,
-  'method-line-x': 130,
+  'method-line-x': 180,
   'method-line-y': 24
 }
 
@@ -40,8 +40,10 @@ export var what_to_see = {
   // y coordinates for filtering pathways
   'all-y': 20,
   'selected-y': 45,
+  'highlighted-y': 70,
   'all-text-y': 7,
   'selected-text-y': 7,
+  'highlighted-text-y': 7,
   // y coordinates for highlighting pathways
   'most-activated-y': 20,
   'most-changed-y': 45,
@@ -50,7 +52,7 @@ export var what_to_see = {
   // Suboptions
   'most-changed-suboption-x': 15,
   'most-changed-suboption-t': 25,
-  'most-changed-suboption-h': 22,
+  'most-changed-suboption-h': 25,
   // Buttons
   'bt-width': 10,
   'bt-height': 10
@@ -58,7 +60,7 @@ export var what_to_see = {
 
 // Size info of filter bar
 export var filter_bar = {
-  'bar_length': 130,
+  'bar_length': 180,
   'cmp_bar_length': 180,
   'cmp_pointer_line_length': 5,
   'outer_rect': 15,
