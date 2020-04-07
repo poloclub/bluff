@@ -49,6 +49,7 @@ var top_neuron_data = {}
 var extracted_neurons = {}
 var edge_data = {}
 var most_inhibited_data = {}
+var most_inhibited_extracted_data = {}
 
 var unique_attack_only_neurons = {}
 
@@ -91,7 +92,10 @@ export function reload_graph() {
       edge_data = read_and_parse_edge_data(data, 3, extracted_neurons)
 
       // Parse most inhibited data
-      most_inhibited_data = parse_most_changed_data()  
+      most_inhibited_data = parse_most_changed_data()
+
+      // Parse most inhibited extracted neurons
+      most_inhibited_extracted_data = parse_most_changed_extracted_data()
     
       // Get activation scale
       get_actiavtion_y_scale()
@@ -111,6 +115,7 @@ export function reload_graph() {
       window.activation_range = activation_range
       window.edge_data = edge_data
       window.most_inhibited_data = most_inhibited_data
+      window.most_inhibited_extracted_data = most_inhibited_extracted_data
     
       // Generate x, y coordinate info
       gen_x_coords()
@@ -268,6 +273,31 @@ function parse_most_changed_data() {
     })
   })
   return most_inhibited_data
+}
+
+function parse_most_changed_extracted_data() {
+
+  var most_inhibited_extracted_data = {}
+
+  // Get all extracted data
+  layers.forEach(layer => {
+    most_inhibited_extracted_data[layer] = {}
+    var neurons = {}
+    for (var graph_key in extracted_neurons[layer]) {
+      extracted_neurons[layer][graph_key].forEach(neuron => {
+        neurons[neuron] = true
+      })
+    }
+    for (var attack_key in most_inhibited_data[layer]) {
+      most_inhibited_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
+        var idx_a = most_inhibited_data[layer][attack_key].indexOf(a)
+        var idx_b = most_inhibited_data[layer][attack_key].indexOf(b)
+        return idx_a - idx_b
+      })
+    }
+  })
+
+  return most_inhibited_extracted_data
 }
 
 function parse_vulnerability_data() {
@@ -1422,7 +1452,7 @@ function is_most_excited(neuron, strength) {
   } else {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(-highlight_pathways['neurons']['top-k'])
+    var top_neurons_to_highlight = most_inhibited_extracted_data[layer][attack_key].slice(-highlight_pathways['neurons']['top-k'])
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
@@ -1437,7 +1467,7 @@ function is_most_inhibited(neuron, strength) {
   } else {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(0, highlight_pathways['neurons']['top-k'])
+    var top_neurons_to_highlight = most_inhibited_extracted_data[layer][attack_key].slice(0, highlight_pathways['neurons']['top-k'])
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
