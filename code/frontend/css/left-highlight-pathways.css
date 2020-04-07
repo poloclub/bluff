@@ -97,3 +97,48 @@
 #highlight-option-text-12 {
   transform: translate(184px, 60px);
 }
+
+/* Dropdown menu */
+.dropdown-menu-bg-rect {
+  fill: white;
+  stroke-width: 1px;
+  stroke: gray;
+  paint-order: stroke;
+  stroke-width: 2px;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+}
+
+.dropdown-item-bg-rect {
+  fill: white;
+}
+
+.dropdown-item-text {
+  transform: translate(8px, 12px);
+  font-size:13px;
+}
+
+/* Dropdown what neurons */
+#g-dropdown-what-neurons {
+  transform: translate(133px, 5px);
+}
+
+#g-dropdown-menu-activated-neurons {
+  transform: translate(0px, 5px);
+}
+
+#g-dropdown-menu-changed-neurons {
+  transform: translate(0px, 20px);
+}
+
+#g-dropdown-changed-neurons {
+  transform: translate(115px, 45px);
+}
+
+#g-dropdown-menu-excited-neurons {
+  transform: translate(0px, 5px);
+}
+
+#g-dropdown-menu-inhibited-neurons {
+  transform: translate(0px, 20px);
+}
