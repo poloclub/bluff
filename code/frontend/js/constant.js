@@ -17,7 +17,7 @@ export var attack_strengths = {
 // Top_k for extracting interesting neurons
 export var top_k = 8
 export var rough_top_k = 8
-export var highlight_top_k = rough_top_k
+// export var highlight_top_k = 8
 
 // Feature vis / example patches
 export var feature_vis_dir = '../../../summit/summit-data/data/feature-vis'

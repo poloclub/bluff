@@ -69,6 +69,40 @@ export var filter_bar = {
   'inner_rx': 1.5,
 }
 
+// Size of highlight pathways
+export var highlight_pathways_style = {
+  // Neurons top-k
+  'neurons-k-rect-width': 30,
+  'neurons-k-rect-height': 15,
+  'neurons-k-line-y': 2,
+  'neurons-k-icon-x': 22,
+  // Most what neurons
+  'neurons-what-rect-width': 69,
+  'neurons-what-rect-height': 15,
+  'neurons-what-line-y': 2,
+  'neurons-what-icon-x': 61,
+  // Most changed neurons
+  'neurons-changed-rect-width': 66,
+  'neurons-changed-rect-height': 15,
+  'neurons-changed-line-y': 2,
+  'neurons-changed-icon-x': 58,
+  // Connections top-k
+  'connections-k-rect-width': 32,
+  'connections-k-rect-height': 15,
+  'connections-k-line-y': 2,
+  'connections-k-icon-x': 24,
+  // Most what connections
+  'connections-what-rect-width': 69,
+  'connections-what-rect-height': 15,
+  'connections-what-line-y': 2,
+  'connections-what-icon-x': 61,
+  // Most changed connections
+  'connections-changed-rect-width': 66,
+  'connections-changed-rect-height': 15,
+  'connections-changed-line-y': 2,
+  'connections-changed-icon-x': 58,
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Colors and icon
 ////////////////////////////////////////////////////////////////////////////////////////////////

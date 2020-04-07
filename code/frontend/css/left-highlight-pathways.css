@@ -7,10 +7,93 @@
   transform: translate(120px, 0px);
 }
 
-#g-highlight-what {
-  transform: translate(0px, 25px)
+/* Highlight options */
+.highlight-dropdown-rect {
+  fill: white;
+  transform: translate(0px, -13px);
 }
 
+.highlight-dropdown-line {
+  stroke: gray;
+  stroke-width: 1px;
+}
+
+.highlight-dropdown-text {
+  transform: translate(0px, 0px);
+}
+
+/* Highlight neurons */
+#g-highlight-option-contents {
+  transform: translate(0px, 25px);
+  fill: gray;
+  font-size: 15px;
+}
+
+#highlight-option-k-neurons {
+  transform: translate(61px, 0px);
+}
+
+#highlight-option-text-2 {
+  transform: translate(97px, 0px);
+}
+
+#highlight-option-what-neurons {
+  transform: translate(133px, 0px);
+}
+
+#highlight-option-text-3 {
+  transform: translate(0px, 20px);
+}
+
+#highlight-option-text-4 {
+  transform: translate(0px, 40px);
+}
+
+#highlight-option-text-5 {
+  transform: translate(0px, 40px);
+}
+
+#highlight-option-changed-neurons {
+  transform: translate(115px, 40px);
+}
+
+#highlight-option-text-6 {
+  transform: translate(184px, 40px);
+}
+
+/* Highlight connections */
 #g-highlight-connections {
-  transform: translate(0px, 155px)
+  transform: translate(0px, 70px);
+}
+
+#highlight-option-text-8 {
+  transform: translate(0px, 20px);
+}
+
+#highlight-option-k-connections {
+  transform: translate(118px, 20px);
+} 
+
+#highlight-option-text-9 {
+  transform: translate(154px, 20px);
+}
+
+#highlight-option-what-connections {
+  transform: translate(0px, 40px);
+}
+
+#highlight-option-text-10 {
+  transform: translate(75px, 40px);
+}
+
+#highlight-option-text-11 {
+  transform: translate(0px, 60px);
+}
+
+#highlight-option-changed-connections {
+  transform: translate(115px, 60px);
+}
+
+#highlight-option-text-12 {
+  transform: translate(184px, 60px);
 }

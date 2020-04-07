@@ -2,7 +2,6 @@ import {
   layers,
   top_k,
   rough_top_k,
-  highlight_top_k,
   attack_types,
   attack_strengths,
   feature_vis_dir
@@ -33,7 +32,7 @@ import {
 } from './left_filter_pathways.js'
 
 import {
-    
+  highlight_pathways
 } from './left_highlight_pathways.js'
 
 import {
@@ -1074,7 +1073,7 @@ function draw_neurons() {
       // })
       .style('opacity', function(neuron) {
 
-        if (highlight_pathways['neurons']['selected'] == 'most-activated') {
+        if (highlight_pathways['neurons']['selected'] == 'activated') {
           if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
@@ -1318,9 +1317,9 @@ export function update_node_opacity() {
 
   off_all_node()
 
-  if (highlight_pathways['neurons']['selected'] == 'most-activated') {
+  if (highlight_pathways['neurons']['selected'] == 'activated') {
     update_opacity_most_activated()
-  } else if (highlight_pathways['neurons']['selected'] == 'most-changed') {
+  } else if (highlight_pathways['neurons']['selected'] == 'changed') {
     if (selected_attack_info['attack_strength'] > 0) {
       if (highlight_pathways['neurons']['sub-selected'] == 'excited') {
         update_opacity_most_excited()
@@ -1409,7 +1408,7 @@ function is_most_activated(neuron, strength) {
     var key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
   }
 
-  var top_neurons_to_highlight = top_neuron_data[layer][key].slice(0, highlight_top_k)
+  var top_neurons_to_highlight = top_neuron_data[layer][key].slice(0, highlight_pathways['neurons']['top-k'])
   if (top_neurons_to_highlight.includes(neuron)) {
     return true
   } else {
@@ -1423,7 +1422,7 @@ function is_most_excited(neuron, strength) {
   } else {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(-highlight_top_k)
+    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(-highlight_pathways['neurons']['top-k'])
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
@@ -1438,7 +1437,7 @@ function is_most_inhibited(neuron, strength) {
   } else {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(0, highlight_top_k)
+    var top_neurons_to_highlight = most_inhibited_data[layer][attack_key].slice(0, highlight_pathways['neurons']['top-k'])
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
@@ -1626,9 +1625,9 @@ export function go_comparison_mode() {
     var weak = comp_attack['weak']
     var strong = comp_attack['strong']
 
-    if (highlight_pathways['neurons']['selected'] == 'most-activated') {
+    if (highlight_pathways['neurons']['selected'] == 'activated') {
       update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
-    } else if (highlight_pathways['neurons']['selected'] == 'most-changed') {
+    } else if (highlight_pathways['neurons']['selected'] == 'changed') {
       update_opacity_compare_mode(highlight_pathways['neurons']['sub-selected'])
     }
 
@@ -1685,7 +1684,7 @@ export function go_comparison_mode() {
     }
 
     function filter_function(filter_method) {
-      if (filter_method == 'most-activated') {
+      if (filter_method == 'activated') {
         return is_most_activated
       } else if (filter_method == 'excited') {
         return is_most_excited

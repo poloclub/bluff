@@ -1,5 +1,6 @@
 import {
   what_to_see, 
+  highlight_pathways_style,
   icons
 } from './style.js'
 
@@ -20,24 +21,27 @@ import {
 
 export var highlight_pathways = {
   'neurons': {
-    'selected': 'most-activated',
-    'sub-selected': '-'
+    'selected': 'activated',
+    'sub-selected': '-',
+    'top-k': 8
   },
   'connections': {
-    'selected': 'most-activated',
-    'sub-selected': '-'
-  }
-  
+    'selected': 'activated',
+    'sub-selected': '-',
+    'top-k': 100
+  } 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Highlight pathways
 //////////////////////////////////////////////////////////////////////////////////////////
 
-gen_pathways_option_g('highlight')
-write_mode_option_title('highlight', 'HIGHLIGHT PATHWAYS')
-add_what_to_highlight_options('highlight', 'what', 'What to Highlight')
-add_how_many_to_highlight_options('highlight', 'many', 'What to Highlight', 'neurons')
+gen_highlight_option_g()
+write_highlight_neurons()
+write_highlight_connections()
+// gen_pathways_option_g('highlight')
+// add_what_to_highlight_options('highlight', 'what', 'What to Highlight')
+// add_how_many_to_highlight_options('highlight', 'many', 'How many to Highlight')
 // add_how_many_to_highlight_options('connections')
 // update_highlight_bottons('neurons')
 // update_highlight_bottons('connections')
@@ -46,19 +50,310 @@ add_how_many_to_highlight_options('highlight', 'many', 'What to Highlight', 'neu
 // Functions
 //////////////////////////////////////////////////////////////////////////////////////////
 
+function gen_highlight_option_g() {
+  d3.select('#svg-highlight-option')
+    .append('g')
+    .attr('id', 'g-highlight-option')
+
+  write_mode_option_title('highlight', 'HIGHLIGHT PATHWAYS')
+
+  d3.select('#g-highlight-option')
+    .append('g')
+    .attr('id', 'g-highlight-option-contents')
+
+  d3.select('#g-highlight-option-contents')
+    .append('g')
+    .attr('id', 'g-highlight-neurons')
+  
+  d3.select('#g-highlight-option-contents')
+    .append('g')
+    .attr('id', 'g-highlight-connections')
+}
+
+function write_highlight_neurons() {
+  // What neurons
+  write_text('highlight-option-text-1', 'Highlight')
+  gen_topk_neurons_dropdown()
+  write_text('highlight-option-text-2', 'most')
+  gen_most_what_neurons_dropdown()
+
+  // Most changed neurons
+  write_text('highlight-option-text-3', 'neurons by attack in each layer.')
+  write_text('highlight-option-text-4', 'Specifically, most', 'most-changed-neurons')
+  gen_most_changed_neurons_dropdown('most-changed-neurons')
+  write_text('highlight-option-text-6', 'ones.', 'most-changed-neurons')
+  d3.selectAll('.most-changed-neurons').style('display', 'none')
+  
+  function write_text(id, text, c) {
+    d3.select('#g-highlight-neurons')
+      .append('text')
+      .attr('id', id)
+      .attr('class', c)
+      .text(text)
+  }
+
+  function gen_topk_neurons_dropdown() {
+    d3.select('#g-highlight-neurons')
+      .append('g')
+      .attr('id', 'highlight-option-k-neurons')
+
+    d3.select('#highlight-option-k-neurons')
+      .append('rect')
+      .attr('id', 'highlight-option-k-neurons-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', highlight_pathways_style['neurons-k-rect-width'])
+      .attr('height', highlight_pathways_style['neurons-k-rect-height'])
+
+    d3.select('#highlight-option-k-neurons')
+      .append('line')
+      .attr('id', 'highlight-option-k-neurons-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', highlight_pathways_style['neurons-k-rect-width'])
+      .attr('y1', highlight_pathways_style['neurons-k-line-y'])
+      .attr('y2', highlight_pathways_style['neurons-k-line-y'])
+
+    d3.select('#highlight-option-k-neurons')
+      .append('text')
+      .attr('id', 'highlight-option-k-neurons-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['neurons']['top-k'])
+    
+    d3.select('#highlight-option-k-neurons')
+      .append('text')
+      .attr('id', 'highlight-option-k-neurons-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style['neurons-k-icon-x'])
+
+  }
+
+  function gen_most_what_neurons_dropdown() {
+    d3.select('#g-highlight-neurons')
+      .append('g')
+      .attr('id', 'highlight-option-what-neurons')
+
+    d3.select('#highlight-option-what-neurons')
+      .append('rect')
+      .attr('id', 'highlight-option-what-neurons-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', highlight_pathways_style['neurons-what-rect-width'])
+      .attr('height', highlight_pathways_style['neurons-what-rect-height'])
+
+    d3.select('#highlight-option-what-neurons')
+      .append('line')
+      .attr('id', 'highlight-option-what-neurons-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', highlight_pathways_style['neurons-what-rect-width'])
+      .attr('y1', highlight_pathways_style['neurons-what-line-y'])
+      .attr('y2', highlight_pathways_style['neurons-what-line-y'])
+
+    d3.select('#highlight-option-what-neurons')
+      .append('text')
+      .attr('id', 'highlight-option-what-neurons-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['neurons']['selected'])
+    
+    d3.select('#highlight-option-what-neurons')
+      .append('text')
+      .attr('id', 'highlight-option-what-neurons-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style['neurons-what-icon-x'])
+  }
+
+  function gen_most_changed_neurons_dropdown(c) {
+    d3.select('#g-highlight-neurons')
+      .append('g')
+      .attr('id', 'highlight-option-changed-neurons')
+      .attr('class', c)
+
+    d3.select('#highlight-option-changed-neurons')
+      .append('rect')
+      .attr('id', 'highlight-option-changed-neurons-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', highlight_pathways_style['neurons-changed-rect-width'])
+      .attr('height', highlight_pathways_style['neurons-changed-rect-height'])
+
+      d3.select('#highlight-option-changed-neurons')
+      .append('line')
+      .attr('id', 'highlight-option-changed-neurons-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', highlight_pathways_style['neurons-changed-rect-width'])
+      .attr('y1', highlight_pathways_style['neurons-changed-line-y'])
+      .attr('y2', highlight_pathways_style['neurons-changed-line-y'])
+
+    d3.select('#highlight-option-changed-neurons')
+      .append('text')
+      .attr('id', 'highlight-option-changed-neurons-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['neurons']['sub-selected'])
+    
+    d3.select('#highlight-option-changed-neurons')
+      .append('text')
+      .attr('id', 'highlight-option-changed-neurons-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style['neurons-changed-icon-x'])
+  }
+
+}
+
+function write_highlight_connections() {
+  // What connections
+  write_text('highlight-option-text-7', 'Out of all connections among such')
+  write_text('highlight-option-text-8', 'neurons, highlight')
+  gen_topk_connections_dropdown()
+  write_text('highlight-option-text-9', '% of most')
+  gen_most_what_connections_dropdown()
+  write_text('highlight-option-text-10', 'connections.')
+  
+  // Most changed connections
+  write_text('highlight-option-text-11', 'Specifically, most', 'most-changed-connections')
+  gen_most_changed_connections_dropdown('most-changed-connections')
+  write_text('highlight-option-text-12', 'ones.', 'most-changed-connections')
+  d3.selectAll('.most-changed-connections').style('display', 'none')
+
+  function write_text(id, text, c) {
+    d3.select('#g-highlight-connections')
+      .append('text')
+      .attr('id', id)
+      .attr('class', c)
+      .text(text)
+  }
+
+  function gen_topk_connections_dropdown() {
+    d3.select('#g-highlight-connections')
+      .append('g')
+      .attr('id', 'highlight-option-k-connections')
+
+    d3.select('#highlight-option-k-connections')
+      .append('rect')
+      .attr('id', 'highlight-option-k-connections-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', highlight_pathways_style['connections-k-rect-width'])
+      .attr('height', highlight_pathways_style['connections-k-rect-height'])
+
+    d3.select('#highlight-option-k-connections')
+      .append('line')
+      .attr('id', 'highlight-option-k-connections-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', highlight_pathways_style['connections-k-rect-width'])
+      .attr('y1', highlight_pathways_style['connections-k-line-y'])
+      .attr('y2', highlight_pathways_style['connections-k-line-y'])
+
+    d3.select('#highlight-option-k-connections')
+      .append('text')
+      .attr('id', 'highlight-option-k-connections-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['connections']['top-k'])
+    
+    d3.select('#highlight-option-k-connections')
+      .append('text')
+      .attr('id', 'highlight-option-k-connections-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style['connections-k-icon-x'])
+
+  }
+
+  function gen_most_what_connections_dropdown() {
+    d3.select('#g-highlight-connections')
+      .append('g')
+      .attr('id', 'highlight-option-what-connections')
+
+    d3.select('#highlight-option-what-connections')
+      .append('rect')
+      .attr('id', 'highlight-option-what-connections-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', highlight_pathways_style['connections-what-rect-width'])
+      .attr('height', highlight_pathways_style['connections-what-rect-height'])
+
+    d3.select('#highlight-option-what-connections')
+      .append('line')
+      .attr('id', 'highlight-option-what-connections-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', highlight_pathways_style['connections-what-rect-width'])
+      .attr('y1', highlight_pathways_style['connections-what-line-y'])
+      .attr('y2', highlight_pathways_style['connections-what-line-y'])
+
+    d3.select('#highlight-option-what-connections')
+      .append('text')
+      .attr('id', 'highlight-option-what-connections-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['connections']['selected'])
+    
+    d3.select('#highlight-option-what-connections')
+      .append('text')
+      .attr('id', 'highlight-option-what-connections-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style['connections-what-icon-x'])
+  }
+
+  function gen_most_changed_connections_dropdown(c) {
+    d3.select('#g-highlight-connections')
+      .append('g')
+      .attr('id', 'highlight-option-changed-connections')
+      .attr('class', c)
+
+    d3.select('#highlight-option-changed-connections')
+      .append('rect')
+      .attr('id', 'highlight-option-changed-connections-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', highlight_pathways_style['connections-changed-rect-width'])
+      .attr('height', highlight_pathways_style['connections-changed-rect-height'])
+
+      d3.select('#highlight-option-changed-connections')
+      .append('line')
+      .attr('id', 'highlight-option-changed-connections-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', highlight_pathways_style['connections-changed-rect-width'])
+      .attr('y1', highlight_pathways_style['connections-changed-line-y'])
+      .attr('y2', highlight_pathways_style['connections-changed-line-y'])
+
+    d3.select('#highlight-option-changed-connections')
+      .append('text')
+      .attr('id', 'highlight-option-changed-connections-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['connections']['sub-selected'])
+    
+    d3.select('#highlight-option-changed-connections')
+      .append('text')
+      .attr('id', 'highlight-option-changed-connections-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style['connections-changed-icon-x'])
+  }
+}
+
+
+
 function add_what_to_highlight_options(type, subtitle, subtitle_txt) {
   
   gen_subtitle_g()
-  draw_subtitle()
+  // draw_subtitle()
 
   gen_option_g(['g', type, subtitle].join('-'), type, subtitle, 'most-activated')
   gen_option_g(['g', type, subtitle].join('-'), type, subtitle, 'most-changed')
 
-  gen_option(type, subtitle, 'most-activated', 'Most activated')
-  gen_option(type, subtitle, 'most-changed', 'Most changed by attack')
+  gen_what_option(type, subtitle, 'most-activated', 'Most activated')
+  gen_what_option(type, subtitle, 'most-changed', 'Most changed by attack')
 
   gen_sub_option(type, subtitle, 'most-changed', ['excited', 'inhibited'])
 
+  // Functions
   function gen_subtitle_g() {
     d3.select('#g-' + type + '-option')
       .append('g')
@@ -66,147 +361,180 @@ function add_what_to_highlight_options(type, subtitle, subtitle_txt) {
   }
 
   function draw_subtitle() {
-    // var subtitle_first_capital = subtitle[0].toUpperCase() + subtitle.slice(1)
     d3.select('#g-' + type + '-' + subtitle)
       .append('text')
       .attr('id', ['option', 'subtitle', type, subtitle].join('-'))
       .text(subtitle_txt)
   }
-}
 
-function add_how_many_to_highlight_options() {
-  
-}
-
-function gen_option_g(parent_g_id, type, subtitle, option) { 
-  d3.select('#' + parent_g_id)
-    .append('g')
-    .attr('id', ['g', type, subtitle, option].join('-'))
-    .attr('transform', function() {
-      var x = what_to_see['option-x']
-      var y = what_to_see[option + '-y']
-      return 'translate(' + x + ',' + y + ')'
-    })
-}
-
-function gen_option(type, subtitle, option, option_txt) {
-  gen_option_botton_rect()
-  gen_option_botton_check_icon()
-  gen_option_text()
-
-  function gen_option_botton_rect() {
-    d3.select('#' + ['g', type, subtitle, option].join('-'))
-      .append('rect')
-      .attr('id', ['what-to-see-option-checkbox', subtitle, option].join('-'))
-      .attr('class', 'what-to-see-option-checkbox what-to-see-option-checkbox-' + type)
-      .attr('width', what_to_see['bt-width'])
-      .attr('height', what_to_see['bt-height'])
-      .on('mouseover', function() { this.style.cursor = 'pointer' })
-      .on('click', function() { return click_highlight_option(subtitle, option) })
-  }
-
-  function gen_option_botton_check_icon() {
-    d3.select('#' + ['g', type, subtitle, option].join('-'))
-      .append('text')
-      .attr('id', ['what-to-see-icon', subtitle, option].join('-'))
-      .attr('class', 'what-to-see-option-checkbox-icon what-to-see-option-checkbox-icon-' + type + '-' + subtitle)
-      .attr('font-family', 'FontAwesome')
-      .text(icons['check-square'])
-      .attr('x', -0.5)
-      .attr('y', what_to_see[option + '-text-y'])
-      .style('display', 'none') 
-      .on('mouseover', function() { this.style.cursor = 'pointer' })
-      .on('click', function() { return click_highlight_option(subtitle, option) })
-  }
-
-  function gen_option_text() {
-    console.log('option-text:', option_txt)
-    d3.select('#' + ['g', type, subtitle, option].join('-'))
-      .append('text')
-      .text(option_txt)
-      .attr('id', ['what-to-see-option-text', subtitle, option].join('-'))
-      .attr('class', 'what-to-see-option-text')
-      .attr('x', what_to_see['option-text-x'])
-      .attr('y', what_to_see[option + '-text-y'])
-  }
-
-}
-
-function gen_sub_option(type, subtitle, option, suboptions) {
-  gen_suboption_botton_rect()
-  gen_suboption_botton_check_icon()
-  gen_suboption_text()
-
-  function gen_suboption_botton_rect() {
-    d3.select('#' + ['g', type, subtitle, option].join('-'))
-      .selectAll('suboptions')
-      .data(suboptions)
-      .enter()
-      .append('rect')  
-      .attr('class', 'what-to-see-option-checkbox what-to-see-option-checkbox-' + type)
-      .attr('width', what_to_see['bt-width'])
-      .attr('height', what_to_see['bt-height'])
-      .attr('x', what_to_see['most-changed-suboption-x'])
-      .attr('y', function(d, i) { 
-        return what_to_see['most-changed-suboption-t'] + i * what_to_see['most-changed-suboption-h'] 
+  function gen_option_g(parent_g_id, type, subtitle, option) { 
+    d3.select('#' + parent_g_id)
+      .append('g')
+      .attr('id', ['g', type, subtitle, option].join('-'))
+      .attr('transform', function() {
+        var x = what_to_see['option-x']
+        var y = what_to_see[option + '-y']
+        return 'translate(' + x + ',' + y + ')'
       })
-      .on('mouseover', function() {this.style.cursor = 'pointer'})
-      .on('click', function(suboption) { return click_sub_option(subtitle, suboption) })
   }
 
-  function gen_suboption_botton_check_icon() {
-    d3.select('#' + ['g', type, subtitle, option].join('-'))
-      .selectAll('suboptions')
-      .data(suboptions)
-      .enter()
-      .append('text')
-      .attr('id', function(suboption) { return ['what-to-see-icon-sub', subtitle, suboption].join('-') })
-      .attr('class', 'what-to-see-option-checkbox-icon what-to-see-option-checkbox-icon-' + type + '-' + subtitle)
-      .attr('font-family', 'FontAwesome')
-      .text(icons['check-square'])
-      .attr('x', what_to_see['most-changed-suboption-x'] - 0.5)
-      .attr('y', function(d, i) { return suboption_text_y(i) - 0.5 })
-      .style('display', 'none')
-      .on('mouseover', function() {this.style.cursor = 'pointer'})
-      .on('click', function(suboption) { return click_sub_option(subtitle, suboption) })
+  function gen_what_option(type, subtitle, what_option, option_txt) {
+    gen_option_botton_rect()
+    gen_option_botton_check_icon()
+    gen_option_text()
+  
+    function gen_option_botton_rect() {
+      d3.select('#' + ['g', type, subtitle, what_option].join('-'))
+        .append('rect')
+        .attr('id', ['what-to-see-option-checkbox', subtitle, what_option].join('-'))
+        .attr('class', 'what-to-see-option-checkbox what-to-see-option-checkbox-' + type)
+        .attr('width', what_to_see['bt-width'])
+        .attr('height', what_to_see['bt-height'])
+        .on('mouseover', function() { this.style.cursor = 'pointer' })
+        .on('click', function() { return click_highlight_option(subtitle, what_option) })
+    }
+  
+    function gen_option_botton_check_icon() {
+      d3.select('#' + ['g', type, subtitle, what_option].join('-'))
+        .append('text')
+        .attr('id', ['what-to-see-icon', subtitle, what_option].join('-'))
+        .attr('class', 'what-to-see-option-checkbox-icon what-to-see-option-checkbox-icon-' + type + '-' + subtitle)
+        .attr('font-family', 'FontAwesome')
+        .text(icons['check-square'])
+        .attr('x', -0.5)
+        .attr('y', what_to_see[what_option + '-text-y'])
+        .style('display', 'none') 
+        .on('mouseover', function() { this.style.cursor = 'pointer' })
+        .on('click', function() { return click_highlight_option(subtitle, what_option) })
+    }
+  
+    function gen_option_text() {
+      console.log('option-text:', option_txt)
+      d3.select('#' + ['g', type, subtitle, what_option].join('-'))
+        .append('text')
+        .text(option_txt)
+        .attr('id', ['what-to-see-option-text', subtitle, what_option].join('-'))
+        .attr('class', 'what-to-see-option-text')
+        .attr('x', what_to_see['option-text-x'])
+        .attr('y', what_to_see[what_option + '-text-y'])
+    }
+  
   }
 
-  function gen_suboption_text() {
-    d3.select('#' + ['g', type, subtitle, option].join('-'))
-      .selectAll('suboptions')
-      .data(suboptions)
-      .enter()
-      .append('text')
-      .attr('id', function(suboption) { return ['what-to-see-option-text-sub-', subtitle, suboption].join('-') })
-      .attr('class', 'what-to-see-option-text what-to-see-option-text-' + type)
-      .attr('x', what_to_see['most-changed-suboption-x'] + what_to_see['option-text-x'])
-      .attr('y', function(d, i) { return suboption_text_y(i) })
-      .text(function(d) { return 'Most ' + d })
+  function gen_sub_option(type, subtitle, what_option, suboptions) {
+    gen_suboption_botton_rect()
+    gen_suboption_botton_check_icon()
+    gen_suboption_text()
+  
+    function gen_suboption_botton_rect() {
+      d3.select('#' + ['g', type, subtitle, what_option].join('-'))
+        .selectAll('suboptions')
+        .data(suboptions)
+        .enter()
+        .append('rect')  
+        .attr('class', 'what-to-see-option-checkbox what-to-see-option-checkbox-' + type)
+        .attr('width', what_to_see['bt-width'])
+        .attr('height', what_to_see['bt-height'])
+        .attr('x', what_to_see['most-changed-suboption-x'])
+        .attr('y', function(d, i) { 
+          return what_to_see['most-changed-suboption-t'] + i * what_to_see['most-changed-suboption-h'] 
+        })
+        .on('mouseover', function() {this.style.cursor = 'pointer'})
+        .on('click', function(suboption) { return click_sub_option(subtitle, suboption) })
+    }
+  
+    function gen_suboption_botton_check_icon() {
+      d3.select('#' + ['g', type, subtitle, what_option].join('-'))
+        .selectAll('suboptions')
+        .data(suboptions)
+        .enter()
+        .append('text')
+        .attr('id', function(suboption) { return ['what-to-see-icon-sub', subtitle, suboption].join('-') })
+        .attr('class', 'what-to-see-option-checkbox-icon what-to-see-option-checkbox-icon-' + type + '-' + subtitle)
+        .attr('font-family', 'FontAwesome')
+        .text(icons['check-square'])
+        .attr('x', what_to_see['most-changed-suboption-x'] - 0.5)
+        .attr('y', function(d, i) { return suboption_text_y(i) - 0.5 })
+        .style('display', 'none')
+        .on('mouseover', function() {this.style.cursor = 'pointer'})
+        .on('click', function(suboption) { return click_sub_option(subtitle, suboption) })
+    }
+  
+    function gen_suboption_text() {
+      d3.select('#' + ['g', type, subtitle, what_option].join('-'))
+        .selectAll('suboptions')
+        .data(suboptions)
+        .enter()
+        .append('text')
+        .attr('id', function(suboption) { return ['what-to-see-option-text-sub-', subtitle, suboption].join('-') })
+        .attr('class', 'what-to-see-option-text what-to-see-option-text-' + type)
+        .attr('x', what_to_see['most-changed-suboption-x'] + what_to_see['option-text-x'])
+        .attr('y', function(d, i) { return suboption_text_y(i) })
+        .text(function(d) { return 'Most ' + d })
+    }
+  
+    function suboption_text_y(i) {
+      var start_y = what_to_see['most-changed-suboption-t'] + what_to_see[what_option + '-text-y']
+      return start_y + i * what_to_see['most-changed-suboption-h'] 
+    }
   }
 
-  function suboption_text_y(i) {
-    var start_y = what_to_see['most-changed-suboption-t'] + what_to_see[option + '-text-y']
-    return start_y + i * what_to_see['most-changed-suboption-h'] 
+  function click_sub_option(subtitle, suboption) {
+    highlight_pathways[subtitle]['selected'] = 'most-changed'
+    highlight_pathways[subtitle]['sub-selected'] = suboption
+    update_highlight_bottons(subtitle)
+    update_node_opacity()
+    go_comparison_mode()
   }
+  
+  function click_highlight_option(subtitle, what_option) {
+    highlight_pathways[subtitle]['selected'] = what_option
+    if (what_option == 'most-changed') {
+      highlight_pathways[subtitle]['sub-selected'] = 'excited'
+    } else {
+      highlight_pathways[subtitle]['sub-selected'] = '-'
+    }
+    update_highlight_bottons(subtitle)
+    update_node_opacity()
+  }
+ 
 }
 
-function click_sub_option(subtitle, suboption) {
-  highlight_pathways[subtitle]['selected'] = 'most-changed'
-  highlight_pathways[subtitle]['sub-selected'] = suboption
-  update_highlight_bottons(subtitle)
-  update_node_opacity()
-  go_comparison_mode()
-}
+function add_how_many_to_highlight_options(type, subtitle, subtitle_txt) {
+  gen_g_how_many()
+  add_neuron_slider()
 
-function click_highlight_option(subtitle, option) {
-  highlight_pathways[subtitle]['selected'] = option
-  if (option == 'most-changed') {
-    highlight_pathways[subtitle]['sub-selected'] = 'excited'
-  } else {
-    highlight_pathways[subtitle]['sub-selected'] = '-'
+  function gen_g_how_many() {
+    d3.select('#g-' + type + '-option')
+      .append('g')
+      .attr('id', ['g', type, subtitle].join('-'))
   }
-  update_highlight_bottons(subtitle)
-  update_node_opacity()
+
+  function add_neuron_slider() {
+    gen_slider_g('neurons')
+    gen_slider_title('neurons')
+  }
+
+  function gen_slider_g(subject) {
+    d3.select('#' + ['g', type, subtitle].join('-'))
+      .append('g')
+      .attr('id', ['g', type, subtitle, subject].join('-'))
+      .attr('class', 'highlight-slider')
+  }
+
+  function gen_slider_title(subject) {
+    var subject_text = subject[0].toUpperCase() + subject.slice(1)
+    d3.select('#' + ['g', type, subtitle, subject].join('-'))
+      .append('text')
+      .attr('id', ['title', type, subtitle, subject].join('-'))
+      .text(subject_text + ':')
+  }
+
+  function gen_slider_val(subject) {
+    // XXXXXXXX
+  }
+
+  // function 
 }
 
 function update_highlight_bottons(subtitle) {
@@ -219,12 +547,10 @@ function update_highlight_bottons(subtitle) {
   if (highlight_pathways[subtitle]['selected'] == 'most-changed') {
     d3.select('#' + ['what-to-see-icon-sub', subtitle, highlight_pathways[subtitle]['sub-selected']].join('-'))
       .style('display', 'block')
-    console.log(highlight_pathways[subtitle]['sub-selected'])
     d3.select('#' + ['what-to-see-option-text-sub', subtitle, highlight_pathways[subtitle]['sub-selected']].join('-'))
       .style('fill', 'gray')
   }
 }
-
 
 
 
