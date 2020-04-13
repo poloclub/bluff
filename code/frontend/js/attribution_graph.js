@@ -49,7 +49,9 @@ var top_neuron_data = {}
 var extracted_neurons = {}
 var edge_data = {}
 var most_inhibited_data = {}
+var most_changed_data = {}
 var most_inhibited_extracted_data = {}
+var most_changed_extracted_data = {}
 
 var unique_attack_only_neurons = {}
 
@@ -92,10 +94,10 @@ export function reload_graph() {
       edge_data = read_and_parse_edge_data(data, 3, extracted_neurons)
 
       // Parse most inhibited data
-      most_inhibited_data = parse_most_changed_data()
-
+      parse_most_changed_data()
+      
       // Parse most inhibited extracted neurons
-      most_inhibited_extracted_data = parse_most_changed_extracted_data()
+      parse_most_changed_extracted_data()
     
       // Get activation scale
       get_actiavtion_y_scale()
@@ -115,7 +117,9 @@ export function reload_graph() {
       window.activation_range = activation_range
       window.edge_data = edge_data
       window.most_inhibited_data = most_inhibited_data
+      window.most_changed_data = most_changed_data
       window.most_inhibited_extracted_data = most_inhibited_extracted_data
+      window.most_changed_extracted_data = most_changed_extracted_data
     
       // Generate x, y coordinate info
       gen_x_coords()
@@ -259,49 +263,72 @@ function read_and_parse_edge_data(data, i, neuron_data) {
 }
 
 function parse_most_changed_data() {
-  var most_inhibited_data = {}
+  most_inhibited_data = {}
+  most_changed_data = {}
+
   layers.forEach(layer => {
     most_inhibited_data[layer] = {}
+    most_changed_data[layer] = {}
 
     attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
       var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
-      var sorted = Object.entries(activation_data[layer]).sort(function(a, b) {
+
+      // Sort the neurons by how they are inhibited
+      var sorted_inhibited = Object.entries(activation_data[layer]).sort(function(a, b) {
         var original_a = a[1]['original'][act_type]
         var original_b = b[1]['original'][act_type]
         var attacked_a = a[1][attack_key][act_type]
         var attacked_b = b[1][attack_key][act_type]
         return (original_b - attacked_b) - (original_a - attacked_a)
       })
-      sorted = sorted.map(x => x[0])
-      most_inhibited_data[layer][attack_key] = sorted
+      sorted_inhibited = sorted_inhibited.map(x => x[0])
+      most_inhibited_data[layer][attack_key] = sorted_inhibited
+
+      // Sort the neurons by how they are changed
+      var sorted_changed = Object.entries(activation_data[layer]).sort(function(a, b) {
+        var original_a = a[1]['original'][act_type]
+        var original_b = b[1]['original'][act_type]
+        var attacked_a = a[1][attack_key][act_type]
+        var attacked_b = b[1][attack_key][act_type]
+        return Math.abs(original_b - attacked_b) - Math.abs(original_a - attacked_a)
+      })
+      sorted_changed = sorted_changed.map(x => x[0])
+      most_changed_data[layer][attack_key] = sorted_changed
     })
   })
-  return most_inhibited_data
 }
 
 function parse_most_changed_extracted_data() {
 
-  var most_inhibited_extracted_data = {}
+  most_inhibited_extracted_data = {}
+  most_changed_extracted_data = {}
 
   // Get all extracted data
   layers.forEach(layer => {
     most_inhibited_extracted_data[layer] = {}
+    most_changed_extracted_data[layer] = {}
+
     var neurons = {}
     for (var graph_key in extracted_neurons[layer]) {
       extracted_neurons[layer][graph_key].forEach(neuron => {
         neurons[neuron] = true
       })
     }
+
     for (var attack_key in most_inhibited_data[layer]) {
       most_inhibited_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
         var idx_a = most_inhibited_data[layer][attack_key].indexOf(a)
         var idx_b = most_inhibited_data[layer][attack_key].indexOf(b)
         return idx_a - idx_b
       })
+      most_changed_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
+        var idx_a = most_changed_data[layer][attack_key].indexOf(a)
+        var idx_b = most_changed_data[layer][attack_key].indexOf(b)
+        return idx_a - idx_b
+      })
     }
   })
 
-  return most_inhibited_extracted_data
 }
 
 function parse_vulnerability_data() {
@@ -1101,21 +1128,16 @@ function draw_neurons() {
     d3.selectAll('.edge-into-' + neuron)
       .style('display', function(d) { return edge_display(d) })
     d3.select('#fv-' + neuron)
-      // .attr('filter', function() {
-      //   var graph_key = d3.select(this).attr('class').split('fv-').slice(-1)
-      //   return 'url(#filter-' + graph_key + ')'
-      // })
       .style('opacity', function(neuron) {
-
         if (highlight_pathways['neurons']['selected'] == 'activated') {
           if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
-        } else if (highlight_pathways['neurons']['sub-selected'] == 'excited') {
+        } else if (highlight_pathways['neurons']['selected'] == 'excited') {
           if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
-        } else if (highlight_pathways['neurons']['sub-selected'] == 'inhibited') {
+        } else if (highlight_pathways['neurons']['selected'] == 'inhibited') {
           if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
             return node_opacity['activated']
           } 
@@ -1355,11 +1377,15 @@ export function update_node_opacity() {
     update_opacity_most_activated()
   } else if (highlight_pathways['neurons']['selected'] == 'changed') {
     if (selected_attack_info['attack_strength'] > 0) {
-      if (highlight_pathways['neurons']['sub-selected'] == 'excited') {
-        update_opacity_most_excited()
-      } else if (highlight_pathways['neurons']['sub-selected'] == 'inhibited') {
-        update_opacity_most_inhibited()
-      }
+      update_opacity_most_changed()
+    }
+  } else if (highlight_pathways['neurons']['selected'] == 'excited') {
+    if (selected_attack_info['attack_strength'] > 0) {
+      update_opacity_most_excited()
+    }
+  } else if (highlight_pathways['neurons']['selected'] == 'inhibited') {
+    if (selected_attack_info['attack_strength'] > 0) {
+      update_opacity_most_inhibited()
     }
   }
 
@@ -1431,6 +1457,25 @@ export function update_node_opacity() {
         }
       })
   }
+
+  function update_opacity_most_changed() {
+    d3.selectAll('.node')
+      .style('fill-opacity', function(neuron) {
+        if (is_most_changed(neuron, selected_attack_info['attack_strength'])) {
+          return node_opacity['activated']
+        } else {
+          return node_opacity['deactivated']
+        }
+      })
+    d3.selectAll('.fv')
+      .style('opacity', function(neuron) {
+        if (is_most_changed(neuron, selected_attack_info['attack_strength'])) {
+          return node_opacity['activated']
+        } else {
+          return node_opacity['fv-deactivated']
+        }
+      })
+  }
   
 }
 
@@ -1472,6 +1517,21 @@ function is_most_inhibited(neuron, strength) {
     var layer = neuron.split('-')[0]
     var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
     var top_neurons_to_highlight = most_inhibited_extracted_data[layer][attack_key].slice(0, highlight_pathways['neurons']['top-k'])
+    if (top_neurons_to_highlight.includes(neuron)) {
+      return true
+    } else {
+      return false
+    }
+  }
+}
+
+function is_most_changed(neuron, strength) {
+  if (strength == 0) {
+    return false
+  } else {
+    var layer = neuron.split('-')[0]
+    var attack_key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
+    var top_neurons_to_highlight = most_changed_extracted_data[layer][attack_key].slice(0, highlight_pathways['neurons']['top-k'])
     if (top_neurons_to_highlight.includes(neuron)) {
       return true
     } else {
@@ -1660,7 +1720,7 @@ export function go_comparison_mode() {
     if (highlight_pathways['neurons']['selected'] == 'activated') {
       update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
     } else if (highlight_pathways['neurons']['selected'] == 'changed') {
-      update_opacity_compare_mode(highlight_pathways['neurons']['sub-selected'])
+      update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
     }
 
     function update_opacity_compare_mode(filter_method) {
@@ -1753,7 +1813,6 @@ function update_edge_stroke_scale() {
 
   var min_inf = 10000
   var max_inf = 0
-
 
   layers.slice(1).forEach(layer => {
     edge_data[0][layer].forEach(d => {

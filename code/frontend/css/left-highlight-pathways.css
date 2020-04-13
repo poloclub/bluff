@@ -131,16 +131,16 @@
   transform: translate(0px, 20px);
 }
 
-#g-dropdown-changed-neurons {
-  transform: translate(115px, 45px);
-}
-
 #g-dropdown-menu-excited-neurons {
-  transform: translate(0px, 5px);
+  transform: translate(0px, 35px);
 }
 
 #g-dropdown-menu-inhibited-neurons {
-  transform: translate(0px, 20px);
+  transform: translate(0px, 50px);
+}
+
+#g-dropdown-changed-neurons {
+  transform: translate(115px, 45px);
 }
 
 /* Dropdown what connections */

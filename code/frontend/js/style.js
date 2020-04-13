@@ -87,7 +87,7 @@ export var highlight_pathways_style = {
   'neurons-changed-line-y': 2,
   'neurons-changed-icon-x': 58,
   // Most what neurons dropdown
-  'neurons-what-dropdown-bg-rect-height': 40,
+  'neurons-what-dropdown-bg-rect-height': 70,
   'dropdown-menu-rect-height': 15,
   // Most changed neurons dropdown
   'neurons-changed-dropdown-bg-rect-height': 40,
