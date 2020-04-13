@@ -7,7 +7,8 @@ import {
 import {
   update_node_opacity,
   update_graph_by_filter_graph,
-  go_comparison_mode
+  go_comparison_mode,
+  update_edges_display
 } from './attribution_graph.js'
 
 import {
@@ -23,12 +24,12 @@ export var highlight_pathways = {
   'neurons': {
     'selected': 'activated',
     'sub-selected': '-',
-    'top-k': 8
+    'top-k': 3
   },
   'connections': {
     'selected': 'activated',
     'sub-selected': '-',
-    'top-k': 0
+    'top-k': 20
   } 
 }
 
@@ -38,7 +39,7 @@ export var highlight_pathways = {
 
 gen_highlight_option_g()
 write_highlight_neurons()
-write_highlight_connections()
+// write_highlight_connections()
 // gen_pathways_option_g('highlight')
 // add_what_to_highlight_options('highlight', 'what', 'What to Highlight')
 // add_how_many_to_highlight_options('highlight', 'many', 'How many to Highlight')
@@ -189,6 +190,11 @@ function write_highlight_neurons() {
 
       // Add changed
       add_changed_neurons()
+
+      // Add excited
+
+      // Add inhibited
+      // XXXX
       
       // Functions
       function gen_basic_bg() {
@@ -512,39 +518,192 @@ function write_highlight_connections() {
   }
 
   function gen_most_what_connections_dropdown() {
-    d3.select('#g-highlight-connections')
-      .append('g')
-      .attr('id', 'highlight-option-what-connections')
+    gen_most_what_connections_g()
+    gen_most_what_connections_rect()
+    gen_most_what_connections_line()
+    gen_most_what_connections_text()
+    gen_most_what_connectinos_icon()
+    gen_dropdown_menu()
 
-    d3.select('#highlight-option-what-connections')
-      .append('rect')
-      .attr('id', 'highlight-option-what-connections-rect')
-      .attr('class', 'highlight-dropdown-rect')
-      .attr('width', highlight_pathways_style['connections-what-rect-width'])
-      .attr('height', highlight_pathways_style['connections-what-rect-height'])
+    function gen_most_what_connections_g() {
+      d3.select('#g-highlight-connections')
+        .append('g')
+        .attr('id', 'highlight-option-what-connections')
+        .on('mouseover', function() { this.style.cursor = 'pointer' })
+        .on('click', function() { click_most_what_connections() })
+    }
 
-    d3.select('#highlight-option-what-connections')
-      .append('line')
-      .attr('id', 'highlight-option-what-connections-line')
-      .attr('class', 'highlight-dropdown-line')
-      .attr('x1', 0)
-      .attr('x2', highlight_pathways_style['connections-what-rect-width'])
-      .attr('y1', highlight_pathways_style['connections-what-line-y'])
-      .attr('y2', highlight_pathways_style['connections-what-line-y'])
+    function gen_most_what_connections_rect() {
+      d3.select('#highlight-option-what-connections')
+        .append('rect')
+        .attr('id', 'highlight-option-what-connections-rect')
+        .attr('class', 'highlight-dropdown-rect')
+        .attr('width', highlight_pathways_style['connections-what-rect-width'])
+        .attr('height', highlight_pathways_style['connections-what-rect-height'])
+    }
 
-    d3.select('#highlight-option-what-connections')
-      .append('text')
-      .attr('id', 'highlight-option-what-connections-text')
-      .attr('class', 'highlight-dropdown-text')
-      .text(highlight_pathways['connections']['selected'])
-    
-    d3.select('#highlight-option-what-connections')
-      .append('text')
-      .attr('id', 'highlight-option-what-connections-icon')
-      .attr('class', 'highlight-dropdown-icon')
-      .attr('font-family', 'FontAwesome')
-      .text(icons['caret-down'])
-      .attr('x', highlight_pathways_style['connections-what-icon-x'])
+    function gen_most_what_connections_line() {
+      d3.select('#highlight-option-what-connections')
+        .append('line')
+        .attr('id', 'highlight-option-what-connections-line')
+        .attr('class', 'highlight-dropdown-line')
+        .attr('x1', 0)
+        .attr('x2', highlight_pathways_style['connections-what-rect-width'])
+        .attr('y1', highlight_pathways_style['connections-what-line-y'])
+        .attr('y2', highlight_pathways_style['connections-what-line-y'])
+    }
+
+    function gen_most_what_connections_text() {
+      d3.select('#highlight-option-what-connections')
+        .append('text')
+        .attr('id', 'highlight-option-what-connections-text')
+        .attr('class', 'highlight-dropdown-text')
+        .text(highlight_pathways['connections']['selected'])
+    }
+
+    function gen_most_what_connectinos_icon() {
+      d3.select('#highlight-option-what-connections')
+        .append('text')
+        .attr('id', 'highlight-option-what-connections-icon')
+        .attr('class', 'highlight-dropdown-icon')
+        .attr('font-family', 'FontAwesome')
+        .text(icons['caret-down'])
+        .attr('x', highlight_pathways_style['connections-what-icon-x'])
+    } 
+
+    function gen_dropdown_menu() {
+      // Setting
+      gen_basic_bg()
+
+      // Add activated
+      add_activated_connections()
+
+      // Add changed
+      add_changed_connections()
+
+      // Add excited
+      add_excited_connections()
+      
+      // Functions
+      function gen_basic_bg() {
+        d3.select('#g-highlight-option-contents')
+          .append('g')
+          .attr('id', 'g-dropdown-what-connections')
+          // .style('display', 'none')
+
+        d3.select('#g-dropdown-what-connections') 
+          .append('rect')
+          .attr('id', 'dropdown-what-connections-rect')
+          .attr('class', 'dropdown-menu-bg-rect')
+          .attr('width', highlight_pathways_style['connections-what-rect-width'])
+          .attr('height', highlight_pathways_style['connections-what-dropdown-bg-rect-height'])
+      }
+
+      function add_activated_connections() {
+        d3.select('#g-dropdown-what-connections')
+          .append('g')
+          .attr('id', 'g-dropdown-menu-activated-connections')
+          .on('mouseover', function() { mouseover_activated() })
+          .on('click', function() { click_activated() })
+
+        d3.select('#g-dropdown-menu-activated-connections')
+          .append('rect')
+          .attr('id', 'dropdown-menu-rect-activated-connections')
+          .attr('class', 'dropdown-item-bg-rect')
+          .attr('width', highlight_pathways_style['connections-what-rect-width'])
+          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+
+        d3.select('#g-dropdown-menu-activated-connections')
+          .append('text')
+          .attr('id', 'dropdown-menu-text-activated-connections')
+          .attr('class', 'dropdown-item-text')
+          .text('activated')
+      }
+
+      function add_changed_connections() {
+        d3.select('#g-dropdown-what-connections')
+          .append('g')
+          .attr('id', 'g-dropdown-menu-changed-connections')
+          .on('mouseover', function() { mouseover_changed() })
+          .on('click', function() { click_changed() })
+
+        d3.select('#g-dropdown-menu-changed-connections')
+          .append('rect')
+          .attr('id', 'dropdown-menu-rect-changed-connections')
+          .attr('class', 'dropdown-item-bg-rect')
+          .attr('width', highlight_pathways_style['connections-what-rect-width'])
+          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+
+        d3.select('#g-dropdown-menu-changed-connections')
+          .append('text')
+          .attr('id', 'dropdown-menu-text-changed-connections')
+          .attr('class', 'dropdown-item-text')
+          .text('changed')
+      }
+
+      function add_excited_connections() {
+        d3.select('#g-dropdown-what-connections')
+          .append('g')
+          .attr('id', 'g-dropdown-menu-excited-connections')
+          .on('mouseover', function() { mouseover_excited() })
+          .on('click', function() { click_excited() })
+
+        d3.select('#g-dropdown-menu-excited-connections')
+          .append('rect')
+          .attr('id', 'dropdown-menu-rect-excited-connections')
+          .attr('class', 'dropdown-item-bg-rect')
+          .attr('width', highlight_pathways_style['connections-what-rect-width'])
+          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+
+        d3.select('#g-dropdown-menu-excited-connections')
+          .append('text')
+          .attr('id', 'dropdown-menu-text-excited-connections')
+          .attr('class', 'dropdown-item-text')
+          .text('excited')
+      }
+
+      function mouseover_activated() {
+        d3.select('#g-dropdown-menu-activated-connections').style('cursor', 'pointer')
+        d3.select('#dropdown-menu-rect-activated-connections').style('fill', 'lightgray')
+        d3.select('#dropdown-menu-rect-changed-connections').style('fill', 'white')
+      }
+
+      function click_activated() {
+        d3.select('#highlight-option-what-connections-text').text('activated')
+        d3.select('#g-dropdown-what-connections').style('display', 'none')
+        highlight_pathways['connections']['selected'] = 'activated'
+        highlight_pathways['connections']['sub-selected'] = '-'
+        d3.selectAll('.most-changed-connections').style('display', 'none')
+        update_edges_display(highlight_pathways['connections']['top-k'], 'activated')
+      }
+
+      function mouseover_changed() {
+        d3.select('#g-dropdown-menu-changed-connections').style('cursor', 'pointer')
+        d3.select('#dropdown-menu-rect-activated-connections').style('fill', 'white')
+        d3.select('#dropdown-menu-rect-changed-connections').style('fill', 'lightgray')
+      }
+
+      function click_changed() {
+        d3.select('#highlight-option-what-connections-text').text('changed')
+        d3.select('#g-dropdown-what-connections').style('display', 'none')
+        highlight_pathways['connections']['selected'] = 'changed'
+        highlight_pathways['connections']['sub-selected'] = 'excited'
+        d3.selectAll('.most-changed-connections').style('display', 'block')
+        d3.select('#highlight-option-changed-connections-text').text(highlight_pathways['connections']['sub-selected'])
+        update_edges_display(highlight_pathways['connections']['top-k'], 'changed')
+      }
+
+      function mouseover_excited() {
+        d3.select('#g-dropdown-menu-excited-connections').style('cursor', 'pointer')
+        d3.select('#dropdown-menu-rect-excited-connections').style('fill', 'white')
+        d3.select('#dropdown-menu-rect-changed-connections').style('fill', 'lightgray')
+      }
+    }
+
+    function click_most_what_connections() {
+      d3.select('#g-highlight-option-what-connections').style('cursor', 'pointer')
+      d3.select('#g-dropdown-what-connections').style('display', 'block')
+    }
   }
 
   function gen_most_changed_connections_dropdown(c) {

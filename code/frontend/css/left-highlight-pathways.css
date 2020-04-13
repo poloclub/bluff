@@ -142,3 +142,20 @@
 #g-dropdown-menu-inhibited-neurons {
   transform: translate(0px, 20px);
 }
+
+/* Dropdown what connections */
+#g-dropdown-what-connections {
+  transform: translate(0px, 115px); /* 40 + 75 */
+}
+
+#g-dropdown-menu-activated-connections {
+  transform: translate(0px, 5px);
+}
+
+#g-dropdown-menu-changed-connections {
+  transform: translate(0px, 20px);
+}
+
+#g-dropdown-menu-excited-connections {
+  transform: translate(0px, 35px);
+}

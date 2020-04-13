@@ -131,6 +131,10 @@ export function reload_graph() {
       // Draw edges
       update_edge_stroke_scale()
       update_edges(selected_attack_info['attack_strength'])
+      update_edges_display(
+        highlight_pathways['connections']['top-k'], 
+        highlight_pathways['connections']['selected']
+      )
 
       // Update the column labels
       update_column_title()
@@ -171,7 +175,8 @@ export function update_column_title() {
     } else if (column == 'original-and-target') {
       label = 'BOTH'
     } else if (column == 'attack-only') {
-      label = 'ATTACK-ONLY'
+      // label = 'ATTACK-ONLY'
+      label = 'EXPLOITED BY ATTACK'
     }
      
     d3.select('#g-column-title')
@@ -196,7 +201,6 @@ export function update_column_title() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 function read_and_parse_edge_data(data, i, neuron_data) {
-  // XXXXXXXXXXXXXX
   var edge_data = {}
   edge_data[0] = data[i]
   attack_strengths[selected_attack_info['attack_type']].forEach((s, j) => {
@@ -1626,8 +1630,6 @@ export function update_graph_by_filter_graph() {
   }
 }
 
-
-
 export function update_scatter_circle() {
 
   d3.selectAll('.node-box-scatter-circle')
@@ -1865,6 +1867,92 @@ function gen_curve(x1, y1, x2, y2) {
     path += ' ' + c2_x + ' ' + c2_y + ','
     path += ' ' + x2 + ' ' + y2
     return path
+}
+
+export function update_edges_display(top_k_percent, most_option) {
+  // XXXXXX
+  // Get all highlighted neurons
+  var highligted_neurons = get_highlighted_neurons()
+  var potentially_highlighted_edges = {}
+  highlighted_edges = {}
+
+  if (most_option == 'activated') {
+
+    // Get edges to be highlighted
+    layers.slice(1).forEach(layer => {
+      potentially_highlighted_edges[layer] = []
+      edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
+        var curr = edge_info['curr']
+        var next = edge_info['next']
+        var inf = edge_info['influence']
+        var curr_layer = curr.split('-')[0]
+        var next_layer = next.split('-')[0]
+
+        if (highligted_neurons[curr_layer].includes(curr) && highligted_neurons[next_layer].includes(next)) {
+          potentially_highlighted_edges[layer].push({
+            'curr': curr,
+            'next': next,
+            'inf': inf
+          })
+        }
+      })
+    })
+
+    for (var layer in potentially_highlighted_edges) {
+      var sorted_edges = potentially_highlighted_edges[layer].sort(function(a, b) {
+        return b['inf'] - a['inf'] 
+      })
+      potentially_highlighted_edges[layer] = sorted_edges
+    }
+
+    for (var layer in potentially_highlighted_edges) {
+      var all_edges = potentially_highlighted_edges[layer]
+      var num_edges = Math.round(all_edges.length * highlight_pathways['connections']['top-k'] / 100)
+      highlighted_edges[layer] = all_edges.slice(0, num_edges)
+    }
+
+    // Highlight the edges
+    for (var layer in highlighted_edges) {
+      highlighted_edges[layer].forEach(edge_info => {
+        var edge_id = ['edge', edge_info['curr'], edge_info['next']].join('-')
+        d3.select('#' + edge_id).style('display', 'block')
+      })
+    }
+
+  } else if (most_option == 'changed') {
+
+  } else if (most_option == 'excited') {
+    
+  } else if (most_option == 'inhibited') {
+    
+  } else {
+    console.log('ERROR: Unknown most_option:', most_option)
+  }
+
+}
+
+function get_highlighted_neurons() {
+  var node_rects = document.getElementsByClassName('node')
+  var highligted_rects = Array.from(node_rects).filter(function(rect) {
+    var fill_opacity = parseFloat(rect.style.fillOpacity)
+    return fill_opacity == 1
+  })
+  var highlighted_neurons_all_layers = highligted_rects.map(function(rect) {
+    var rect_id = rect.id
+    var neuron = rect_id.split('node-')[1]
+    return neuron
+  })
+
+  var highlighted_neurons = {}
+  highlighted_neurons_all_layers.forEach(neuron => {
+    var layer = neuron.split('-')[0]
+    if (!(layer in highlighted_neurons)) {
+      highlighted_neurons[layer] = []
+    }
+    highlighted_neurons[layer].push(neuron)
+  })
+
+  return highlighted_neurons
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

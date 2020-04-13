@@ -106,6 +106,9 @@ export var highlight_pathways_style = {
   'connections-changed-rect-height': 15,
   'connections-changed-line-y': 2,
   'connections-changed-icon-x': 58,
+  // Most what connections dropdown
+  'connections-what-dropdown-bg-rect-height': 70,
+  'connections-what-rect-width': 69,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +203,7 @@ export var node_box_style = {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 export var edge_style = {
-  'min-stroke': 1,
+  'min-stroke': 0.1,
   'max-stroke': 5,
   'edge-color': 'lightgray',
   'edge-highlight-color': 'gray',
