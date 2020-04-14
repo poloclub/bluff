@@ -71,6 +71,20 @@ export var filter_bar = {
 
 // Size of highlight pathways
 export var highlight_pathways_style = {
+  // General
+  'line-y': 2,
+  'dropdown-menu-rect-height': 15,
+  'menu-y': 7,
+  'menu-top-padding': 5,
+  'menu-height': 15, 
+  'menu-bottom-padding': 5, 
+  // Most what
+  'what-x': 100,
+  'what-y': 0,
+  'what-rect-width': 69,
+  'what-rect-height': 15,
+  'what-icon-x': 61,
+  'what-menu-rect-height': 70,
   // Neurons top-k
   'neurons-k-rect-width': 30,
   'neurons-k-rect-height': 15,
@@ -88,7 +102,6 @@ export var highlight_pathways_style = {
   'neurons-changed-icon-x': 58,
   // Most what neurons dropdown
   'neurons-what-dropdown-bg-rect-height': 70,
-  'dropdown-menu-rect-height': 15,
   // Most changed neurons dropdown
   'neurons-changed-dropdown-bg-rect-height': 40,
   // Connections top-k

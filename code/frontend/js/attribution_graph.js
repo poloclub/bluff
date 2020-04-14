@@ -549,20 +549,22 @@ function gen_x_coords() {
       node_group_x[attack_type]['original']['start_x'] = graph_margin['start_x']
       node_group_x[attack_type]['original']['end_x'] = node_group_x[attack_type]['original']['start_x'] + length_node_group(top_k, w)
 
-      // Set intersection group
+      // Set both group
       node_group_x[attack_type]['original-and-target'] = {}
       node_group_x[attack_type]['original-and-target']['start_x'] = node_group_x[attack_type]['original']['end_x'] + graph_margin['group_lr']
       node_group_x[attack_type]['original-and-target']['end_x'] = node_group_x[attack_type]['original-and-target']['start_x'] + length_node_group(top_k, w)
 
-      // Set target group
-      node_group_x[attack_type]['target'] = {}
-      node_group_x[attack_type]['target']['start_x'] = node_group_x[attack_type]['original-and-target']['end_x'] + graph_margin['group_lr']
-      node_group_x[attack_type]['target']['end_x'] = node_group_x[attack_type]['target']['start_x'] + length_node_group(top_k, w) 
-
       // Set attack only group
       node_group_x[attack_type]['attack-only'] = {}
-      node_group_x[attack_type]['attack-only']['start_x'] = node_group_x[attack_type]['target']['end_x'] + graph_margin['group_lr']
+      node_group_x[attack_type]['attack-only']['start_x'] = node_group_x[attack_type]['original-and-target']['end_x'] + graph_margin['group_lr']
       node_group_x[attack_type]['attack-only']['end_x'] = node_group_x[attack_type]['attack-only']['start_x'] + length_node_group(max_num_attacked_only[attack_type], w)
+
+      // Set target group
+      node_group_x[attack_type]['target'] = {}
+      node_group_x[attack_type]['target']['start_x'] = node_group_x[attack_type]['attack-only']['end_x'] + graph_margin['group_lr']
+      node_group_x[attack_type]['target']['end_x'] = node_group_x[attack_type]['target']['start_x'] + length_node_group(top_k, w) 
+
+      
 
       
     })
@@ -825,11 +827,11 @@ function draw_neurons() {
     highlight_neuron(neuron)
     d3.select('#neuron-id-' + neuron).style('display', 'block')
 
-    // Show edges 
-    if (filter_pathways['filter'] == 'all') {
-      d3.selectAll('.edge-from-' + neuron).style('display', 'block')
-      d3.selectAll('.edge-into-' + neuron).style('display', 'block')
-    }
+    // // Show edges 
+    // if (filter_pathways['filter'] == 'all') {
+    //   d3.selectAll('.edge-from-' + neuron).style('display', 'block')
+    //   d3.selectAll('.edge-into-' + neuron).style('display', 'block')
+    // }
     
     // Add node box if it does not exist
     var node_box_id = get_node_box_id(neuron)
@@ -1123,10 +1125,10 @@ function draw_neurons() {
     var node_box_id = get_node_box_id(neuron)
     d3.select('#' + node_box_id)
       .style('display', 'none')
-    d3.selectAll('.edge-from-' + neuron)
-      .style('display', function(d) { return edge_display(d) })
-    d3.selectAll('.edge-into-' + neuron)
-      .style('display', function(d) { return edge_display(d) })
+    // d3.selectAll('.edge-from-' + neuron)
+    //   .style('display', function(d) { return edge_display(d) })
+    // d3.selectAll('.edge-into-' + neuron)
+    //   .style('display', function(d) { return edge_display(d) })
     d3.select('#fv-' + neuron)
       .style('opacity', function(neuron) {
         if (highlight_pathways['neurons']['selected'] == 'activated') {

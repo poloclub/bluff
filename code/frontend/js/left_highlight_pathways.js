@@ -15,6 +15,7 @@ import {
   gen_pathways_option_g,
   write_mode_option_title
 } from './left_filter_pathways.js'
+import { get_absolute_position } from './header.js'
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -23,11 +24,11 @@ import {
 export var highlight_pathways = {
   'neurons': {
     'selected': 'activated',
-    'top-k': 3
+    'top-k': 5
   },
   'connections': {
     'selected': 'activated',
-    'top-k': 20
+    'top-k': 50
   } 
 }
 
@@ -36,7 +37,11 @@ export var highlight_pathways = {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 gen_highlight_option_g()
-write_highlight_neurons()
+write_text('highlight-option-text-1', 'g-highlight-mode', 'Highlight most')
+gen_dropdown('what', 'g-highlight-mode', highlight_pathways_style)
+write_text('highlight-option-text-2', 'g-highlight-mode', 'pathways by attack.')
+
+// write_highlight_neurons()
 // write_highlight_connections()
 // gen_pathways_option_g('highlight')
 // add_what_to_highlight_options('highlight', 'what', 'What to Highlight')
@@ -62,6 +67,10 @@ function gen_highlight_option_g() {
 
   d3.select('#g-highlight-option-contents')
     .append('g')
+    .attr('id', 'g-highlight-mode')
+
+  d3.select('#g-highlight-option-contents')
+    .append('g')
     .attr('id', 'g-highlight-neurons')
   
   d3.select('#g-highlight-option-contents')
@@ -69,20 +78,300 @@ function gen_highlight_option_g() {
     .attr('id', 'g-highlight-connections')
 }
 
-function write_highlight_neurons() {
-  // What neurons
-  write_text('highlight-option-text-1', 'Highlight')
-  gen_topk_neurons_dropdown()
-  write_text('highlight-option-text-2', 'most')
-  gen_most_what_neurons_dropdown()
-  write_text('highlight-option-text-3', 'neurons by attack in each layer.')
+function write_text(id, parent_id, text, c) {
+  d3.select('#' + parent_id)
+    .append('text')
+    .attr('id', id)
+    .attr('class', c)
+    .text(text)
+}
 
-  // // Most changed neurons
+function gen_dropdown(group_id, parent_id, styler) {
+  d3.select('#' + parent_id)
+    .append('g')
+    .attr('id', 'highlight-option-' + group_id)
+    .attr('transform', dropdown_translate(group_id, styler))
+    .on('mouseover', function() { mouseover_dropdown(group_id) })
+    .on('click', function() { click_dropdown(group_id) })
+
+  gen_dropdown_bg_rect(group_id)
+  gen_dropdown_line(group_id)
+  gen_dropdown_text(group_id)
+  gen_dropdown_icon(group_id)
+  gen_dropdown_menu(group_id)
+
+  function dropdown_translate(group_id, styler) {
+    // TODO: Need to be correct when generalized
+    var x = styler[group_id + '-x']
+    var y = styler[group_id + '-y']
+    return 'translate(' + x + ',' + y + ')'
+  }
+
+  function gen_dropdown_bg_rect(group_id) {
+    d3.select('#highlight-option-' + group_id)
+      .append('rect')
+      .attr('id', 'highlight-option-' + group_id + '-rect')
+      .attr('class', 'highlight-dropdown-rect')
+      .attr('width', styler[group_id + '-rect-width'])
+      .attr('height', styler[group_id + '-rect-height'])
+  }
+
+  function gen_dropdown_line(group_id) {
+    d3.select('#highlight-option-' + group_id)
+      .append('line')
+      .attr('id', 'highlight-option-' + group_id + '-line')
+      .attr('class', 'highlight-dropdown-line')
+      .attr('x1', 0)
+      .attr('x2', styler[group_id + '-rect-width'])
+      .attr('y1', styler['line-y'])
+      .attr('y2', styler['line-y'])
+  }
+
+  function gen_dropdown_text(group_id) {
+    // TODO: Can be generalized later
+    d3.select('#highlight-option-' + group_id)
+      .append('text')
+      .attr('id', 'highlight-option-' + group_id + '-text')
+      .attr('class', 'highlight-dropdown-text')
+      .text(highlight_pathways['neurons']['selected'])
+  }
+
+  function gen_dropdown_icon(group_id) {
+    d3.select('#highlight-option-' + group_id)
+      .append('text')
+      .attr('id', 'highlight-option-' + group_id + '-icon')
+      .attr('class', 'highlight-dropdown-icon')
+      .attr('font-family', 'FontAwesome')
+      .text(icons['caret-down'])
+      .attr('x', highlight_pathways_style[group_id + '-icon-x'])
+  }
+
+  function gen_dropdown_menu(group_id) {
+    // Setting
+    gen_basic_bg(4)
+
+    // Add activated
+    add_item(0, 'activated', 'highlight-option-' + group_id)
+
+    // Add changed
+    add_item(1, 'changed', 'highlight-option-' + group_id)
+
+    // Add excited
+    add_item(2, 'excited', 'highlight-option-' + group_id)
+
+    // Add inhibited
+    add_item(3, 'inhibited', 'highlight-option-' + group_id)
+    
+    // Functions
+    function gen_basic_bg(num_item) {
+      d3.select('#g-highlight-option-contents')
+        .append('g')
+        .attr('id', 'g-dropdown-' + group_id)
+        .attr('transform', g_dropdown_menu_transform())
+        // .style('display', 'none')
+
+      d3.select('#g-dropdown-' + group_id) 
+        .append('rect')
+        .attr('id', 'dropdown-' + group_id + '-rect')
+        .attr('class', 'dropdown-menu-bg-rect dropdown-menu-bg-rect-' + group_id)
+        .attr('width', highlight_pathways_style[group_id + '-rect-width'])
+        .attr('height', g_dropdown_menu_height(num_item))
+        
+      function g_dropdown_menu_transform() {
+        // TODO: Need to be correct when generalized
+        var x = styler[group_id + '-x']
+        var y = styler[group_id + '-y'] + styler['menu-y']
+        return 'translate(' + x + ',' + y + ')'
+      }
+
+      function g_dropdown_menu_height(num_item) {
+        // TODO: Need to be correct when generalized
+        return styler['menu-top-padding'] + num_item * styler['menu-height'] + styler['menu-bottom-padding']
+      }
+    }
+
+    function add_item(i, item, dropdown_id) {
+      d3.select('#g-dropdown-' + group_id)
+        .append('g')
+        .attr('id', 'g-dropdown-menu-' + group_id + '-' + item)
+        .on('mouseover', function() { mouseover_item() })
+        .on('click', function() { click_item() })
+        .attr('transform', g_item_transform(i))
+      
+      gen_item_rect()
+      gen_item_text()
+      
+      function g_item_transform(i) {
+        var x = 0
+        var y = styler['menu-top-padding'] + i * styler['menu-height']
+        return 'translate(' + x + ',' + y + ')'
+      }
+
+      function gen_item_rect() {
+        d3.select('#g-dropdown-menu-' + group_id + '-' + item)
+          .append('rect')
+          .attr('id', gen_item_component_id('rect'))
+          .attr('class', gen_item_component_class('rect'))
+          .attr('width', highlight_pathways_style['what-rect-width'])
+          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+      }
+
+      function gen_item_text() {
+        d3.select('#g-dropdown-menu-' + group_id + '-' + item)
+          .append('text')
+          .attr('id', gen_item_component_id('text'))
+          .attr('class', gen_item_component_class('text'))
+          .text(item)
+      }
+
+      function gen_item_component_class(component) {
+        var c1 = 'dropdown-item-' + component
+        var c2 = c1 + '-' + group_id
+        return [c1, c2].join(' ')
+      }
+
+      function gen_item_component_id(component) {
+        return ['dropdown-item', group_id, item, component].join('-')
+      }
+
+      function mouseover_item() {
+        d3.select('#g-dropdown-menu-' + group_id + '-' + item).style('cursor', 'pointer')
+        d3.selectAll('.dropdown-item-rect-' + group_id).style('fill', 'white')
+        d3.select('#' + gen_item_component_id('rect')).style('fill', 'lightgray')
+      }
+
+      function click_item() {
+        d3.select('#highlight-option-' + group_id + '-text').text(item)
+        d3.select('#g-dropdown-' + group_id).style('display', 'none')
+        highlight_pathways['neurons']['selected'] = item
+        update_node_opacity()
+      }
+    }
+
+    function add_changed_neurons() {
+      d3.select('#g-dropdown-what-neurons')
+        .append('g')
+        .attr('id', 'g-dropdown-menu-changed-neurons')
+        .on('mouseover', function() { mouseover_changed() })
+        .on('click', function() { click_changed() })
+
+      d3.select('#g-dropdown-menu-changed-neurons')
+        .append('rect')
+        .attr('id', 'dropdown-menu-rect-changed-neurons')
+        .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
+        .attr('width', highlight_pathways_style['neurons-what-rect-width'])
+        .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+
+      d3.select('#g-dropdown-menu-changed-neurons')
+        .append('text')
+        .attr('id', 'dropdown-menu-text-changed-neurons')
+        .attr('class', 'dropdown-item-text')
+        .text('changed')
+
+      function mouseover_changed() {
+        d3.select('#g-dropdown-menu-changed-neurons').style('cursor', 'pointer')
+        d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
+        d3.select('#dropdown-menu-rect-changed-neurons').style('fill', 'lightgray')
+      }
+
+      function click_changed() {
+        d3.select('#highlight-option-what-neurons-text').text('changed')
+        d3.select('#g-dropdown-what-neurons').style('display', 'none')
+        highlight_pathways['neurons']['selected'] = 'changed'
+        d3.selectAll('.most-changed-neurons').style('display', 'block')
+        d3.select('#highlight-option-changed-neurons-text').text(highlight_pathways['neurons']['sub-selected'])
+        update_node_opacity()
+      }
+    }
+
+    function add_excited_neurons() {
+      d3.select('#g-dropdown-what-neurons')
+        .append('g')
+        .attr('id', 'g-dropdown-menu-excited-neurons')
+        .on('mouseover', function() { mouseover_excited() })
+        .on('click', function() { click_excited() })
+
+      d3.select('#g-dropdown-menu-excited-neurons')
+        .append('rect')
+        .attr('id', 'dropdown-menu-rect-excited-neurons')
+        .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
+        .attr('width', highlight_pathways_style['neurons-what-rect-width'])
+        .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+
+      d3.select('#g-dropdown-menu-excited-neurons')
+        .append('text')
+        .attr('id', 'dropdown-menu-text-excited-neurons')
+        .attr('class', 'dropdown-item-text')
+        .text('excited')
+
+      function mouseover_excited() {
+        d3.select('#g-dropdown-menu-excited-neurons').style('cursor', 'pointer')
+        d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
+        d3.select('#dropdown-menu-rect-excited-neurons').style('fill', 'lightgray')
+      }
+
+      function click_excited() {
+        d3.select('#highlight-option-what-neurons-text').text('excited')
+        d3.select('#g-dropdown-what-neurons').style('display', 'none')
+        highlight_pathways['neurons']['selected'] = 'excited'
+        d3.selectAll('.most-excited-neurons').style('display', 'block')
+        d3.select('#highlight-option-excited-neurons-text').text(highlight_pathways['neurons']['selected'])
+        update_node_opacity()
+      }
+    }
+
+    function add_inhibited_neurons() {
+      d3.select('#g-dropdown-what-neurons')
+        .append('g')
+        .attr('id', 'g-dropdown-menu-inhibited-neurons')
+        .on('mouseover', function() { mouseover_inhibited() })
+        .on('click', function() { click_inhibited() })
+
+      d3.select('#g-dropdown-menu-inhibited-neurons')
+        .append('rect')
+        .attr('id', 'dropdown-menu-rect-inhibited-neurons')
+        .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
+        .attr('width', highlight_pathways_style['neurons-what-rect-width'])
+        .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
+
+      d3.select('#g-dropdown-menu-inhibited-neurons')
+        .append('text')
+        .attr('id', 'dropdown-menu-text-inhibited-neurons')
+        .attr('class', 'dropdown-item-text')
+        .text('inhibited')
+
+      function mouseover_inhibited() {
+        d3.select('#g-dropdown-menu-inhibited-neurons').style('cursor', 'pointer')
+        d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
+        d3.select('#dropdown-menu-rect-inhibited-neurons').style('fill', 'lightgray')
+      }
+
+      function click_inhibited() {
+        d3.select('#highlight-option-what-neurons-text').text('inhibited')
+        d3.select('#g-dropdown-what-neurons').style('display', 'none')
+        highlight_pathways['neurons']['selected'] = 'inhibited'
+        d3.selectAll('.most-inhibited-neurons').style('display', 'block')
+        d3.select('#highlight-option-inhibited-neurons-text').text(highlight_pathways['neurons']['selected'])
+        update_node_opacity()
+      }
+    }
+    
+  }
+
+  function mouseover_dropdown(group_id) {
+    d3.select('#highlight-option-' + group_id).style('cursor', 'pointer')
+  }
+
+  function click_dropdown(group_id) {
+    d3.select('#g-highlight-option-' + group_id).style('cursor', 'pointer')
+    toggle_display_element('g-dropdown-' + group_id)
+  }
+}
+
+function write_highlight_neurons() {
   
-  // write_text('highlight-option-text-4', 'Specifically, most', 'most-changed-neurons')
-  // gen_most_changed_neurons_dropdown('most-changed-neurons')
-  // write_text('highlight-option-text-6', 'ones.', 'most-changed-neurons')
-  // d3.selectAll('.most-changed-neurons').style('display', 'none')
+
+  // 
   
   function write_text(id, text, c) {
     d3.select('#g-highlight-neurons')
@@ -129,405 +418,8 @@ function write_highlight_neurons() {
 
   }
 
-  function gen_most_what_neurons_dropdown() {
-    d3.select('#g-highlight-neurons')
-      .append('g')
-      .attr('id', 'highlight-option-what-neurons')
-      .on('mouseover', function() { mouseover_most_what_neurons() })
-      .on('click', function() { click_most_what_neurons() })
-
-    gen_dropdown_bg_rect()
-    gen_dropdown_line()
-    gen_dropdown_text()
-    gen_dropdown_icon()
-    gen_dropdown_menu()
-
-    function gen_dropdown_bg_rect() {
-      d3.select('#highlight-option-what-neurons')
-        .append('rect')
-        .attr('id', 'highlight-option-what-neurons-rect')
-        .attr('class', 'highlight-dropdown-rect')
-        .attr('width', highlight_pathways_style['neurons-what-rect-width'])
-        .attr('height', highlight_pathways_style['neurons-what-rect-height'])
-    }
-
-    function gen_dropdown_line() {
-      d3.select('#highlight-option-what-neurons')
-        .append('line')
-        .attr('id', 'highlight-option-what-neurons-line')
-        .attr('class', 'highlight-dropdown-line')
-        .attr('x1', 0)
-        .attr('x2', highlight_pathways_style['neurons-what-rect-width'])
-        .attr('y1', highlight_pathways_style['neurons-what-line-y'])
-        .attr('y2', highlight_pathways_style['neurons-what-line-y'])
-    }
-
-    function gen_dropdown_text() {
-      d3.select('#highlight-option-what-neurons')
-        .append('text')
-        .attr('id', 'highlight-option-what-neurons-text')
-        .attr('class', 'highlight-dropdown-text')
-        .text(highlight_pathways['neurons']['selected'])
-    }
-
-    function gen_dropdown_icon() {
-      d3.select('#highlight-option-what-neurons')
-        .append('text')
-        .attr('id', 'highlight-option-what-neurons-icon')
-        .attr('class', 'highlight-dropdown-icon')
-        .attr('font-family', 'FontAwesome')
-        .text(icons['caret-down'])
-        .attr('x', highlight_pathways_style['neurons-what-icon-x'])
-    }
-
-    function gen_dropdown_menu() {
-      // Setting
-      gen_basic_bg()
-
-      // Add activated
-      add_activated_neurons()
-
-      // Add changed
-      add_changed_neurons()
-
-      // Add excited
-      add_excited_neurons()
-
-      // Add inhibited
-      add_inhibited_neurons()
-      
-      // Functions
-      function gen_basic_bg() {
-        d3.select('#g-highlight-option-contents')
-          .append('g')
-          .attr('id', 'g-dropdown-what-neurons')
-          .style('display', 'none')
-
-        d3.select('#g-dropdown-what-neurons') 
-          .append('rect')
-          .attr('id', 'dropdown-what-neurons-rect')
-          .attr('class', 'dropdown-menu-bg-rect')
-          .attr('width', highlight_pathways_style['neurons-what-rect-width'])
-          .attr('height', highlight_pathways_style['neurons-what-dropdown-bg-rect-height'])
-      }
-
-      function add_activated_neurons() {
-        d3.select('#g-dropdown-what-neurons')
-          .append('g')
-          .attr('id', 'g-dropdown-menu-activated-neurons')
-          .on('mouseover', function() { mouseover_activated() })
-          .on('click', function() { click_activated() })
-
-        d3.select('#g-dropdown-menu-activated-neurons')
-          .append('rect')
-          .attr('id', 'dropdown-menu-rect-activated-neurons')
-          .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
-          .attr('width', highlight_pathways_style['neurons-what-rect-width'])
-          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
-
-        d3.select('#g-dropdown-menu-activated-neurons')
-          .append('text')
-          .attr('id', 'dropdown-menu-text-activated-neurons')
-          .attr('class', 'dropdown-item-text')
-          .text('activated')
-
-        function mouseover_activated() {
-          d3.select('#g-dropdown-menu-activated-neurons').style('cursor', 'pointer')
-          d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
-          d3.select('#dropdown-menu-rect-activated-neurons').style('fill', 'lightgray')
-        }
-  
-        function click_activated() {
-          d3.select('#highlight-option-what-neurons-text').text('activated')
-          d3.select('#g-dropdown-what-neurons').style('display', 'none')
-          highlight_pathways['neurons']['selected'] = 'activated'
-          highlight_pathways['neurons']['sub-selected'] = '-'
-          d3.selectAll('.most-changed-neurons').style('display', 'none')
-          update_node_opacity()
-        }
-      }
-
-      function add_changed_neurons() {
-        d3.select('#g-dropdown-what-neurons')
-          .append('g')
-          .attr('id', 'g-dropdown-menu-changed-neurons')
-          .on('mouseover', function() { mouseover_changed() })
-          .on('click', function() { click_changed() })
-
-        d3.select('#g-dropdown-menu-changed-neurons')
-          .append('rect')
-          .attr('id', 'dropdown-menu-rect-changed-neurons')
-          .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
-          .attr('width', highlight_pathways_style['neurons-what-rect-width'])
-          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
-
-        d3.select('#g-dropdown-menu-changed-neurons')
-          .append('text')
-          .attr('id', 'dropdown-menu-text-changed-neurons')
-          .attr('class', 'dropdown-item-text')
-          .text('changed')
-
-        function mouseover_changed() {
-          d3.select('#g-dropdown-menu-changed-neurons').style('cursor', 'pointer')
-          d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
-          d3.select('#dropdown-menu-rect-changed-neurons').style('fill', 'lightgray')
-        }
-  
-        function click_changed() {
-          d3.select('#highlight-option-what-neurons-text').text('changed')
-          d3.select('#g-dropdown-what-neurons').style('display', 'none')
-          highlight_pathways['neurons']['selected'] = 'changed'
-          d3.selectAll('.most-changed-neurons').style('display', 'block')
-          d3.select('#highlight-option-changed-neurons-text').text(highlight_pathways['neurons']['sub-selected'])
-          update_node_opacity()
-        }
-      }
-
-      function add_excited_neurons() {
-        d3.select('#g-dropdown-what-neurons')
-          .append('g')
-          .attr('id', 'g-dropdown-menu-excited-neurons')
-          .on('mouseover', function() { mouseover_excited() })
-          .on('click', function() { click_excited() })
-
-        d3.select('#g-dropdown-menu-excited-neurons')
-          .append('rect')
-          .attr('id', 'dropdown-menu-rect-excited-neurons')
-          .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
-          .attr('width', highlight_pathways_style['neurons-what-rect-width'])
-          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
-
-        d3.select('#g-dropdown-menu-excited-neurons')
-          .append('text')
-          .attr('id', 'dropdown-menu-text-excited-neurons')
-          .attr('class', 'dropdown-item-text')
-          .text('excited')
-
-        function mouseover_excited() {
-          d3.select('#g-dropdown-menu-excited-neurons').style('cursor', 'pointer')
-          d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
-          d3.select('#dropdown-menu-rect-excited-neurons').style('fill', 'lightgray')
-        }
-  
-        function click_excited() {
-          d3.select('#highlight-option-what-neurons-text').text('excited')
-          d3.select('#g-dropdown-what-neurons').style('display', 'none')
-          highlight_pathways['neurons']['selected'] = 'excited'
-          d3.selectAll('.most-excited-neurons').style('display', 'block')
-          d3.select('#highlight-option-excited-neurons-text').text(highlight_pathways['neurons']['selected'])
-          update_node_opacity()
-        }
-      }
-
-      function add_inhibited_neurons() {
-        d3.select('#g-dropdown-what-neurons')
-          .append('g')
-          .attr('id', 'g-dropdown-menu-inhibited-neurons')
-          .on('mouseover', function() { mouseover_inhibited() })
-          .on('click', function() { click_inhibited() })
-
-        d3.select('#g-dropdown-menu-inhibited-neurons')
-          .append('rect')
-          .attr('id', 'dropdown-menu-rect-inhibited-neurons')
-          .attr('class', 'dropdown-item-bg-rect dropdown-item-bg-rect-neurons')
-          .attr('width', highlight_pathways_style['neurons-what-rect-width'])
-          .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
-
-        d3.select('#g-dropdown-menu-inhibited-neurons')
-          .append('text')
-          .attr('id', 'dropdown-menu-text-inhibited-neurons')
-          .attr('class', 'dropdown-item-text')
-          .text('inhibited')
-
-        function mouseover_inhibited() {
-          d3.select('#g-dropdown-menu-inhibited-neurons').style('cursor', 'pointer')
-          d3.selectAll('.dropdown-item-bg-rect-neurons').style('fill', 'white')
-          d3.select('#dropdown-menu-rect-inhibited-neurons').style('fill', 'lightgray')
-        }
-  
-        function click_inhibited() {
-          d3.select('#highlight-option-what-neurons-text').text('inhibited')
-          d3.select('#g-dropdown-what-neurons').style('display', 'none')
-          highlight_pathways['neurons']['selected'] = 'inhibited'
-          d3.selectAll('.most-inhibited-neurons').style('display', 'block')
-          d3.select('#highlight-option-inhibited-neurons-text').text(highlight_pathways['neurons']['selected'])
-          update_node_opacity()
-        }
-      }
-      
-    }
-
-    function mouseover_most_what_neurons() {
-      d3.select('#highlight-option-what-neurons').style('cursor', 'pointer')
-    }
-
-    function click_most_what_neurons() {
-      d3.select('#g-highlight-option-what-neurons').style('cursor', 'pointer')
-      d3.select('#g-dropdown-what-neurons').style('display', 'block')
-    }
-  }
-
-  // function gen_most_changed_neurons_dropdown(c) {
-    
-  //   d3.select('#g-highlight-neurons')
-  //     .append('g')
-  //     .attr('id', 'highlight-option-changed-neurons')
-  //     .attr('class', c)
-  //     .on('mouseover', function() { mouseover_most_changed_neurons() }) 
-  //     .on('click', function() { click_most_changed_neurons() }) 
-
-  //   gen_dropdown_bg()
-  //   gen_dropdown_line()
-  //   gen_dropdown_text()
-  //   gen_dropdown_icon()
-  //   gen_dropdown_menu()
-    
-  //   function gen_dropdown_bg() {
-  //     d3.select('#highlight-option-changed-neurons')
-  //       .append('rect')
-  //       .attr('id', 'highlight-option-changed-neurons-rect')
-  //       .attr('class', 'highlight-dropdown-rect')
-  //       .attr('width', highlight_pathways_style['neurons-changed-rect-width'])
-  //       .attr('height', highlight_pathways_style['neurons-changed-rect-height'])
-  //   }
-
-  //   function gen_dropdown_line() {
-  //     d3.select('#highlight-option-changed-neurons')
-  //       .append('line')
-  //       .attr('id', 'highlight-option-changed-neurons-line')
-  //       .attr('class', 'highlight-dropdown-line')
-  //       .attr('x1', 0)
-  //       .attr('x2', highlight_pathways_style['neurons-changed-rect-width'])
-  //       .attr('y1', highlight_pathways_style['neurons-changed-line-y'])
-  //       .attr('y2', highlight_pathways_style['neurons-changed-line-y'])
-  //   }
-
-  //   function gen_dropdown_text() {
-  //     d3.select('#highlight-option-changed-neurons')
-  //       .append('text')
-  //       .attr('id', 'highlight-option-changed-neurons-text')
-  //       .attr('class', 'highlight-dropdown-text')
-  //       .text(highlight_pathways['neurons']['sub-selected'])
-  //   }
-
-  //   function gen_dropdown_icon() {
-  //     d3.select('#highlight-option-changed-neurons')
-  //       .append('text')
-  //       .attr('id', 'highlight-option-changed-neurons-icon')
-  //       .attr('class', 'highlight-dropdown-icon')
-  //       .attr('font-family', 'FontAwesome')
-  //       .text(icons['caret-down'])
-  //       .attr('x', highlight_pathways_style['neurons-changed-icon-x'])
-  //   }
-
-    // function gen_dropdown_menu() {
-    //   // Setting
-    //   gen_basic_bg()
-
-    //   // Add excited
-    //   add_excited_neurons()
-
-    //   // Add inhibited
-    //   add_inhibited_neurons()
-      
-    //   // Functions
-    //   function gen_basic_bg() {
-    //     d3.select('#g-highlight-option-contents')
-    //       .append('g')
-    //       .attr('id', 'g-dropdown-changed-neurons')
-    //       .style('display', 'none')
-
-    //     d3.select('#g-dropdown-changed-neurons') 
-    //       .append('rect')
-    //       .attr('id', 'dropdown-changed-neurons-rect')
-    //       .attr('class', 'dropdown-menu-bg-rect')
-    //       .attr('width', highlight_pathways_style['neurons-changed-rect-width'])
-    //       .attr('height', highlight_pathways_style['neurons-changed-dropdown-bg-rect-height'])
-    //   }
-
-    //   function add_excited_neurons() {
-    //     d3.select('#g-dropdown-changed-neurons')
-    //       .append('g')
-    //       .attr('id', 'g-dropdown-menu-excited-neurons')
-    //       .on('mouseover', function() { mouseover_excited() })
-    //       .on('click', function() { click_excited() })
-
-    //     d3.select('#g-dropdown-menu-excited-neurons')
-    //       .append('rect')
-    //       .attr('id', 'dropdown-menu-rect-excited-neurons')
-    //       .attr('class', 'dropdown-item-bg-rect')
-    //       .attr('width', highlight_pathways_style['neurons-changed-rect-width'])
-    //       .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
-
-    //     d3.select('#g-dropdown-menu-excited-neurons')
-    //       .append('text')
-    //       .attr('id', 'dropdown-menu-text-excited-neurons')
-    //       .attr('class', 'dropdown-item-text')
-    //       .text('excited')
-    //   }
-
-    //   function add_inhibited_neurons() {
-    //     d3.select('#g-dropdown-changed-neurons')
-    //       .append('g')
-    //       .attr('id', 'g-dropdown-menu-inhibited-neurons')
-    //       .on('mouseover', function() { mouseover_inhibited() })
-    //       .on('click', function() { click_inhibited() })
-
-    //     d3.select('#g-dropdown-menu-inhibited-neurons')
-    //       .append('rect')
-    //       .attr('id', 'dropdown-menu-rect-inhibited-neurons')
-    //       .attr('class', 'dropdown-item-bg-rect')
-    //       .attr('width', highlight_pathways_style['neurons-changed-rect-width'])
-    //       .attr('height', highlight_pathways_style['dropdown-menu-rect-height'])
-
-    //       d3.select('#g-dropdown-menu-inhibited-neurons')
-    //       .append('text')
-    //       .attr('id', 'dropdown-menu-text-inhibited-neurons')
-    //       .attr('class', 'dropdown-item-text')
-    //       .text('inhibited')
-
-    //   }
-
-    //   function mouseover_excited() {
-    //     d3.select('#g-dropdown-menu-excited-neurons').style('cursor', 'pointer')
-    //     d3.select('#dropdown-menu-rect-excited-neurons').style('fill', 'lightgray')
-    //     d3.select('#dropdown-menu-rect-inhibited-neurons').style('fill', 'white')
-    //   }
-
-    //   function click_excited() {
-    //     d3.select('#highlight-option-changed-neurons-text').text('excited')
-    //     d3.select('#g-dropdown-changed-neurons').style('display', 'none')
-    //     highlight_pathways['neurons']['selected'] = 'changed'
-    //     highlight_pathways['neurons']['sub-selected'] = 'excited'
-    //     update_node_opacity()
-    //   }
-
-    //   function mouseover_inhibited() {
-    //     d3.select('#g-dropdown-menu-inhibited-neurons').style('cursor', 'pointer')
-    //     d3.select('#dropdown-menu-rect-excited-neurons').style('fill', 'white')
-    //     d3.select('#dropdown-menu-rect-inhibited-neurons').style('fill', 'lightgray')
-    //   }
-
-    //   function click_inhibited() {
-    //     d3.select('#highlight-option-changed-neurons-text').text('inhibited')
-    //     d3.select('#g-dropdown-changed-neurons').style('display', 'none')
-    //     highlight_pathways['neurons']['selected'] = 'changed'
-    //     highlight_pathways['neurons']['sub-selected'] = 'inhibited'
-    //     update_node_opacity()
-    //   }
-    // }
-
-    // function mouseover_most_changed_neurons() {
-    //   d3.select('#highlight-option-changed-neurons').style('cursor', 'pointer')
-    // }
-
-    // function click_most_changed_neurons() {
-    //   d3.select('#g-dropdown-changed-neurons').style('display', 'block')
-    // }
-
-  // }
-
 }
+
 
 function write_highlight_connections() {
   // What connections
@@ -543,14 +435,6 @@ function write_highlight_connections() {
   gen_most_changed_connections_dropdown('most-changed-connections')
   write_text('highlight-option-text-12', 'ones.', 'most-changed-connections')
   d3.selectAll('.most-changed-connections').style('display', 'none')
-
-  function write_text(id, text, c) {
-    d3.select('#g-highlight-connections')
-      .append('text')
-      .attr('id', id)
-      .attr('class', c)
-      .text(text)
-  }
 
   function gen_topk_connections_dropdown() {
     d3.select('#g-highlight-connections')
@@ -816,6 +700,15 @@ function write_highlight_connections() {
   }
 }
 
+function toggle_display_element(id) {
+  var element = document.getElementById(id)
+  var display = element.style.display
+  if (display == 'none') {
+    element.style.display = 'block'
+  } else {
+    element.style.display = 'none'
+  }
+}
 
 
 // function add_what_to_highlight_options(type, subtitle, subtitle_txt) {
