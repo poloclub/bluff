@@ -1,29 +1,29 @@
-# Bluff
+## Bluff: Interactively Deciphering Adversarial Attacks on Deep NeuralNetworks
 
-_
+### Motivation
 
-[Summit][summit] follow-up.
+Deep learning is now pervasive, and has been applied to diverse domains such as grocery shopping, entertainment, and finance. But can we confidently and securely apply it everywhere? Deep neural networks (DNNs) are vulnerable to _adversarial attacks_: typically small and human-imperceptible perturbations on data inputs that cause models to make incorrect predictions. While there has been significant interest within the machine learning community on developing attack and defense techniques for DNNs, there is a lack of research in understanding how such attacks permeate a model's internals. For example, which neurons are exploited to cause a model to misclassify an ambulance as a street sign; is a stronger attack harming the same neurons as a weaker attack, or are they completely different?
 
-[summit]: http://github.com/fredhohman/summit
+We build **Bluff**, an interactive system for visualizing, characterizing, and deciphering adversarial attacks on vision-based neural networks. **Bluff** allows people to flexibly compare and visualize the activation pathways of benign and attacked images throughout a network, and examine the effect of varying adversarial attack strengths. **Bluff** is open-sourced and runs in modern web browsers. Demo is available [Here](https://haekyu.com/Bluff/code/frontend/).
 
-
-### Install dependencies
+### Requirements
+This project is written in python 3.7.6. You can install the dependencies by running:
 ```bash
 pip install -r requirements.txt
 ```
 
-### Code, how to run
-- prepare to breifly explain and walk through the code (1-2 min)
-- go to key file
+### How to run the code
+For demo, 
 
-### Data specification
-- activation_data: neurons' activation. It is a dictionary, where
-  - key: layer
-  - val: a dictionary, where
-      - key: neuron id (e.g., 'mixed3b-0')
-      - val: a dictionary, where
-          - key: one of \['original', 'target', 'attacked-{attack_alg}-{attack_strength'}\]
-          - val: a dictionary, where
-              - key: domain value key, one of \['median_activation', 'median_activation_percentile'\]
-              - val: the domain value
-  
+1. Create and run a server
+```
+python -m http.server <PORT>
+``` 
+
+2. Open a web browser
+
+3. Go to `localhost:<PORT>/code/frontend` in your browser.
+
+### License
+This code is released under the MIT License (refer to the LICENSE file for details).
+
