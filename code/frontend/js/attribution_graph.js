@@ -4,7 +4,7 @@ import {
   rough_top_k,
   attack_types,
   attack_strengths,
-  feature_vis_dir
+  data_dir
 } from './constant.js';
 
 import {
@@ -44,7 +44,6 @@ import {
 // Global variables
 ////////////////////////////////////////////////////////////////////////////////////////////////
 var activation_data = {}
-var vulnerability_data = {}
 var top_neuron_data = {}
 var extracted_neurons = {}
 var edge_data = {}
@@ -55,13 +54,9 @@ var most_inhibited_extracted_data = {}
 var most_changed_extracted_data = {}
 
 var unique_attack_only_neurons = {}
-
 var act_type = 'median_activation'
 var activation_range = {}
 var activation_y_scale = {}
-
-var sorted_vulnerability_data = {}
-var vul_type = 'strengthwise_vulnerability'
 
 var node_size = {}
 export var node_group_x = {}
@@ -80,6 +75,7 @@ var highlighted_edges = {}
 gen_filters()
 
 export function reload_graph() {
+
   var file_list = data_file_path()
   remove_graph()
   draw_graph(file_list)
@@ -89,10 +85,9 @@ export function reload_graph() {
       
       // Read the neuron data
       activation_data = data[0]
-      vulnerability_data = data[1]
-      top_neuron_data = data[2]
+      top_neuron_data = data[1]
       extracted_neurons = extract_neurons()
-      edge_data = read_and_parse_edge_data(data, 3, extracted_neurons)
+      edge_data = read_and_parse_edge_data(data, 2, extracted_neurons)
 
       // Parse most inhibited data
       parse_most_changed_data()
@@ -102,15 +97,9 @@ export function reload_graph() {
     
       // Get activation scale
       get_actiavtion_y_scale()
-    
-      // Parse vulnerability data
-      parse_vulnerability_data()
-      sorted_vulnerability_data = sort_vulnerability_data()
 
       window.activation_data = activation_data
-      window.vulnerability_data = vulnerability_data
       window.top_neuron_data = top_neuron_data
-      window.sorted_vulnerability_data = sorted_vulnerability_data
       window.extracted_neurons = extracted_neurons
       window.node_size = node_size
       window.node_group_x = node_group_x
@@ -209,6 +198,9 @@ function read_and_parse_edge_data(data, i, neuron_data) {
     edge_data[s] = data[i + j + 1]
   })
 
+  console.log('?????')
+  console.log(edge_data)
+
   edge_data = filter_parse_edge_data(edge_data)
   return edge_data
 
@@ -229,12 +221,12 @@ function read_and_parse_edge_data(data, i, neuron_data) {
             
             for (var next_neuron in edge_data[strength][layer][neuron]) {
               if (is_in_neuron_data(next_neuron)) {
-                var inf = edge_data[strength][layer][neuron][next_neuron]['influence']
+                var inf = edge_data[strength][layer][neuron][next_neuron]['inf']
                 if (inf > 0) {
                   new_edge_data[strength][layer].push({
                     'curr': neuron,
                     'next': next_neuron,
-                    'influence': inf
+                    'inf': inf
                   })
                 }
               }
@@ -351,45 +343,6 @@ function parse_most_extracted_data() {
 
 }
 
-function parse_vulnerability_data() {
-  layers.forEach(layer => {
-    for (var neuron in vulnerability_data[layer]) {
-      attack_types.forEach(attack_type => {
-        var accumulated_vul = 0
-        attack_strengths[attack_type].forEach((strength, i) => {
-          var value_key = get_value_key('attacked', attack_type, strength)
-          var curr_strengthwise_vul = vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key]
-          accumulated_vul += curr_strengthwise_vul
-          vulnerability_data[layer][neuron]['strengthwise_vulnerability'][attack_type][value_key] = accumulated_vul 
-        })
-        
-      })
-    }
-  })
-}
-
-function sort_vulnerability_data() {
-  // Sort neurons by overall vulnerability
-  var sorted_vulnerability_data = {}
-  attack_types.forEach(attack_type => {
-    sorted_vulnerability_data[attack_type] = {}
-    layers.forEach(layer => {
-      sorted_vulnerability_data[attack_type][layer] = Object
-        .keys(vulnerability_data[layer])
-        .map(function(key) {
-          return [key, vulnerability_data[layer][key]]
-        })
-      sorted_vulnerability_data[attack_type][layer].sort(function(a, b) {
-        var a_overall_vul = a[1]['overall_vulnerability'][attack_type]
-        var b_overall_vul = b[1]['overall_vulnerability'][attack_type]
-        return b_overall_vul - a_overall_vul
-      })
-
-    })
-  })
-  return sorted_vulnerability_data
-}
-
 function extract_neurons() {
   var extracted_neurons = {}
 
@@ -483,21 +436,20 @@ function get_actiavtion_y_scale() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 function data_file_path() {
-  var data_dir = '../../data/'
+  
   var original_class = selected_class['original']
   var target_class = selected_class['target']
   var attack_type = selected_attack_info['attack_type']
   
   var class_info = [original_class, target_class].join('-')
-  var activation_data_path = data_dir + ['neuron_data/neuron_data', class_info, attack_type + '.json'].join('-')
-  var vulnerability_data_path = data_dir + ['neuron_vulnerabilities/neuron_vulnerabilities', class_info, attack_type + '.json'].join('-')
-  var top_neuron_data_path = data_dir + ['top_neurons/top_neurons', class_info, attack_type + '.json'].join('-')
-  var file_list = [activation_data_path, vulnerability_data_path, top_neuron_data_path]
+  var activation_data_path = data_dir + ['/neuron-data/neuron_data', class_info, attack_type + '.json'].join('-')
+  var top_neuron_data_path = data_dir + ['/top-neurons/top_neurons', class_info, attack_type + '.json'].join('-')
+  var file_list = [activation_data_path, top_neuron_data_path]
 
-  file_list.push(data_dir + ['parsed_inf/edg_inf_parsed', 'benign', class_info.split('-')[0] + '.json'].join('-'))
+  file_list.push(data_dir + ['/connection-data/edg_inf_parsed', 'benign', class_info.split('-')[0] + '.json'].join('-'))
   attack_strengths[attack_type].forEach(strength => {
     var st = strength.toFixed(4)
-    var edge_data_path = data_dir + ['parsed_inf/edg_inf_parsed', 'attacked', class_info, attack_type, st + '.json'].join('-')
+    var edge_data_path = data_dir + ['/connection-data/edg_inf_parsed', 'attacked', class_info, attack_type, st + '.json'].join('-')
     file_list.push(edge_data_path)
   })
   
@@ -522,14 +474,15 @@ function does_exist(id) {
 }
 
 function vis_filename(neuron_id, type) {
-  var filename = feature_vis_dir + '/'
+  var filename = data_dir + '/neuron-vis/'
+  
   if (type == 'channel') {
-    filename += 'channel/'
+    filename += 'feature-vis/'
     filename += [neuron_id, type].join('-')
     filename += '.jpg'
   } else if (type.includes('ex')) {
     var ex = type.split('-')[1]
-    filename += 'dataset-p/'
+    filename += 'example-patch/'
     filename += [neuron_id, 'dataset', 'p', ex].join('-')
     filename += '.jpg'
   }
@@ -1849,7 +1802,7 @@ function update_edge_stroke_scale() {
 
   layers.slice(1).forEach(layer => {
     edge_data[0][layer].forEach(d => {
-      var inf = d['influence']
+      var inf = d['inf']
       min_inf = d3.min([min_inf, inf])
       max_inf = d3.max([max_inf, inf])
     })
@@ -1860,7 +1813,7 @@ function update_edge_stroke_scale() {
 
     layers.slice(1).forEach(layer => {
       edge_data[strength][layer].forEach(d => {
-        var inf = d['influence']
+        var inf = d['inf']
         min_inf = d3.min([min_inf, inf])
         max_inf = d3.max([max_inf, inf])
       })
@@ -1897,7 +1850,7 @@ export function update_edges(strength) {
       .append('path')
       .attr('id', function(d) { return get_edge_id(d) })
       .attr('class', function(d) { return get_edge_class(d, layer) })
-      .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['influence']) })
+      .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['inf']) })
       .style('stroke', edge_style['edge-color'])
       .style('fill', 'none')
       .style('stroke', function(d) { return edge_stroke(d) })
@@ -1979,7 +1932,7 @@ export function update_edges_display() {
       edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
         var curr = edge_info['curr']
         var next = edge_info['next']
-        var inf = edge_info['influence']
+        var inf = edge_info['inf']
         var curr_layer = curr.split('-')[0]
         var next_layer = next.split('-')[0]
 
@@ -2055,6 +2008,7 @@ function get_highlighted_neurons() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 function gen_filters() {
+
   d3.select('#svg-ag')
     .append('defs')
     .attr('id', 'filter-defs')
