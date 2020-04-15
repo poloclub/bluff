@@ -32,77 +32,39 @@
 #highlight-option-text-2 {
   transform: translate(0px, 20px);
 }
-/* 
-#highlight-option-what {
-  transform: translate(100px, 0px);
-} */
-
 
 /* Highlight neurons */
-
-
-#highlight-option-k-neurons {
-  transform: translate(61px, 0px);
+#g-highlight-neurons {
+  transform: translate(0px, 55px);
 }
 
+#topk-neurons {
+  transform: translate(87px, 0px);
+}
 
+#highlight-option-neurons-text-2 {
+  transform: translate(110px, 0px);
+}
 
-
-#highlight-option-text-3 {
+#g-slider-topk-neurons {
   transform: translate(0px, 20px);
-}
-
-#highlight-option-text-4 {
-  transform: translate(0px, 40px);
-}
-
-#highlight-option-text-5 {
-  transform: translate(0px, 40px);
-}
-
-#highlight-option-changed-neurons {
-  transform: translate(115px, 40px);
-}
-
-#highlight-option-text-6 {
-  transform: translate(184px, 40px);
 }
 
 /* Highlight connections */
 #g-highlight-connections {
-  transform: translate(0px, 70px);
+  transform: translate(0px, 115px);
 }
 
-#highlight-option-text-8 {
+#topk-connections {
+  transform: translate(113px, 0px);
+}
+
+#highlight-option-connections-text-2 {
+  transform: translate(135px, 0px);
+}
+
+#g-slider-topk-connections {
   transform: translate(0px, 20px);
-}
-
-#highlight-option-k-connections {
-  transform: translate(118px, 20px);
-} 
-
-#highlight-option-text-9 {
-  transform: translate(154px, 20px);
-}
-
-#highlight-option-what-connections {
-  transform: translate(0px, 40px);
-}
-
-#highlight-option-text-10 {
-  transform: translate(75px, 40px);
-}
-
-#highlight-option-text-11 {
-  transform: translate(0px, 60px);
-}
-
-#highlight-option-changed-connections {
-  transform: translate(115px, 60px);
-}
-
-#highlight-option-text-12 {
-  transform: translate(184px, 60px);
 }
 
 /* Dropdown menu */

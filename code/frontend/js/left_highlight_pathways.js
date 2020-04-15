@@ -1,8 +1,13 @@
 import {
   what_to_see, 
   highlight_pathways_style,
-  icons
+  icons,
+  filter_bar
 } from './style.js'
+
+import {
+  round_unit
+} from './left_attack_control.js'
 
 import {
   update_node_opacity,
@@ -13,9 +18,10 @@ import {
 
 import {
   gen_pathways_option_g,
-  write_mode_option_title
+  write_mode_option_title,
+  filter_pathways
 } from './left_filter_pathways.js'
-import { get_absolute_position } from './header.js'
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -24,13 +30,23 @@ import { get_absolute_position } from './header.js'
 export var highlight_pathways = {
   'neurons': {
     'selected': 'activated',
-    'top-k': 5
+    'top-k': 20
   },
   'connections': {
     'selected': 'activated',
-    'top-k': 50
+    'top-k': 30
   } 
 }
+
+var domains = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+var bar_length_scale = d3
+  .scaleLinear()
+  .domain([0, d3.max(domains)])
+  .range([0, filter_bar['bar_length']])
+var domain_scale = d3
+  .scaleLinear()
+  .domain([0, filter_bar['bar_length']])
+  .range([0, d3.max(domains)])
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Highlight pathways
@@ -40,6 +56,16 @@ gen_highlight_option_g()
 write_text('highlight-option-text-1', 'g-highlight-mode', 'Highlight most')
 gen_dropdown('what', 'g-highlight-mode', highlight_pathways_style)
 write_text('highlight-option-text-2', 'g-highlight-mode', 'pathways by attack.')
+
+write_text('highlight-option-neurons-text-1', 'g-highlight-neurons', 'Neurons: top')
+write_text('topk-neurons', 'g-highlight-neurons', highlight_pathways['neurons']['top-k'])
+write_text('highlight-option-neurons-text-2', 'g-highlight-neurons', '% in each layer')
+gen_slider('topk-neurons', 'g-highlight-neurons', filter_bar)
+
+write_text('highlight-option-connections-text-1', 'g-highlight-connections', 'Connections: top')
+write_text('topk-connections', 'g-highlight-connections', highlight_pathways['connections']['top-k'])
+write_text('highlight-option-connections-text-2', 'g-highlight-connections', '%')
+gen_slider('topk-connections', 'g-highlight-connections', filter_bar)
 
 // write_highlight_neurons()
 // write_highlight_connections()
@@ -168,7 +194,7 @@ function gen_dropdown(group_id, parent_id, styler) {
         .append('g')
         .attr('id', 'g-dropdown-' + group_id)
         .attr('transform', g_dropdown_menu_transform())
-        // .style('display', 'none')
+        .style('display', 'none')
 
       d3.select('#g-dropdown-' + group_id) 
         .append('rect')
@@ -244,6 +270,7 @@ function gen_dropdown(group_id, parent_id, styler) {
         d3.select('#highlight-option-' + group_id + '-text').text(item)
         d3.select('#g-dropdown-' + group_id).style('display', 'none')
         highlight_pathways['neurons']['selected'] = item
+        highlight_pathways['connections']['selected'] = item
         update_node_opacity()
       }
     }
@@ -278,6 +305,7 @@ function gen_dropdown(group_id, parent_id, styler) {
         d3.select('#highlight-option-what-neurons-text').text('changed')
         d3.select('#g-dropdown-what-neurons').style('display', 'none')
         highlight_pathways['neurons']['selected'] = 'changed'
+        highlight_pathways['connections']['selected'] = 'changed'
         d3.selectAll('.most-changed-neurons').style('display', 'block')
         d3.select('#highlight-option-changed-neurons-text').text(highlight_pathways['neurons']['sub-selected'])
         update_node_opacity()
@@ -314,6 +342,7 @@ function gen_dropdown(group_id, parent_id, styler) {
         d3.select('#highlight-option-what-neurons-text').text('excited')
         d3.select('#g-dropdown-what-neurons').style('display', 'none')
         highlight_pathways['neurons']['selected'] = 'excited'
+        highlight_pathways['connections']['selected'] = 'excited'
         d3.selectAll('.most-excited-neurons').style('display', 'block')
         d3.select('#highlight-option-excited-neurons-text').text(highlight_pathways['neurons']['selected'])
         update_node_opacity()
@@ -350,6 +379,7 @@ function gen_dropdown(group_id, parent_id, styler) {
         d3.select('#highlight-option-what-neurons-text').text('inhibited')
         d3.select('#g-dropdown-what-neurons').style('display', 'none')
         highlight_pathways['neurons']['selected'] = 'inhibited'
+        highlight_pathways['connections']['selected'] = 'inhibited'
         d3.selectAll('.most-inhibited-neurons').style('display', 'block')
         d3.select('#highlight-option-inhibited-neurons-text').text(highlight_pathways['neurons']['selected'])
         update_node_opacity()
@@ -367,6 +397,125 @@ function gen_dropdown(group_id, parent_id, styler) {
     toggle_display_element('g-dropdown-' + group_id)
   }
 }
+
+function gen_slider(group_id, parent_id, styler) {
+  // XXXXXXXXXXXXXXXXXXX
+  // TODO: Need to be generalized
+  gen_g_slider()
+  gen_background_bar()
+  gen_front_bar()
+  gen_circle()
+
+  function gen_g_slider() {
+    d3.select('#' + parent_id)
+      .append('g')
+      .attr('id', slider_id('g'))
+  }
+
+  function slider_id(name) {
+    if (name == 'g') {
+      return 'g-slider-' + group_id
+    } else if (name == 'background-rect') {
+      return 'filter-bar-background-' + group_id
+    } else if (name == 'front-rect') {
+      return 'filter-bar-front-' + group_id
+    } else if (name == 'circle') {
+      return 'filter-bar-circle-' + group_id
+    }
+  }
+
+  function gen_background_bar() {
+    d3.select('#' + slider_id('g'))
+      .append('rect')
+      .attr('id', slider_id('background-rect'))
+      .attr('class', 'filter-bar-background filter-bar-rect')
+      .style('width', styler['bar_length'])
+
+  }
+
+  function gen_front_bar() {
+    // TODO: Need to be generalized
+    var group_type = group_id.split('-')[1]
+    d3.select('#' + slider_id('g'))
+      .append('rect')
+      .attr('id', slider_id('front-rect'))
+      .attr('class', 'filter-bar-front filter-bar-rect')
+      .style('width', bar_length_scale(highlight_pathways[group_type]['top-k']))
+  }
+
+  function gen_circle() {
+    // TODO: Need to be generalized
+    var group_type = group_id.split('-')[1]
+    d3.select('#' + slider_id('g'))
+      .append('circle')
+      .attr('id', slider_id('circle'))
+      .attr('class', 'filter-bar-circle')
+      .style('cx', bar_length_scale(highlight_pathways[group_type]['top-k']))
+      .on('mouseover', function(){ this.style.cursor = 'pointer'})
+      .call(circle_drag())
+  }
+
+  function circle_drag() {
+    var control_drag = d3
+      .drag()
+      .on('start', function() { circle_drag_start() })
+      .on('drag', function() { circle_drag_ing() })
+      .on('end', function() { circle_drag_end() })
+
+    return control_drag
+
+    function circle_drag_start() { 
+      d3.select('#' + slider_id('circle'))
+        .style('fill', 'gray')
+        .style('stroke', 'none')
+    }
+
+    function circle_drag_ing() {
+      // Get the position of the circle and the front bar
+      var mouse_x = d3.mouse(document.getElementById(slider_id('circle')))[0]
+      mouse_x = d3.min([d3.max([0, mouse_x]), styler['bar_length']])
+  
+      var max_domain_val = d3.max(domains)
+      var domain_unit = max_domain_val / domains.length
+  
+      // Update the selected value
+      // TODO: Need to be generalized
+      var group_type = group_id.split('-')[1]
+      var topk_val = round_unit(domain_scale(mouse_x), domain_unit)
+      highlight_pathways[group_type]['top-k'] = topk_val
+      d3.select('#' + group_id).text(topk_val)
+
+      // Position the circle and the front bar
+      d3.select('#' + slider_id('circle')).style('cx', mouse_x)
+      d3.select('#' + slider_id('front-rect')).style('width', mouse_x)
+  
+      // Update attribution graph
+      update_node_opacity()
+      update_edges_display()
+    }
+
+    function circle_drag_end() {
+
+      // Update the circle's color 
+      d3.select('#' + slider_id('circle'))
+        .style('fill', 'white')
+        .style('stroke', 'gray')
+  
+      // Get the position of the circle and the front bar
+      var mouse_x = d3.mouse(document.getElementById(slider_id('circle')))[0]
+      mouse_x = d3.min([d3.max([0, mouse_x]), styler['bar_length']])
+  
+      // Sticky movement
+      var bar_length_unit = styler['bar_length'] / domains.length
+      mouse_x = round_unit(mouse_x, bar_length_unit)
+      d3.select('#' + slider_id('circle')).style('cx', mouse_x)
+      d3.select('#' + slider_id('front-rect')).style('width', mouse_x)
+    }
+  }
+}
+
+
+
 
 function write_highlight_neurons() {
   
