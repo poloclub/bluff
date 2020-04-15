@@ -3,9 +3,9 @@
 __pycache__/
 .DS_Store
 data/.DS_Store
-data/*
 data/sample-neurons/both_activated.json
 design/*
+data/parse-edge-data.ipynb
 Meeting-Massif.gdoc
 chi-lbw-20-massif.pdf
 code/backend/gen-graph-different-attack.ipynb
