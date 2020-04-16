@@ -217,10 +217,11 @@ export var node_box_style = {
 
 export var edge_style = {
   'min-stroke': 0.1,
-  'max-stroke': 5,
+  'max-stroke': 3,
   'edge-color': 'lightgray',
   'edge-highlight-color': 'gray',
   'edge-opacity': 0.5,
   'min-opacity': 0.3,
-  'max-opacity': 1
+  'max-opacity': 1,
+  'magnify': 8
 }

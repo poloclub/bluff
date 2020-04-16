@@ -45,3 +45,18 @@
 .layer-text {
   fill: gray;
 }
+
+.flowline {
+  cursor: crosshair;
+  stroke-dasharray: 10 4;
+  animation: flow 30s linear;
+}
+
+@keyframes flow {
+  from {
+    stroke-dashoffset: 900;
+  }
+  to {
+    stroke-dashoffset: 10;
+  }
+}

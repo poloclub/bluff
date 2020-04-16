@@ -706,7 +706,6 @@ function draw_neurons() {
         .attr('cx', ns / 2)
         .attr('r', r)
         .attr('fill', node_color[graph_key])
-        // .attr('stroke', 'white')
         .style('display', 'none')
 
       d3.selectAll('.g-node-' + graph_key)
@@ -717,7 +716,6 @@ function draw_neurons() {
         .attr('cy', ns)
         .attr('r', r)
         .attr('fill', node_color[graph_key])
-        // .attr('stroke', 'white')
         .style('display', 'none')
     }
   
@@ -730,7 +728,6 @@ function draw_neurons() {
         .attr('height', node_size[selected_attack_info['attack_type']])
         .attr('xlink:href', function(neuron) { return vis_filename(neuron, 'channel') })
         .attr('clip-path', 'url(#rounded-edge)')
-        // .attr('filter', 'url(#filter-' + graph_key + ')')
         .style('display', 'none')
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
@@ -792,26 +789,26 @@ function draw_neurons() {
   }
 
   function mouseover_node(neuron) {
+    // XXXXXXXXX
     // Mouse pointer
-    var node_id = get_node_id(neuron)
-    d3.select('#' + node_id).style('cursor', 'pointer')
-    d3.select('#inner-node-' + neuron).style('cursor', 'pointer')
-    d3.select('#fv-' + neuron).style('cursor', 'pointer')
-
-    // Node feature vis full color, full opacity
-    d3.select('#fv-' + neuron)
-      .attr('filter', 'url(#filter-identity)')
-      .style('opacity', node_opacity['activated'])
+    d3.select('#g-node-' + neuron).style('cursor', 'pointer')
 
     // Hightlight neuron
     highlight_neuron(neuron)
-    d3.select('#neuron-id-' + neuron).style('display', 'block')
 
-    // // Show edges 
-    // if (filter_pathways['filter'] == 'all') {
-    //   d3.selectAll('.edge-from-' + neuron).style('display', 'block')
-    //   d3.selectAll('.edge-into-' + neuron).style('display', 'block')
-    // }
+    // Flowline edges
+    d3.selectAll('.edge-from-' + neuron)
+      .classed('flowline', true)
+      .style('stroke-width', function() {
+        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+        return curr_stroke_width * edge_style['magnify']
+      })
+    d3.selectAll('.edge-into-' + neuron)
+      .classed('flowline', true)
+      .style('stroke-width', function() {
+        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+        return curr_stroke_width * edge_style['magnify']
+      })
     
     // Add node box if it does not exist
     var node_box_id = get_node_box_id(neuron)
@@ -1129,7 +1126,19 @@ function draw_neurons() {
     }
 
     d3.select('#neuron-id-' + neuron).style('display', 'none')
-    
+    d3.selectAll('.edge-from-' + neuron)
+      .classed('flowline', false)
+      .style('stroke-width', function() {
+        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+        return curr_stroke_width / edge_style['magnify']
+      })
+    d3.selectAll('.edge-into-' + neuron)
+      .classed('flowline', false)
+      .style('stroke-width', function() {
+        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+        return curr_stroke_width / edge_style['magnify']
+      })
+
 
     function edge_display(d) {
       if (is_highlighted_edge(d['curr'], d['next'])) {
@@ -1160,9 +1169,12 @@ function draw_neurons() {
 
   function highlight_neuron(neuron) {
     d3.select('#fv-' + neuron)
+      .style('opacity', node_opacity['activated'])
       .style('display', 'block')
     d3.select('#node-' + neuron)
       .style('display', 'none')
+    d3.select('#neuron-id-' + neuron)
+      .style('display', 'block')
   }
 
   function dehighlight_neuron(neuron) {
@@ -1923,7 +1935,7 @@ export function update_edges_display() {
 
   // Initialized whether edges be highlighted
   highlighted_edges = {}
-  d3.selectAll('.edge').style('display', 'none')
+  d3.selectAll('.edge').classed('edge-shown', false).style('display', 'none')
 
   // Highlight edges based on the selected option
   var most_option = highlight_pathways['connections']['selected']
@@ -2033,7 +2045,7 @@ export function update_edges_display() {
     for (var layer in highlighted_edges) {
       highlighted_edges[layer].forEach(edge_info => {
         var edge_id = ['edge', edge_info['curr'], edge_info['next']].join('-')
-        d3.select('#' + edge_id).style('display', 'block')
+        d3.select('#' + edge_id).classed('edge-shown', true).style('display', 'block')
       })
     }
   }
