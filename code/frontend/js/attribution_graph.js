@@ -198,9 +198,6 @@ function read_and_parse_edge_data(data, i, neuron_data) {
     edge_data[s] = data[i + j + 1]
   })
 
-  console.log('?????')
-  console.log(edge_data)
-
   edge_data = filter_parse_edge_data(edge_data)
   return edge_data
 

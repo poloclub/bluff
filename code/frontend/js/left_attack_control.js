@@ -16,7 +16,7 @@ import {
 import { 
   update_node_opacity,
   update_scatter_circle,
-  update_edges
+  update_edges_display
 } from './attribution_graph.js';
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ import {
 
 export var selected_attack_info = {
   'attack_type': 'pgd',
-  'attack_strength': 0.15
+  'attack_strength': 0.50
 }
 
 var strength_bar_scale = {}
@@ -230,8 +230,7 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       if (filter_type == 'strength') {
         update_node_opacity()
         update_scatter_circle()
-        // XXXXXXXXXXXXX
-        // update_edges(selected_attack_info['attack_strength'])
+        update_edges_display()
       } 
       
     }
