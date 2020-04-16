@@ -1912,37 +1912,33 @@ function gen_curve(x1, y1, x2, y2) {
 }
 
 export function update_edges_display() {
-  // XXXXXX 
-  // Get all highlighted neurons
-  var most_option = highlight_pathways['connections']['selected']
-  var highligted_neurons = get_highlighted_neurons()
-  var potentially_highlighted_edges = {}
-  highlighted_edges = {}
+  
+  // Get currently highlighted neurons
+  var highlighted_neurons = get_highlighted_neurons()
 
+  // Get currently highligtable edges
+  var potentially_highlighted_edges = get_highlightable_edges(highlighted_neurons)
+
+  // Initialized whether edges be highlighted
+  highlighted_edges = {}
   d3.selectAll('.edge').style('display', 'none')
 
+  // Highlight edges based on the selected option
+  var most_option = highlight_pathways['connections']['selected']
   if (most_option == 'activated') {
+    highlight_most_activated_edges()
+  } else if (most_option == 'changed') {
 
-    // Get edges to be highlighted
-    layers.slice(1).forEach(layer => {
-      potentially_highlighted_edges[layer] = []
-      edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
-        var curr = edge_info['curr']
-        var next = edge_info['next']
-        var inf = edge_info['inf']
-        var curr_layer = curr.split('-')[0]
-        var next_layer = next.split('-')[0]
+  } else if (most_option == 'excited') {
+    highlight_most_excited_edges()
+  } else if (most_option == 'inhibited') {
+    
+  } else {
+    console.log('ERROR: Unknown most_option:', most_option)
+  }
 
-        if (highligted_neurons[curr_layer].includes(curr) && highligted_neurons[next_layer].includes(next)) {
-          potentially_highlighted_edges[layer].push({
-            'curr': curr,
-            'next': next,
-            'inf': inf
-          })
-        }
-      })
-    })
-
+  function highlight_most_activated_edges() {
+    // Sort the highlightable edges
     for (var layer in potentially_highlighted_edges) {
       var sorted_edges = potentially_highlighted_edges[layer].sort(function(a, b) {
         return b['inf'] - a['inf'] 
@@ -1950,6 +1946,7 @@ export function update_edges_display() {
       potentially_highlighted_edges[layer] = sorted_edges
     }
 
+    // Get edges to highlight
     for (var layer in potentially_highlighted_edges) {
       var all_edges = potentially_highlighted_edges[layer]
       var num_edges = Math.round(all_edges.length * highlight_pathways['connections']['top-k'] / 100)
@@ -1963,15 +1960,18 @@ export function update_edges_display() {
         d3.select('#' + edge_id).style('display', 'block')
       })
     }
+  }
 
-  } else if (most_option == 'changed') {
-
-  } else if (most_option == 'excited') {
-    
-  } else if (most_option == 'inhibited') {
-    
-  } else {
-    console.log('ERROR: Unknown most_option:', most_option)
+  function highlight_most_excited_edges() {
+    console.log(potentially_highlighted_edges)
+    // XXXXXXXXXXX
+    // Sort the highlightable edges
+    for (var layer in potentially_highlighted_edges) {
+      var sorted_edges = potentially_highlighted_edges[layer].sort(function(a, b) {
+        return b['inf'] - a['inf'] 
+      })
+      potentially_highlighted_edges[layer] = sorted_edges
+    }
   }
 
 }
@@ -1998,6 +1998,34 @@ function get_highlighted_neurons() {
   })
 
   return highlighted_neurons
+}
+
+function get_highlightable_edges(highlighted_neurons) {
+  // console.log(highlighted_neurons)
+
+  var no_highlighted_neurons = Object.keys(highlighted_neurons).length === 0
+  var potentially_highlighted_edges = {}
+  layers.slice(1).forEach(layer => {
+    potentially_highlighted_edges[layer] = []
+    if (!no_highlighted_neurons) {
+      edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
+        var curr = edge_info['curr']
+        var next = edge_info['next']
+        var inf = edge_info['inf']
+        var curr_layer = curr.split('-')[0]
+        var next_layer = next.split('-')[0]
+  
+        if (highlighted_neurons[curr_layer].includes(curr) && highlighted_neurons[next_layer].includes(next)) {
+          potentially_highlighted_edges[layer].push({
+            'curr': curr,
+            'next': next,
+            'inf': inf
+          })
+        }
+      })
+    }
+  })
+  return potentially_highlighted_edges
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
