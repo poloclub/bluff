@@ -791,6 +791,7 @@ function draw_neurons() {
   function mouseover_node(neuron) {
     // XXXXXXXXX
     // Mouse pointer
+    var node_id = get_node_id(neuron)
     d3.select('#g-node-' + neuron).style('cursor', 'pointer')
 
     // Hightlight neuron
@@ -837,7 +838,6 @@ function draw_neurons() {
     }
 
     function mk_node_box_g() {
-
       var [node_x, node_y]  = get_translate_coords('g-' + node_id)
       
       d3.select('#g-node')
