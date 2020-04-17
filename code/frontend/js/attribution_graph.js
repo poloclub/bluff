@@ -65,7 +65,7 @@ var y_coords = {}
 
 var edge_stroke_scale = {}
 
-var clicked_neurons = {}
+var pinned_neurons = {}
 var highlighted_edges = {}
 
 
@@ -145,7 +145,7 @@ export function remove_graph() {
   d3.selectAll('.g-node').remove()
   d3.selectAll('.node-box').remove()
   d3.selectAll('.edge').remove()
-  clicked_neurons = {}
+  pinned_neurons = {}
   highlighted_edges = {}
 }
 
@@ -637,7 +637,7 @@ function write_layers() {
 function draw_neurons() {
 
   // Initialize clicked neurons
-  clicked_neurons = {}
+  pinned_neurons = {}
   
   // Draw neurons in original, original & target, target graph
   var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
@@ -789,45 +789,62 @@ function draw_neurons() {
   }
 
   function mouseover_node(neuron) {
-    // XXXXXXXXX
+
     // Mouse pointer
     var node_id = get_node_id(neuron)
     d3.select('#g-node-' + neuron).style('cursor', 'pointer')
 
-    // Hightlight neuron
-    highlight_neuron(neuron)
+    // Show feature vis
+    turn_on_node_feature_vis(neuron)
+
+    // Show feature vis of connected neurons
+    turn_on_connected_node_feature_vis(neuron)
 
     // Flowline edges
-    d3.selectAll('.edge-from-' + neuron)
-      .classed('flowline', true)
-      .style('stroke-width', function() {
-        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
-        return curr_stroke_width * edge_style['magnify']
-      })
-    d3.selectAll('.edge-into-' + neuron)
-      .classed('flowline', true)
-      .style('stroke-width', function() {
-        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
-        return curr_stroke_width * edge_style['magnify']
-      })
-    
-    // Add node box if it does not exist
-    var node_box_id = get_node_box_id(neuron)
-    if (!does_exist(node_box_id)) {
-      add_node_box()
-    }
-    // Show node box if it exists
-    else {
-      var [node_x, node_y]  = get_translate_coords('g-' + node_id)
+    flow_edges()
 
-      d3.select('#' + node_box_id)
-        .style('display', 'block')
-        .attr('transform', function() {
-          var x = node_x + node_box_style['left']
-          var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2 + 100
-          return 'translate(' + x + ',' + y +')'
+    // Show neuron id
+    d3.select('#neuron-id-' + neuron).style('display', 'block')
+    
+    // Show node box
+    var node_box_id = get_node_box_id(neuron)
+    show_node_box()
+
+    // Functions
+
+    function flow_edges() {
+      d3.selectAll('.edge-from-' + neuron)
+        .classed('flowline', true)
+        .style('stroke-width', function() {
+          var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+          return curr_stroke_width * edge_style['magnify']
         })
-    } 
+      d3.selectAll('.edge-into-' + neuron)
+        .classed('flowline', true)
+        .style('stroke-width', function() {
+          var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+          return curr_stroke_width * edge_style['magnify']
+        })
+    }
+
+    function show_node_box() {
+      // Add node box if it does not exist
+      if (!does_exist(node_box_id)) {
+        add_node_box()
+      }
+      // Show node box if it exists
+      else {
+        var [node_x, node_y]  = get_translate_coords('g-' + node_id)
+
+        d3.select('#' + node_box_id)
+          .style('display', 'block')
+          .attr('transform', function() {
+            var x = node_x + node_box_style['left']
+            var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2 + 100
+            return 'translate(' + x + ',' + y +')'
+          })
+      } 
+    }
 
     function add_node_box() {
       mk_node_box_g()
@@ -1099,67 +1116,78 @@ function draw_neurons() {
   }
 
   function mouseout_node(neuron) {
-    var node_box_id = get_node_box_id(neuron)
-    d3.select('#' + node_box_id)
-      .style('display', 'none')
-    
-    d3.select('#fv-' + neuron)
-      .style('opacity', function(neuron) {
-        if (highlight_pathways['neurons']['selected'] == 'activated') {
-          if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
-            return node_opacity['activated']
-          } 
-        } else if (highlight_pathways['neurons']['selected'] == 'excited') {
-          if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
-            return node_opacity['activated']
-          } 
-        } else if (highlight_pathways['neurons']['selected'] == 'inhibited') {
-          if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
-            return node_opacity['activated']
-          } 
-        }
-        return node_opacity['fv-deactivated']
-      })
 
-    if (!is_clicked_on(neuron)) {
-      dehighlight_neuron(neuron)
+    // Turn of node box
+    var node_box_id = get_node_box_id(neuron)
+    d3.select('#' + node_box_id).style('display', 'none')
+
+    // Turn off the neuron id
+    d3.select('#neuron-id-' + neuron).style('display', 'none')
+
+    // Set the feature vis
+    back_to_previous_fv_opacity()
+    back_to_previous_fv_display()
+
+    // Return to previous edge setting
+    back_to_previous_edges()
+
+    function back_to_previous_fv_display() {
+      turn_off_node_feature_vis(neuron)
+      turn_off_connected_node_feature_vis(neuron)
     }
 
-    d3.select('#neuron-id-' + neuron).style('display', 'none')
-    d3.selectAll('.edge-from-' + neuron)
-      .classed('flowline', false)
-      .style('stroke-width', function() {
-        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
-        return curr_stroke_width / edge_style['magnify']
-      })
-    d3.selectAll('.edge-into-' + neuron)
-      .classed('flowline', false)
-      .style('stroke-width', function() {
-        var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
-        return curr_stroke_width / edge_style['magnify']
-      })
+    function back_to_previous_fv_opacity() {
+      d3.select('#fv-' + neuron)
+        .style('opacity', function(neuron) {
+          if (highlight_pathways['neurons']['selected'] == 'activated') {
+            if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
+              return node_opacity['activated']
+            } 
+          } else if (highlight_pathways['neurons']['selected'] == 'excited') {
+            if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
+              return node_opacity['activated']
+            } 
+          } else if (highlight_pathways['neurons']['selected'] == 'inhibited') {
+            if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
+              return node_opacity['activated']
+            } 
+          }
+          return node_opacity['fv-deactivated']
+        })
+    }
 
+    function back_to_previous_edges() {
+      d3.selectAll('.edge-from-' + neuron)
+        .classed('flowline', false)
+        .style('stroke-width', function() {
+          var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+          return curr_stroke_width / edge_style['magnify']
+        })
 
-    function edge_display(d) {
-      if (is_highlighted_edge(d['curr'], d['next'])) {
-        return 'block'
-      } else {
-        return 'none'
-      }
+      d3.selectAll('.edge-into-' + neuron)
+        .classed('flowline', false)
+        .style('stroke-width', function() {
+          var curr_stroke_width = parseFloat(d3.select(this).style('stroke-width'))
+          return curr_stroke_width / edge_style['magnify']
+        })
     }
   }
 
   function click_node(neuron) {
-    if (is_clicked_on(neuron)) {
+    if (is_pinned(neuron)) {
       // Turn off the neuron
-      dehighlight_neuron(neuron)
-      remove_clicked_neuron(neuron)
-      dehighlight_edges_of_clicked_neuron(neuron)
+      turn_off_node_feature_vis(neuron)
+      remove_pinned_neuron(neuron)
+
+      // Turn off edges
+      // dehighlight_edges_of_pinned_neuron(neuron)
     } else {
       // Turn on the neuron
-      highlight_neuron(neuron)
-      add_clicked_neuron(neuron)
-      highlight_edges_of_clicked_neuron(neuron)
+      turn_on_node_feature_vis(neuron)
+      add_pinned_neuron(neuron)
+
+      // Turn on edges
+      // highlight_edges_of_pinned_neuron(neuron)
     }
   }
 
@@ -1167,43 +1195,79 @@ function draw_neurons() {
     return ['node-box', neuron].join('-')
   }
 
-  function highlight_neuron(neuron) {
+  function turn_on_node_feature_vis(neuron) {
     d3.select('#fv-' + neuron)
+      .style('display', 'block')
       .style('opacity', node_opacity['activated'])
-      .style('display', 'block')
     d3.select('#node-' + neuron)
       .style('display', 'none')
-    d3.select('#neuron-id-' + neuron)
-      .style('display', 'block')
   }
 
-  function dehighlight_neuron(neuron) {
-    d3.select('#neuron-id-' + neuron)
-      .style('display', 'none')
-    d3.select('#fv-' + neuron)
-      .style('display', 'none')
-    d3.select('#node-' + neuron)
-      .style('display', 'block')
+  function turn_on_connected_node_feature_vis(neuron) {
+    
+    // Show next layer's connected neurons' feature vis
+    var layer = neuron.split('-')[0]
+    if (layer != 'mixed5b') {
+      highlighted_edges[layer].forEach(edge_info => {
+        if (edge_info['curr'] == neuron) {
+          var next_neuron = edge_info['next']
+          turn_on_node_feature_vis(next_neuron)
+        }
+      })
+    }
+
+    // Show previous layer's connected neurons' feature vis
+    if (layer != 'mixed3a') {
+      var prev_layer = layers[layers.indexOf(layer) + 1]
+      highlighted_edges[prev_layer].forEach(edge_info => {
+        if (edge_info['next'] == neuron) {
+          var prev_neuron = edge_info['curr']
+          turn_on_node_feature_vis(prev_neuron)
+        }
+      })
+    }
+    
   }
 
-}
+  function turn_off_node_feature_vis(neuron) {
 
-function get_cx(neuron) {
-  var ns = node_size[selected_attack_info['attack_type']]
-  var coords = get_translate_coords('g-node-' + neuron)
-  var [x, y] = coords
-  x = x + (ns / 2)
-  return x
-}
-
-function get_cy(neuron, curr_or_next) {
-  var ns = node_size[selected_attack_info['attack_type']]
-  var coords = get_translate_coords('g-node-' + neuron)
-  var [x, y] = coords
-  if (curr_or_next == 'next') {
-    y = y + ns
+    if (!is_pinned(neuron)) {
+      d3.select('#neuron-id-' + neuron)
+        .style('display', 'none')
+      d3.select('#fv-' + neuron)
+        .style('display', 'none')
+      d3.select('#node-' + neuron)
+        .style('display', 'block')
+    }
+    
   }
-  return y
+
+  function turn_off_connected_node_feature_vis(neuron) {
+    
+    // Show next layer's connected neurons' feature vis
+    var layer = neuron.split('-')[0]
+    if (layer != 'mixed5b') {
+      highlighted_edges[layer].forEach(edge_info => {
+        if (edge_info['curr'] == neuron) {
+          var next_neuron = edge_info['next']
+          turn_off_node_feature_vis(next_neuron)
+        }
+      })
+    }
+
+    // Show previous layer's connected neurons' feature vis
+    if (layer != 'mixed3a') {
+      var prev_layer = layers[layers.indexOf(layer) + 1]
+      highlighted_edges[prev_layer].forEach(edge_info => {
+        if (edge_info['next'] == neuron) {
+          var prev_neuron = edge_info['curr']
+          turn_off_node_feature_vis(prev_neuron)
+        }
+      })
+    }
+    
+  }
+
 }
 
 function g_transform(graph_key, neuron, i) {
@@ -1224,32 +1288,32 @@ function get_node_y(neuron_id) {
   return y_coords[layer]
 }
 
-function add_clicked_neuron(neuron) {
+function add_pinned_neuron(neuron) {
   var layer = neuron.split('-')[0]
-  if (!(layer in clicked_neurons)) {
-    clicked_neurons[layer] = {}
+  if (!(layer in pinned_neurons)) {
+    pinned_neurons[layer] = {}
   }
-  clicked_neurons[layer][neuron] = true
+  pinned_neurons[layer][neuron] = true
 }
 
-function remove_clicked_neuron(neuron) {
+function remove_pinned_neuron(neuron) {
   var layer = neuron.split('-')[0]
-  if (neuron in clicked_neurons[layer])  {
-    clicked_neurons[layer][neuron] = false
+  if (neuron in pinned_neurons[layer])  {
+    pinned_neurons[layer][neuron] = false
   }
 }
 
-function is_clicked_on(neuron) {
+function is_pinned(neuron) {
   var layer = neuron.split('-')[0]
-  if (!(layer in clicked_neurons)) {
+  if (!(layer in pinned_neurons)) {
     return false
   } 
 
-  if (!(neuron in clicked_neurons[layer])) {
+  if (!(neuron in pinned_neurons[layer])) {
     return false
   }
 
-  return clicked_neurons[layer][neuron]
+  return pinned_neurons[layer][neuron]
 }
 
 function add_highlighted_edges(neuron, next_neuron) {
@@ -1270,16 +1334,16 @@ function is_highlighted_edge(neuron, next_neuron) {
   return highlighted_edges[edge_pair]
 }
 
-function highlight_edges_of_clicked_neuron(neuron) {
+function highlight_edges_of_pinned_neuron(neuron) {
 
   var layer = neuron.split('-')[0]
 
   // Highlight edges with previous layer
   if (layer != 'mixed3a') {
     var prev_layer = layers[layers.indexOf(layer) + 1]
-    if (prev_layer in clicked_neurons) {
-      for (var prev_neuron in clicked_neurons[prev_layer]) {
-        if (clicked_neurons[prev_layer][prev_neuron]) {
+    if (prev_layer in pinned_neurons) {
+      for (var prev_neuron in pinned_neurons[prev_layer]) {
+        if (pinned_neurons[prev_layer][prev_neuron]) {
           add_highlighted_edges(prev_neuron, neuron)
           var edge_id = ['edge', prev_neuron, neuron].join('-')
           d3.select('#' + edge_id)
@@ -1297,9 +1361,9 @@ function highlight_edges_of_clicked_neuron(neuron) {
   // Highlight edges with next layer
   if (layer != 'mixed5b') {
     var next_layer = layers[layers.indexOf(layer) - 1]
-    if (next_layer in clicked_neurons) {
-      for (var next_neuron in clicked_neurons[next_layer]) {
-        if (clicked_neurons[next_layer][next_neuron]) {
+    if (next_layer in pinned_neurons) {
+      for (var next_neuron in pinned_neurons[next_layer]) {
+        if (pinned_neurons[next_layer][next_neuron]) {
           add_highlighted_edges(neuron, next_neuron)
           var edge_id = ['edge', neuron, next_neuron].join('-')
           d3.select('#' + edge_id)
@@ -1313,7 +1377,7 @@ function highlight_edges_of_clicked_neuron(neuron) {
   update_node_circle_display()
 }
 
-function dehighlight_edges_of_clicked_neuron(neuron) {
+function dehighlight_edges_of_pinned_neuron(neuron) {
   
   d3.selectAll('.edge-from-' + neuron)
     .style('display', 'none')
@@ -1326,8 +1390,8 @@ function dehighlight_edges_of_clicked_neuron(neuron) {
   var layer = neuron.split('-')[0]
   if (layer != 'mixed3a') {
     var prev_layer = layers[layers.indexOf(layer) + 1]
-    if (prev_layer in clicked_neurons) {
-      for (var prev_neuron in clicked_neurons[prev_layer]) {
+    if (prev_layer in pinned_neurons) {
+      for (var prev_neuron in pinned_neurons[prev_layer]) {
         remove_highlighted_edges(prev_neuron, neuron)
       }
     }
@@ -1336,8 +1400,8 @@ function dehighlight_edges_of_clicked_neuron(neuron) {
   // Highlight edges with next layer
   if (layer != 'mixed5b') {
     var next_layer = layers[layers.indexOf(layer) - 1]
-    if (next_layer in clicked_neurons) {
-      for (var next_neuron in clicked_neurons[next_layer]) {
+    if (next_layer in pinned_neurons) {
+      for (var next_neuron in pinned_neurons[next_layer]) {
         remove_highlighted_edges(neuron, next_neuron)
       }
     }
@@ -1553,10 +1617,10 @@ export function update_graph_by_filter_graph() {
 
   function get_displayable_neurons() {
     var displayable_neurons = {}
-    for (var layer in clicked_neurons) {
+    for (var layer in pinned_neurons) {
       displayable_neurons[layer] = {}
-      for (var neuron in clicked_neurons[layer]) {
-        if (clicked_neurons[layer][neuron]) {
+      for (var neuron in pinned_neurons[layer]) {
+        if (pinned_neurons[layer][neuron]) {
           var graph_key = d3.select('#node-' + neuron).attr('class').split(' ')[1].split('node-')[1]
           if (!(graph_key in displayable_neurons[layer])) {
             displayable_neurons[layer][graph_key] = []
@@ -2077,7 +2141,6 @@ function get_highlighted_neurons() {
 }
 
 function get_highlightable_edges(highlighted_neurons) {
-  // XXXXXX
   var no_highlighted_neurons = Object.keys(highlighted_neurons).length === 0
   var potentially_highlighted_edges = {}
   layers.slice(1).forEach(layer => {

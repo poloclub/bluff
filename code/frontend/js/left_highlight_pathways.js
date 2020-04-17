@@ -38,7 +38,7 @@ export var highlight_pathways = {
   } 
 }
 
-var domains = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+var domains = Array.from(Array(20).keys()).map(x => x * 5 + 5)
 var bar_length_scale = d3
   .scaleLinear()
   .domain([0, d3.max(domains)])
