@@ -79,8 +79,8 @@ export var highlight_pathways_style = {
   'menu-height': 15, 
   'menu-bottom-padding': 5, 
   // Most what
-  'what-x': 100,
-  'what-y': 0,
+  'what-x': 0,
+  'what-y': 20,
   'what-rect-width': 69,
   'what-rect-height': 15,
   'what-icon-x': 61,

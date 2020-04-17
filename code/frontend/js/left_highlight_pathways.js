@@ -53,9 +53,9 @@ var domain_scale = d3
 //////////////////////////////////////////////////////////////////////////////////////////
 
 gen_highlight_option_g()
-write_text('highlight-option-text-1', 'g-highlight-mode', 'Highlight most')
+write_text('highlight-option-text-1', 'g-highlight-mode', 'Highlight pathways most')
 gen_dropdown('what', 'g-highlight-mode', highlight_pathways_style)
-write_text('highlight-option-text-2', 'g-highlight-mode', 'pathways by attack.')
+write_text('highlight-option-text-2', 'g-highlight-mode', 'by attack.')
 
 write_text('highlight-option-neurons-text-1', 'g-highlight-neurons', 'Neurons: top')
 write_text('topk-neurons', 'g-highlight-neurons', highlight_pathways['neurons']['top-k'])
