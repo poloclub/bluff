@@ -1182,14 +1182,15 @@ function draw_neurons() {
     if (is_pinned(neuron)) {
       // Turn off the neuron
       turn_off_node_feature_vis(neuron)
-      remove_pinned_neuron(neuron)
+      unpin_neuron(neuron)
 
       // Turn off edges
       // dehighlight_edges_of_pinned_neuron(neuron)
     } else {
       // Turn on the neuron
+      console.log('click', neuron)
       turn_on_node_feature_vis(neuron)
-      add_pinned_neuron(neuron)
+      pin_neuron(neuron)
 
       // Turn on edges
       // highlight_edges_of_pinned_neuron(neuron)
@@ -1293,7 +1294,7 @@ function get_node_y(neuron_id) {
   return y_coords[layer]
 }
 
-function add_pinned_neuron(neuron) {
+function pin_neuron(neuron) {
   var layer = neuron.split('-')[0]
   if (!(layer in pinned_neurons)) {
     pinned_neurons[layer] = {}
@@ -1301,7 +1302,7 @@ function add_pinned_neuron(neuron) {
   pinned_neurons[layer][neuron] = true
 }
 
-function remove_pinned_neuron(neuron) {
+function unpin_neuron(neuron) {
   var layer = neuron.split('-')[0]
   if (neuron in pinned_neurons[layer])  {
     pinned_neurons[layer][neuron] = false
@@ -1609,14 +1610,15 @@ function is_most_changed(neuron, strength) {
 export function update_graph_by_filter_graph() {
 
   if (filter_pathways['filter'] == 'all') {
-    d3.select('#g-strength-bar').style('opacity', 1)
+    d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
+    d3.select('#g-highlight-option-contents').classed('disabled', false).style('opacity', 1)
     rearrange_all_neurons()
     rearrange_all_edges()
     rearrange_layers_full_graph()
   } else {
-    d3.select('#g-strength-bar').style('opacity', 0.3)
+    d3.select('#g-strength-bar').classed('disabled', true).style('opacity', 0.3)
+    d3.select('#g-highlight-option-contents').classed('disabled', true).style('opacity', 0.3)
     var displayable_neurons = get_displayable_neurons(filter_pathways['filter'])
-    console.log(displayable_neurons)
     var node_transforms = get_node_transforms(displayable_neurons)
     rearrange_neurons(node_transforms)
     rearrange_edges(node_transforms)

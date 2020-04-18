@@ -180,7 +180,7 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       .attr('class', 'filter-bar-circle')
       .style('cx', 20)
       .style('cx', bar_length_scale['val_to_len'](default_val))
-      .on('mouseover', function(){ this.style.cursor = 'pointer'})
+      .on('mouseover', function(){ circle_mouseover() })
       .call(gen_control_circle_drag())
 
     // Add value text
@@ -190,6 +190,16 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       .attr('class', 'filter-bar-text')
       .text(selected_attack_info['attack_strength'])
 
+  }
+
+  function circle_mouseover() {
+    var is_disabled = d3.select('#g-' + filter_type + '-bar').attr('class')
+    if (is_disabled) {
+      is_disabled = is_disabled.includes('disabled')
+    }
+    if (!is_disabled) {
+      d3.select('#filter-bar-circle-' + filter_type).style('cursor', 'pointer')
+    }
   }
 
   function gen_control_circle_drag() {
@@ -202,55 +212,71 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
     return control_drag
 
     function circle_drag_start() { 
-      d3.select('#filter-bar-circle-' + filter_type)
-      .style('fill', 'gray')
-      .style('stroke', 'none')
+      var is_disabled = d3.select('#g-' + filter_type + '-bar').attr('class')
+      if (is_disabled) {
+        is_disabled = is_disabled.includes('disabled')
+      }
+      if (!is_disabled) {
+        d3.select('#filter-bar-circle-' + filter_type)
+          .style('fill', 'gray')
+          .style('stroke', 'none')
+      }
     }
 
     function circle_drag_ing() {
-      // Get the position of the circle and the front bar
-      var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
-      mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['bar_length']])
-  
-      var max_domain_val = d3.max(domains)
-      var domain_unit = max_domain_val / domains.length
-  
-      // Update the selected value
-      if (filter_type == 'strength') {
-        selected_attack_info['attack_strength'] = strength_bar_scale[selected_attack_info['attack_type']]['len_to_val'](mouse_x)
-        selected_attack_info['attack_strength'] = round_unit(selected_attack_info['attack_strength'], domain_unit)
-        d3.select('#filter-bar-text-' + filter_type).text(selected_attack_info['attack_strength']) 
-      } 
-        
-      // Position the circle and the front bar
-      d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
-      d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
-  
-      // Update attribution graph
-      if (filter_type == 'strength') {
-        update_node_opacity()
-        update_scatter_circle()
-        update_edges_display()
-      } 
-      
+      var is_disabled = d3.select('#g-' + filter_type + '-bar').attr('class')
+      if (is_disabled) {
+        is_disabled = is_disabled.includes('disabled')
+      }
+      if (!is_disabled) {
+        // Get the position of the circle and the front bar
+        var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
+        mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['bar_length']])
+    
+        var max_domain_val = d3.max(domains)
+        var domain_unit = max_domain_val / domains.length
+    
+        // Update the selected value
+        if (filter_type == 'strength') {
+          selected_attack_info['attack_strength'] = strength_bar_scale[selected_attack_info['attack_type']]['len_to_val'](mouse_x)
+          selected_attack_info['attack_strength'] = round_unit(selected_attack_info['attack_strength'], domain_unit)
+          d3.select('#filter-bar-text-' + filter_type).text(selected_attack_info['attack_strength']) 
+        } 
+          
+        // Position the circle and the front bar
+        d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
+        d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+    
+        // Update attribution graph
+        if (filter_type == 'strength') {
+          update_node_opacity()
+          update_scatter_circle()
+          update_edges_display()
+        } 
+      }      
     }
 
     function circle_drag_end() {
+      var is_disabled = d3.select('#g-' + filter_type + '-bar').attr('class')
+      if (is_disabled) {
+        is_disabled = is_disabled.includes('disabled')
+      }
+      if (!is_disabled) {
+        // Update the circle's color 
+        d3.select('#filter-bar-circle-' + filter_type)
+          .style('fill', 'white')
+          .style('stroke', 'gray')
 
-      // Update the circle's color 
-      d3.select('#filter-bar-circle-' + filter_type)
-        .style('fill', 'white')
-        .style('stroke', 'gray')
-  
-      // Get the position of the circle and the front bar
-      var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
-      mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['bar_length']])
-  
-      // Sticky movement
-      var bar_length_unit = filter_bar['bar_length'] / domains.length
-      mouse_x = round_unit(mouse_x, bar_length_unit)
-      d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
-      d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+        // Get the position of the circle and the front bar
+        var mouse_x = d3.mouse(document.getElementById('filter-bar-circle-' + filter_type))[0]
+        mouse_x = d3.min([d3.max([0, mouse_x]), filter_bar['bar_length']])
+
+        // Sticky movement
+        var bar_length_unit = filter_bar['bar_length'] / domains.length
+        mouse_x = round_unit(mouse_x, bar_length_unit)
+        d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
+        d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+      }
     }
   }
 
