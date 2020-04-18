@@ -192,6 +192,12 @@ export var icons = {
 // Nodes
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
+export var node_style = {
+  // When filtered
+  'group-lr': 40,
+  'neuron-lr': 5
+}
+
 export var node_box_style = {
   'left': 40, 
   'width': 430, 
