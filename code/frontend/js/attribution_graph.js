@@ -1604,29 +1604,15 @@ function is_most_changed(neuron, strength) {
 
 export function update_graph_by_filter_graph() {
 
-  if (filter_pathways['filter'] == 'selected') {
-    var displayable_neurons = get_displayable_neurons()
-    var node_transforms = get_node_transforms(displayable_neurons)
-    rearrange_selected_neurons(node_transforms)
-    rearrange_selected_edges(node_transforms)
-  } else if (filter_pathways['filter'] == 'all') {
+  if (filter_pathways['filter'] == 'all') {
     d3.select('#g-strength-bar').style('opacity', 1)
     rearrange_all_neurons()
     rearrange_all_edges()
-  } else if (filter_pathways['filter'] == 'highlighted') {
-    // XXXXXXX
-    console.log('Show highlighted only')
-
-    // Make strength control stop
+  } else {
     d3.select('#g-strength-bar').style('opacity', 0.3)
-
-    // Get the grouped highlighted neurons
-    var displayable_neurons = get_displayable_neurons('highlighted')   
-
-    // Get the x coordinates of the neurons
+    var displayable_neurons = get_displayable_neurons(filter_pathways['filter'])
+    console.log(displayable_neurons)
     var node_transforms = get_node_transforms(displayable_neurons)
-
-    // Rearrage those neurons and connections
     rearrange_neurons(node_transforms)
     rearrange_edges(node_transforms)
   }
@@ -1636,6 +1622,8 @@ export function update_graph_by_filter_graph() {
 
     if (filter_option == 'highlighted') {
       return get_highlightd_displayable_neurons()
+    } else if (filter_option == 'selected') {
+      return get_pinned_displayable_neurons()
     }
 
     function get_highlightd_displayable_neurons() {
@@ -1654,22 +1642,23 @@ export function update_graph_by_filter_graph() {
       return grouped_highlighted_neurons
     }
 
-
-
-    // var displayable_neurons = {}
-    // for (var layer in pinned_neurons) {
-    //   displayable_neurons[layer] = {}
-    //   for (var neuron in pinned_neurons[layer]) {
-    //     if (pinned_neurons[layer][neuron]) {
-    //       var graph_key = d3.select('#node-' + neuron).attr('class').split(' ')[1].split('node-')[1]
-    //       if (!(graph_key in displayable_neurons[layer])) {
-    //         displayable_neurons[layer][graph_key] = []
-    //       }
-    //       displayable_neurons[layer][graph_key].push(neuron)
-    //     }
-    //   }
-    // }
-    // return displayable_neurons
+    function get_pinned_displayable_neurons() {
+      var displayable_neurons = {}
+      for (var layer in pinned_neurons) {
+        displayable_neurons[layer] = {}
+        for (var neuron in pinned_neurons[layer]) {
+          if (pinned_neurons[layer][neuron]) {
+            var graph_key = d3.select('#node-' + neuron).attr('class').split(' ')[1].split('node-')[1]
+            if (!(graph_key in displayable_neurons[layer])) {
+              displayable_neurons[layer][graph_key] = []
+            }
+            displayable_neurons[layer][graph_key].push(neuron)
+          }
+        }
+      }
+      return displayable_neurons
+    }
+    
   }
 
   function get_node_transforms(displayable_neurons) {
@@ -1722,6 +1711,46 @@ export function update_graph_by_filter_graph() {
     var ns = node_size[selected_attack_info['attack_type']]
 
     d3.selectAll('.edge-shown')
+      .classed('edge-shown', function(edge) {
+        var curr = edge['curr']
+        var next = edge['next']
+        var curr_layer = curr.split('-')[0]
+        var next_layer = next.split('-')[0]
+        if (!(curr_layer in node_transforms)) {
+          return false
+        }
+        if (!(next_layer in node_transforms)) {
+          return false
+        }
+        if (!(curr in node_transforms[curr_layer])) {
+          return false
+        } 
+        if (!(next in node_transforms[next_layer])) {
+          return false
+        } 
+        return true
+      })
+      .style('display', function(edge) {
+        var curr = edge['curr']
+        var next = edge['next']
+        var curr_layer = curr.split('-')[0]
+        var next_layer = next.split('-')[0]
+        if (!(curr_layer in node_transforms)) {
+          return 'none'
+        }
+        if (!(next_layer in node_transforms)) {
+          return 'none'
+        }
+        if (!(curr in node_transforms[curr_layer])) {
+          return 'none'
+        } 
+        if (!(next in node_transforms[next_layer])) {
+          return 'none'
+        } 
+        return 'block'
+      })
+
+    d3.selectAll('.edge-shown')
       .transition()
       .duration(1500)
       .attr('d', function(edge) { 
@@ -1754,8 +1783,6 @@ export function update_graph_by_filter_graph() {
     })
 
   }
-
-  
 
   function rearrange_all_edges() {
 
