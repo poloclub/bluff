@@ -1156,6 +1156,10 @@ function draw_neurons() {
             if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
               return node_opacity['activated']
             } 
+          } else if (highlight_pathways['neurons']['selected'] == 'changed') {
+            if (is_most_changed(neuron, selected_attack_info['attack_strength'])) {
+              return node_opacity['activated']
+            } 
           }
           return node_opacity['fv-deactivated']
         })
@@ -1183,17 +1187,14 @@ function draw_neurons() {
       // Turn off the neuron
       turn_off_node_feature_vis(neuron)
       unpin_neuron(neuron)
-
-      // Turn off edges
-      // dehighlight_edges_of_pinned_neuron(neuron)
+      d3.select('#node-circle-curr-' + neuron).style('display', 'none')
+      d3.select('#node-circle-next-' + neuron).style('display', 'none')
     } else {
       // Turn on the neuron
-      console.log('click', neuron)
       turn_on_node_feature_vis(neuron)
       pin_neuron(neuron)
-
-      // Turn on edges
-      // highlight_edges_of_pinned_neuron(neuron)
+      d3.select('#node-circle-curr-' + neuron).style('display', 'block')
+      d3.select('#node-circle-next-' + neuron).style('display', 'block')
     }
   }
 
@@ -1414,18 +1415,6 @@ function dehighlight_edges_of_pinned_neuron(neuron) {
   }
 
   update_node_circle_display()
-}
-
-function update_node_circle_display() {
-  d3.selectAll('.node-circle').style('display', 'none')
-
-  for (var edge in highlighted_edges) {
-    var [curr, next] = edge.split('_')
-    if (highlighted_edges[edge]) {
-      d3.select('#node-circle-curr-' + curr).style('display', 'block')
-      d3.select('#node-circle-next-' + next).style('display', 'block')
-    }
-  }
 }
 
 export function update_node_opacity() {

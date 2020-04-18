@@ -362,7 +362,7 @@ function gen_slider(group_id, parent_id, styler) {
       is_disabled = is_disabled.includes('disabled')
     }
     if (!is_disabled) {
-      d3.select('#' + slider_id('circle')).style(cursor, 'pointer')
+      d3.select('#' + slider_id('circle')).style('cursor', 'pointer')
     }
   }
 
