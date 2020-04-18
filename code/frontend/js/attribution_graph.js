@@ -1708,6 +1708,7 @@ export function update_graph_by_filter_graph() {
   }
 
   function rearrange_edges(node_transforms) {
+    
     var ns = node_size[selected_attack_info['attack_type']]
 
     d3.selectAll('.edge-shown')
@@ -1750,6 +1751,10 @@ export function update_graph_by_filter_graph() {
         return 'block'
       })
 
+    if (filter_pathways['filter'] != 'selected') {
+      update_edges_display()
+    }
+
     d3.selectAll('.edge-shown')
       .transition()
       .duration(1500)
@@ -1765,6 +1770,8 @@ export function update_graph_by_filter_graph() {
         var curve = gen_curve(new_curr_x, curr_y, new_next_x, (next_y + ns))
         return curve
       })
+
+    
   }
 
   function rearrange_all_neurons() {
@@ -1786,6 +1793,8 @@ export function update_graph_by_filter_graph() {
 
   function rearrange_all_edges() {
 
+    update_edges_display()
+
     var ns = node_size[selected_attack_info['attack_type']]
     d3.selectAll('.edge-shown')
       .transition()
@@ -1793,18 +1802,15 @@ export function update_graph_by_filter_graph() {
       .attr('d', function(edge) { 
         var curr = edge['curr']
         var next = edge['next']
-
         
         var [curr_graph_key, curr_i] = get_graph_key_and_i(curr)
         var [next_graph_key, next_i] = get_graph_key_and_i(next)
-
 
         var curr_x = get_node_x(curr_graph_key, curr_i) + (ns / 2) 
         var curr_y = get_node_y(curr)
         var next_x = get_node_x(next_graph_key, next_i) + (ns / 2) 
         var next_y = get_node_y(next) + ns
         
-
         var curve = gen_curve(curr_x, curr_y, next_x, next_y)
         return curve
       })
@@ -2217,8 +2223,6 @@ function get_highlightable_edges(highlighted_neurons) {
         var curr = edge_info['curr']
         var next = edge_info['next']
         var inf = edge_info['inf']
-        // var inf_0 = edge_data[0][layer][edge_i]['inf']
-        // console.log(edge_info, edge_data[0][layer][edge_i])
         var curr_layer = curr.split('-')[0]
         var next_layer = next.split('-')[0]
   
@@ -2227,7 +2231,6 @@ function get_highlightable_edges(highlighted_neurons) {
             'curr': curr,
             'next': next,
             'inf': inf,
-            // 'delta-inf': inf - inf_0
           })
         }
       })
