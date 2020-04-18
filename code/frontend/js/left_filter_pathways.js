@@ -24,7 +24,7 @@ add_options(
   'filter', 
   'g-filter-option', 
   [{'option': 'all', 'text': 'Show full graph'},
-   {'option': 'selected', 'text': 'Show selected only'},
+   {'option': 'selected', 'text': 'Show pinned only'},
    {'option': 'highlighted', 'text': 'Show highlighted only'}],
   click_filter_option
 )

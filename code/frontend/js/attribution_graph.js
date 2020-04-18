@@ -169,7 +169,6 @@ export function update_column_title() {
     } else if (column == 'original-and-target') {
       label = 'BOTH'
     } else if (column == 'attack-only') {
-      // label = 'ATTACK-ONLY'
       label = 'EXPLOITED BY ATTACK'
     }
      
@@ -629,10 +628,15 @@ function write_layers() {
     .data(layers)
     .enter()
     .append('text')
+    .attr('id', function(layer) { return 'layer-' + layer })
     .attr('class', 'layer-text')
     .text(function(layer) { return layer })
-    .attr('x', graph_margin['start_x'] - 80)
+    .attr('x', layer_x())
     .attr('y', function(layer) { return y_coords[layer] + node_size[selected_attack_info['attack_type']] / 2 + 5})
+}
+
+function layer_x() {
+  return graph_margin['start_x'] - 80
 }
 
 function draw_neurons() {
@@ -1608,6 +1612,7 @@ export function update_graph_by_filter_graph() {
     d3.select('#g-strength-bar').style('opacity', 1)
     rearrange_all_neurons()
     rearrange_all_edges()
+    rearrange_layers_full_graph()
   } else {
     d3.select('#g-strength-bar').style('opacity', 0.3)
     var displayable_neurons = get_displayable_neurons(filter_pathways['filter'])
@@ -1615,6 +1620,7 @@ export function update_graph_by_filter_graph() {
     var node_transforms = get_node_transforms(displayable_neurons)
     rearrange_neurons(node_transforms)
     rearrange_edges(node_transforms)
+    rearrange_layers(node_transforms)
   }
 
   // Functions
@@ -1774,6 +1780,16 @@ export function update_graph_by_filter_graph() {
     
   }
 
+  function rearrange_layers(node_transforms) {
+    layers.forEach(layer => {
+      var node_x_min = d3.min(Object.values(node_transforms[layer]))
+      d3.select('#layer-' + layer)
+        .transition()
+        .duration(1500)
+        .attr('transform', 'translate(' + (node_x_min - 150) + ',0)')
+    })
+  }
+
   function rearrange_all_neurons() {
     
     d3.selectAll('.g-node').style('display', 'block')
@@ -1822,6 +1838,14 @@ export function update_graph_by_filter_graph() {
       return [graph_key, i]
     }
   }
+
+  function rearrange_layers_full_graph() {
+    d3.selectAll('.layer-text')
+      .transition()
+      .duration(1500)
+      .attr('transform', layer_x())
+  }
+
 }
 
 export function update_scatter_circle() {

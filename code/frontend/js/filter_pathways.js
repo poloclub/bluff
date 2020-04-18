@@ -84,7 +84,7 @@ function add_what_to_filter_options(type) {
   gen_option_g('all', type)
   gen_option_g('selected', type)
   gen_option(type, 'all', 'Show full graph')
-  gen_option(type, 'selected', 'Show selected only')
+  gen_option(type, 'selected', 'Show pinned only')
 }
 
 function gen_option_g(option, type) { 
