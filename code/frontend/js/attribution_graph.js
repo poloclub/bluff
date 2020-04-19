@@ -666,8 +666,9 @@ function draw_neurons() {
 
     
     append_feature_vis(graph_key)
+    append_inner_rects(graph_key)
+    append_outer_rects(graph_key)
     append_node_end_circles(graph_key)
-    append_comp_nodes(graph_key)
 
     function get_neuron_data(graph_key, layer) {
       var neuron_data = ''
@@ -740,7 +741,7 @@ function draw_neurons() {
         .on('click', function(neuron) { return click_node(neuron) })
     }
   
-    function append_comp_nodes(graph_key) {
+    function append_inner_rects(graph_key) {
       d3.selectAll('.g-node-' + graph_key)
         .append('rect')
         .attr('id', function(neuron) { return 'inner-' + get_node_id(neuron) })
@@ -752,6 +753,26 @@ function draw_neurons() {
         .attr('x', 0.25 * node_size[selected_attack_info['attack_type']])
         .attr('y', 0.25 * node_size[selected_attack_info['attack_type']])
         .style('fill', node_color[graph_key])
+        .style('display', 'none')
+        .on('mouseover', function(neuron) { return mouseover_node(neuron) })
+        .on('mouseout', function(neuron) { return mouseout_node(neuron) })
+        .on('click', function(neuron) { return click_node(neuron) })
+    }
+
+    function append_outer_rects(graph_key) {
+      d3.selectAll('.g-node-' + graph_key)
+        .append('rect')
+        .attr('id', function(neuron) { return 'outer-' + get_node_id(neuron) })
+        .attr('class', 'outer-node outer-node-' + graph_key)
+        .attr('width', 0.75 * node_size[selected_attack_info['attack_type']])
+        .attr('height', 0.75 * node_size[selected_attack_info['attack_type']])
+        .attr('x', 0.125 * node_size[selected_attack_info['attack_type']])
+        .attr('y', 0.125 * node_size[selected_attack_info['attack_type']])
+        .attr('rx', 0.05 * node_size[selected_attack_info['attack_type']])
+        .attr('ry', 0.05 * node_size[selected_attack_info['attack_type']])
+        .attr('stroke-width', 0.25 * node_size[selected_attack_info['attack_type']])
+        .attr('fill', 'none')
+        .style('stroke', '#F5F5F5')
         .style('display', 'none')
         .on('mouseover', function(neuron) { return mouseover_node(neuron) })
         .on('mouseout', function(neuron) { return mouseout_node(neuron) })
