@@ -8,6 +8,65 @@
   transform: translate(130px, 0px);
 }
 
+/* Comparison legend - neither */
+#symbol-neither {
+  transform: translate(0px, 13px);
+}
+
+#outer-neither {
+  fill: lightgray;
+}
+
+#inner-neither {
+  fill: lightgray;
+}
+
+/* Comparison legend - weaker */
+#symbol-weaker {
+  transform: translate(0px, 35px);
+}
+
+#outer-weaker {
+  fill: lightgray;
+}
+
+#inner-weaker {
+  fill: gray;
+}
+
+/* Comparison legend - stronger */
+#symbol-stronger {
+  transform: translate(85px, 13px);
+}
+
+#outer-stronger {
+  fill: gray;
+}
+
+#inner-stronger {
+  fill: lightgray;
+}
+
+/* Comparison legend - boths */
+#symbol-both {
+  transform: translate(85px, 35px);
+}
+
+#outer-both {
+  fill: gray;
+}
+
+#inner-both {
+  fill: gray;
+}
+
+/* compare-legend-text */
+.compare-legend-text {
+  font-size: 13px;
+  fill: gray;
+}
+
+/* Comparison bar */
 #g-compare-bar {
   transform: translate(0px, 70px);
   fill: gray;

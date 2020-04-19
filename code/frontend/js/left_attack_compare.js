@@ -46,6 +46,7 @@ var bar_length_scale_cmp = {}
 gen_mode_option_g()
 write_mode_option_title('compare', 'COMPARE ATTACKS')
 add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
+gen_compare_contents_g()
 add_compare_legend()
 add_compare_strength_bar()
 
@@ -58,6 +59,13 @@ function gen_mode_option_g() {
     .append('g')
     .attr('id', 'g-compare-option')
 }
+
+function gen_compare_contents_g() {
+  d3.select('#g-compare-option')
+    .append('g')
+    .attr('id', 'g-compare-contents')
+}
+
 
 export function add_on_off_icon(option, turn_on_function, turn_off_function) {
   d3.select('#' + ['g', option, 'option'].join('-'))
@@ -89,7 +97,50 @@ export function add_on_off_icon(option, turn_on_function, turn_off_function) {
 }
 
 function add_compare_legend() {
-  
+  gen_legned_g()
+  add_legend('neither', 'N/A')
+  add_legend('weaker', 'Weaker')
+  add_legend('stronger', 'Stronger')
+  add_legend('both', 'Weaker + Stronger')
+
+  function gen_legned_g() {
+    d3.select('#g-compare-contents')
+      .append('g')
+      .attr('id', 'g-compare-legend')
+  }
+
+  function add_legend(symbol_id, symbol_text) {
+    d3.select('#g-compare-legend')
+      .append('g')
+      .attr('id', 'symbol-' + symbol_id)
+    
+    d3.select('#symbol-' + symbol_id)
+      .append('g')
+      .attr('id', 'symbol-rects-' + symbol_id)
+    
+    d3.select('#symbol-rects-' + symbol_id)
+      .append('rect')
+      .attr('id', 'outer-' + symbol_id)
+      .attr('width', filter_bar['outer_rect'])
+      .attr('height', filter_bar['outer_rect'])
+      .style('rx', filter_bar['outer_rx'])
+
+    d3.select('#symbol-rects-' + symbol_id)
+      .append('rect')
+      .attr('id', 'inner-' + symbol_id)
+      .attr('width', filter_bar['inner_rect'])
+      .attr('height', filter_bar['inner_rect'])
+      .style('rx', filter_bar['inner_rx'])
+      .attr('x', (filter_bar['outer_rect'] - filter_bar['inner_rect']) / 2)
+      .attr('y', (filter_bar['outer_rect'] - filter_bar['inner_rect']) / 2)
+
+    d3.select('#symbol-' + symbol_id)
+      .append('text')
+      .text(symbol_text)
+      .attr('class', 'compare-legend-text')
+      .attr('x', filter_bar['outer_rect'] + 7)
+      .attr('y', 11.5)
+  }
 }
 
 function turn_on_comparison_mode() {
@@ -123,7 +174,7 @@ function add_compare_strength_bar() {
   gen_bar('compare', [comp_attack['weak'], comp_attack['strong']])
 
   function create_bar_g() {
-    d3.select('#g-compare-option')
+    d3.select('#g-compare-contents')
       .append('g')
       .attr('id', 'g-compare-bar')
       .style('opacity', 0.3)
