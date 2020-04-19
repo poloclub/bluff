@@ -64,6 +64,7 @@ function gen_compare_contents_g() {
   d3.select('#g-compare-option')
     .append('g')
     .attr('id', 'g-compare-contents')
+    .classed('disabled', true).style('opacity', 0.3)
 }
 
 
@@ -146,11 +147,11 @@ function add_compare_legend() {
 function turn_on_comparison_mode() {
   comp_attack['on'] = true
 
-  // Option on
-  d3.select('#g-compare-bar').style('opacity', 1)
-
   // Attack strength off
   d3.select('#g-strength-bar').classed('disabled', true).style('opacity', 0.3)
+
+  // Option on
+  d3.select('#g-compare-contents').classed('disabled', false).style('opacity', 1)
 
   go_comparison_mode()
 }
@@ -158,11 +159,11 @@ function turn_on_comparison_mode() {
 function turn_off_comparison_mode() {
   comp_attack['on'] = false
 
-  // Option off
-  d3.select('#g-compare-bar').style('opacity', 0.3)
-
   // Attack strength on
   d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
+
+  // Option off
+  d3.select('#g-compare-contents').classed('disabled', true).style('opacity', 0.3)
 
   update_node_opacity()
 }
@@ -170,20 +171,12 @@ function turn_off_comparison_mode() {
 function add_compare_strength_bar() {
   bar_length_scale_cmp = gen_strength_bar_length_scale(filter_bar['cmp_bar_length'])
   create_bar_g()
-  // create_bar_title('Strengths')
   gen_bar('compare', [comp_attack['weak'], comp_attack['strong']])
 
   function create_bar_g() {
     d3.select('#g-compare-contents')
       .append('g')
       .attr('id', 'g-compare-bar')
-      .style('opacity', 0.3)
-  }
-
-  function create_bar_title(title) {
-    d3.select('#g-compare-bar')
-      .append('text')
-      .text(title)
   }
 
   function gen_bar(filter_type, default_vals) {
@@ -263,7 +256,7 @@ function add_compare_strength_bar() {
             .attr('width', filter_bar['outer_rect'])
             .attr('height', filter_bar['outer_rect'])
             .style('rx', filter_bar['outer_rx'])
-            .on('mouseover', function() { this.style.cursor = 'pointer' })
+            .on('mouseover', function() { rect_mouseover() })
             .call(gen_slider_drag())
 
             function outer_delta_x() {
@@ -288,7 +281,7 @@ function add_compare_strength_bar() {
             .attr('width', filter_bar['inner_rect'])
             .attr('height', filter_bar['inner_rect'])
             .style('rx', filter_bar['inner_rx'])
-            .on('mouseover', function() { this.style.cursor = 'pointer' })
+            .on('mouseover', function() { rect_mouseover() })
             .call(gen_slider_drag())
 
           function inner_delta_x() {
@@ -301,6 +294,18 @@ function add_compare_strength_bar() {
             } else {
               return -(filter_bar['outer_rect'] + filter_bar['inner_rect']) / 2
             }
+          }
+        }
+
+        function rect_mouseover() {
+          var is_disabled = d3.select('#g-compare-contents').attr('class')
+          if (is_disabled) {
+            is_disabled = is_disabled.includes('disabled')
+          }
+          if (is_disabled) {
+            d3.select('#g-attack-' + weak_or_strong).style('cursor', 'default')
+          } else {
+            d3.select('#g-attack-' + weak_or_strong).style('cursor', 'pointer')
           }
         }
         
@@ -323,43 +328,61 @@ function add_compare_strength_bar() {
   
           return slider_drag
   
-          function slider_drag_start() { 
-            d3.select('#circle-' + weak_or_strong).style('display', 'block')
+          function slider_drag_start() {
+            var is_disabled = d3.select('#g-compare-contents').attr('class')
+            if (is_disabled) {
+              is_disabled = is_disabled.includes('disabled')
+            }
+            if (!is_disabled) {
+              d3.select('#circle-' + weak_or_strong).style('display', 'block')
+            }
           }
   
           function slider_drag_ing() {
-            // Get the position of pointer
-            var mouse_x = get_mouse_x()
-          
-            // Domains
-            var domains = attack_strengths[selected_attack_info['attack_type']]
-            var max_domain_val = d3.max(domains)
-            var domain_unit = max_domain_val / domains.length
-        
-            // Update the selected value
-            comp_attack[weak_or_strong] = bar_len['len_to_val'](mouse_x)
-            comp_attack[weak_or_strong] = round_unit(comp_attack[weak_or_strong], domain_unit)
-            d3.select('#strength-val-' + weak_or_strong).text(comp_attack[weak_or_strong])
-  
-            // Position pointer
-            d3.select('#g-attack-' + weak_or_strong)
-              .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+            var is_disabled = d3.select('#g-compare-contents').attr('class')
+            if (is_disabled) {
+              is_disabled = is_disabled.includes('disabled')
+            }
+            if (!is_disabled) {
+              // Get the position of pointer
+              var mouse_x = get_mouse_x()
             
-            go_comparison_mode()
+              // Domains
+              var domains = attack_strengths[selected_attack_info['attack_type']]
+              var max_domain_val = d3.max(domains)
+              var domain_unit = max_domain_val / domains.length
+          
+              // Update the selected value
+              comp_attack[weak_or_strong] = bar_len['len_to_val'](mouse_x)
+              comp_attack[weak_or_strong] = round_unit(comp_attack[weak_or_strong], domain_unit)
+              d3.select('#strength-val-' + weak_or_strong).text(comp_attack[weak_or_strong])
+    
+              // Position pointer
+              d3.select('#g-attack-' + weak_or_strong)
+                .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+              
+              go_comparison_mode()
+            }
           }
   
           function slider_drag_end() {
-            d3.select('#circle-' + weak_or_strong).style('display', 'none')
-        
-            // Get the position of the circle and the front bar
-            var mouse_x = get_mouse_x()
-        
-            // Sticky movement
-            var domains = attack_strengths[selected_attack_info['attack_type']]
-            var bar_length_unit = filter_bar['cmp_bar_length'] / domains.length
-            mouse_x = round_unit(mouse_x, bar_length_unit)
-            d3.select('#g-attack-' + weak_or_strong)
-              .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+            var is_disabled = d3.select('#g-compare-contents').attr('class')
+            if (is_disabled) {
+              is_disabled = is_disabled.includes('disabled')
+            }
+            if (!is_disabled) {
+              d3.select('#circle-' + weak_or_strong).style('display', 'none')
+          
+              // Get the position of the circle and the front bar
+              var mouse_x = get_mouse_x()
+          
+              // Sticky movement
+              var domains = attack_strengths[selected_attack_info['attack_type']]
+              var bar_length_unit = filter_bar['cmp_bar_length'] / domains.length
+              mouse_x = round_unit(mouse_x, bar_length_unit)
+              d3.select('#g-attack-' + weak_or_strong)
+                .attr('transform', 'translate(' + mouse_x + ',' + get_y() + ')')
+            }
           }
 
           function get_mouse_x() {
