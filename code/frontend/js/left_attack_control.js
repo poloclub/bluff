@@ -197,7 +197,9 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
     if (is_disabled) {
       is_disabled = is_disabled.includes('disabled')
     }
-    if (!is_disabled) {
+    if (is_disabled) {
+      d3.select('#filter-bar-circle-' + filter_type).style('cursor', 'default')
+    } else {
       d3.select('#filter-bar-circle-' + filter_type).style('cursor', 'pointer')
     }
   }

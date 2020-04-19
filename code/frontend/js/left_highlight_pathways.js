@@ -361,7 +361,9 @@ function gen_slider(group_id, parent_id, styler) {
     if (is_disabled) {
       is_disabled = is_disabled.includes('disabled')
     }
-    if (!is_disabled) {
+    if (is_disabled) {
+      d3.select('#' + slider_id('circle')).style('cursor', 'default')
+    } else {
       d3.select('#' + slider_id('circle')).style('cursor', 'pointer')
     }
   }

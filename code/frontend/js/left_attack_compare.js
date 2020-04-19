@@ -47,14 +47,14 @@ gen_mode_option_g()
 write_mode_option_title('compare', 'COMPARE ATTACKS')
 add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
 // write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
-add_compare_strength_bar()
+// add_compare_strength_bar()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Main division
 //////////////////////////////////////////////////////////////////////////////////////////
 
 function gen_mode_option_g() {
-  d3.select('#svg-attack-comparison-option')
+  d3.select('#svg-comparison-option')
     .append('g')
     .attr('id', 'g-compare-option')
 }
@@ -95,7 +95,7 @@ function turn_on_comparison_mode() {
   d3.select('#g-compare-bar').style('opacity', 1)
 
   // Attack strength off
-  d3.select('#g-strength-bar').style('opacity', 0.3)
+  d3.select('#g-strength-bar').classed('disabled', true).style('opacity', 0.3)
 
   go_comparison_mode()
 }
@@ -107,7 +107,7 @@ function turn_off_comparison_mode() {
   d3.select('#g-compare-bar').style('opacity', 0.3)
 
   // Attack strength on
-  d3.select('#g-strength-bar').style('opacity', 1)
+  d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
 
   update_node_opacity()
 }
