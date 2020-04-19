@@ -46,8 +46,8 @@ var bar_length_scale_cmp = {}
 gen_mode_option_g()
 write_mode_option_title('compare', 'COMPARE ATTACKS')
 add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
-// write_mode_option_help('compare', ['Which adversarial strenghts', 'do you want to compare?'])
-// add_compare_strength_bar()
+add_compare_legend()
+add_compare_strength_bar()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Main division
@@ -86,6 +86,10 @@ export function add_on_off_icon(option, turn_on_function, turn_off_function) {
   function turn_off_icon() {
     d3.select('#' + option + '-on-off-icon').text(icons['toggle-off'])
   }
+}
+
+function add_compare_legend() {
+  
 }
 
 function turn_on_comparison_mode() {

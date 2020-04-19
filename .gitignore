@@ -13,3 +13,4 @@ code/backend/run_attack_pgd.sh
 chi-lbw-review.gdoc
 code/backend/percentile.ipynb
 code/cp_massif_local_code.sh
+code/backend/gen-adversarial-example-patches.ipynb
