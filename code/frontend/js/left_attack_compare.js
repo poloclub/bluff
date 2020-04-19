@@ -13,13 +13,12 @@ import {
 } from './left_attack_control.js'
 
 import {
-  write_mode_option_title,
-  write_mode_option_help
+  write_mode_option_title
 } from './left_filter_pathways.js'
 
 import { 
   go_comparison_mode,
-  update_node_opacity
+  go_out_from_comparison_mode
 } from './attribution_graph.js'
 
 import {
@@ -165,7 +164,9 @@ function turn_off_comparison_mode() {
   // Option off
   d3.select('#g-compare-contents').classed('disabled', true).style('opacity', 0.3)
 
-  update_node_opacity()
+  go_out_from_comparison_mode()
+  // update_node_opacity()
+  
 }
 
 function add_compare_strength_bar() {

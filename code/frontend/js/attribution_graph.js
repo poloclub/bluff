@@ -1817,7 +1817,7 @@ export function update_scatter_circle() {
 }
 
 export function go_comparison_mode() {
-  // XXXXXXXX
+
   if (comp_attack['on']) {
 
     off_all_node()
@@ -1939,6 +1939,18 @@ export function go_comparison_mode() {
     }
   }
 
+}
+
+export function go_out_from_comparison_mode() {
+  if (!comp_attack['on']) {
+    console.log('go out') 
+    d3.selectAll('.inner-node').style('display', 'none')
+    d3.selectAll('.inner-pinned-node').style('display', 'none')
+    d3.selectAll('.outer-node').style('display', 'none')
+    update_node_opacity()
+    update_scatter_circle()
+    update_edges_display()
+  }
 }
 
 function off_all_node() {
