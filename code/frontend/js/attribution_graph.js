@@ -663,9 +663,10 @@ function draw_neurons() {
       var neuron_data = get_neuron_data(graph_key, layer)
       append_node_rect(graph_key, neuron_data)
     })
-    append_node_end_circles(graph_key)
-    append_feature_vis(graph_key)
+
     
+    append_feature_vis(graph_key)
+    append_node_end_circles(graph_key)
     append_comp_nodes(graph_key)
 
     function get_neuron_data(graph_key, layer) {
@@ -1859,80 +1860,84 @@ export function update_scatter_circle() {
 }
 
 export function go_comparison_mode() {
+  // XXXXXXXX
   if (comp_attack['on']) {
 
     off_all_node()
 
+    // Show weaker attack's nodes
     var weak = comp_attack['weak']
-    var strong = comp_attack['strong']
+    update_node_opacity_compare_mode(highlight_pathways['neurons']['selected'])
 
-    if (highlight_pathways['neurons']['selected'] == 'activated') {
-      update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
-    } else if (highlight_pathways['neurons']['selected'] == 'changed') {
-      update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
+    // var strong = comp_attack['strong']
+
+    // if (highlight_pathways['neurons']['selected'] == 'activated') {
+    //   update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
+    // } else if (highlight_pathways['neurons']['selected'] == 'changed') {
+    //   update_opacity_compare_mode(highlight_pathways['neurons']['selected'])
+    // }
+
+    function update_node_opacity_compare_mode(filter_method) {
+    //   update_opacity_outer_rect(filter_method)
+    //   update_opacity_inner_rect(filter_method)
     }
 
-    function update_opacity_compare_mode(filter_method) {
-      update_opacity_outer_rect(filter_method)
-      update_opacity_inner_rect(filter_method)
-    }
-
-    function update_opacity_outer_rect(filter_method) {
+    // function update_opacity_outer_rect(filter_method) {
       
-      var f = filter_function(filter_method)
-      console.log(filter_method, f)
+    //   var f = filter_function(filter_method)
+    //   console.log(filter_method, f)
 
-      d3.selectAll('.node')
-        .style('fill-opacity', function(neuron) {
-          if (f(neuron, strong)) {
-            return node_opacity['activated']
-          } else {
-            return node_opacity['deactivated']
-          }
-        })
-    }
+    //   d3.selectAll('.node')
+    //     .style('fill-opacity', function(neuron) {
+    //       if (f(neuron, strong)) {
+    //         return node_opacity['activated']
+    //       } else {
+    //         return node_opacity['deactivated']
+    //       }
+    //     })
+    // }
 
-    function update_opacity_inner_rect(filter_method) {
-      var f = filter_function(filter_method)
+    // function update_opacity_inner_rect(filter_method) {
+    //   var f = filter_function(filter_method)
 
-      var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
-      graph_keys.forEach(graph_key => {
-        d3.selectAll('.inner-node-' + graph_key)
-          .style('display', 'block')
-          .style('fill', function(neuron) {
-            if (f(neuron, weak)) {
-              return node_color[graph_key]
-            } else {
-              return 'white'
-            }
-          })
-          .style('fill-opacity', function(neuron) {
-            if (f(neuron, weak)) {
-              return node_opacity['activated']
-            } else {
-              return 1 - node_opacity['deactivated']
-            }
-          })
-          .style('display', function(neuron) {
-            if (!(f(neuron, weak)) && !(f(neuron, strong))) {
-              return 'none'
-            } else {
-              return 'block'
-            }
-          })
-      })
+    //   var graph_keys = ['original', 'original-and-target', 'target', 'attack-only']
+    //   graph_keys.forEach(graph_key => {
+    //     d3.selectAll('.inner-node-' + graph_key)
+    //       .style('display', 'block')
+    //       .style('fill', function(neuron) {
+    //         if (f(neuron, weak)) {
+    //           return node_color[graph_key]
+    //         } else {
+    //           return 'white'
+    //         }
+    //       })
+    //       .style('fill-opacity', function(neuron) {
+    //         if (f(neuron, weak)) {
+    //           return node_opacity['activated']
+    //         } else {
+    //           return 1 - node_opacity['deactivated']
+    //         }
+    //       })
+    //       .style('display', function(neuron) {
+    //         if (!(f(neuron, weak)) && !(f(neuron, strong))) {
+    //           return 'none'
+    //         } else {
+    //           return 'block'
+    //         }
+    //       })
+    //   })
 
-    }
+    // }
 
-    function filter_function(filter_method) {
-      if (filter_method == 'activated') {
-        return is_most_activated
-      } else if (filter_method == 'excited') {
-        return is_most_excited
-      } else if (filter_method == 'inhibited') {
-        return is_most_inhibited
-      } 
-    }
+    // function filter_function(filter_method) {
+    //   if (filter_method == 'activated') {
+    //     return is_most_activated
+    //   } else if (filter_method == 'excited') {
+    //     return is_most_excited
+    //   } else if (filter_method == 'inhibited') {
+    //     return is_most_inhibited
+    //   } 
+    // }
   }
 
 }

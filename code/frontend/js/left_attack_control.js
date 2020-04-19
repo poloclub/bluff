@@ -25,7 +25,7 @@ import {
 
 export var selected_attack_info = {
   'attack_type': 'pgd',
-  'attack_strength': 0.50
+  'attack_strength': 0.05
 }
 
 var strength_bar_scale = {}
@@ -35,7 +35,6 @@ var strength_bar_scale = {}
 //////////////////////////////////////////////////////////////////////////////////////////
 
 write_attack_option_title('ADVERSARIAL ATTACK')
-// write_attack_help_text('How to manipulate?')
 gen_attack_dropdown()
 strength_bar_scale = gen_strength_bar_length_scale(filter_bar['bar_length'])
 gen_filter_bar(
@@ -54,13 +53,6 @@ function write_attack_option_title(title) {
     .append('text')
     .attr('id', 'attack-option-title')
     .text(title)
-}
-
-function write_attack_help_text(text) {
-  d3.select('#svg-attack-option')
-    .append('text')
-    .attr('id', 'attack-option-help')
-    .text(text)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

@@ -67,14 +67,6 @@ write_text('topk-connections', 'g-highlight-connections', highlight_pathways['co
 write_text('highlight-option-connections-text-2', 'g-highlight-connections', '%')
 gen_slider('topk-connections', 'g-highlight-connections', filter_bar)
 
-// write_highlight_neurons()
-// write_highlight_connections()
-// gen_pathways_option_g('highlight')
-// add_what_to_highlight_options('highlight', 'what', 'What to Highlight')
-// add_how_many_to_highlight_options('highlight', 'many', 'How many to Highlight')
-// add_how_many_to_highlight_options('connections')
-// update_highlight_bottons('neurons')
-// update_highlight_bottons('connections')
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Functions

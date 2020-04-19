@@ -16,6 +16,11 @@
   display: inline;
 }
 
+.node-circle {
+  stroke: white;
+  stroke-width: 0.7px;
+}
+
 .nodebox-bg {
   fill: white;
   stroke: lightgray;
