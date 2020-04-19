@@ -49,6 +49,7 @@ add_on_off_icon('compare', turn_on_comparison_mode, turn_off_comparison_mode)
 gen_compare_contents_g()
 add_compare_legend()
 add_compare_strength_bar()
+add_edge_option()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Main division
@@ -66,7 +67,6 @@ function gen_compare_contents_g() {
     .attr('id', 'g-compare-contents')
     .classed('disabled', true).style('opacity', 0.3)
 }
-
 
 export function add_on_off_icon(option, turn_on_function, turn_off_function) {
   d3.select('#' + ['g', option, 'option'].join('-'))
@@ -485,5 +485,85 @@ function add_compare_strength_bar() {
         }
       }
     }
+  }
+}
+
+function add_edge_option() {
+  gen_edge_option_g()
+  write_option_text('compare-option-text-1', 'Only show edges for')
+  add_dropdown_menu()
+  write_option_text('compare-option-text-2', 'attack')
+
+  function gen_edge_option_g() {
+    d3.select('#g-compare-contents')
+      .append('g')
+      .attr('id', 'g-compare-edge-option')
+  }
+
+  function write_option_text(id, text) {
+    d3.select('#g-compare-edge-option')
+      .append('text')
+      .attr('id', id)
+      .text(text)
+      .attr('class', 'compare-edge-option-text')
+  }
+
+  function add_dropdown_menu() {
+    
+    gen_g_compare_edge_dropdown()
+    gen_edge_dropdown_bg_rect()
+    gen_edge_dropdown_val_text()
+    gen_edge_dropdown_icon()
+    gen_edge_dropdown_line()
+
+    function gen_g_compare_edge_dropdown() {
+      d3.select('#g-compare-edge-option')
+        .append('g')
+        .attr('id', 'g-compare-edge-dropdown')
+    }
+
+    function gen_edge_dropdown_bg_rect() {
+      d3.select('#g-compare-edge-dropdown')
+        .append('rect')
+        .attr('id', 'edge-compare-dropdown-bg-rect')
+        .style('fill', 'white')
+        .attr('width', 60)
+        .attr('height', 15)
+        .attr('x', 115)
+        .attr('y', -11)
+    }
+
+    function gen_edge_dropdown_val_text() {
+      d3.select('#g-compare-edge-dropdown')
+        .append('text')
+        .attr('id', 'edge-compare-dropdown-text')
+        .attr('class', 'compare-edge-option-text')
+        .text('stronger')
+        .attr('x', 115)
+    }
+
+    function gen_edge_dropdown_icon() {
+      d3.select('#g-compare-edge-dropdown')
+        .append('text')
+        .attr('id', 'edge-compare-dropdown-icon')
+        .attr('font-family', 'FontAwesome')
+        .text(icons['caret-down'])
+        .attr('x', 165)
+        .attr('y', 2)
+        .style('fill', 'gray')
+    }
+
+    function gen_edge_dropdown_line() {
+      d3.select('#g-compare-edge-dropdown')
+        .append('line')
+        .attr('id', 'edge-compare-dropdown-line')
+        .attr('x1', 115)
+        .attr('x2', 175)
+        .attr('y1', 2)
+        .attr('y2', 2)
+        .style('stroke', 'gray')
+        .style('stroke-width', 1)
+    }
+    
   }
 }

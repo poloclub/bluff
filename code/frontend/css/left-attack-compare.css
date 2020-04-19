@@ -10,7 +10,7 @@
 
 /* Comparison legend - neither */
 #symbol-neither {
-  transform: translate(0px, 13px);
+  transform: translate(0px, 20px);
 }
 
 #outer-neither {
@@ -23,7 +23,7 @@
 
 /* Comparison legend - weaker */
 #symbol-weaker {
-  transform: translate(0px, 35px);
+  transform: translate(0px, 43px);
 }
 
 #outer-weaker {
@@ -36,7 +36,7 @@
 
 /* Comparison legend - stronger */
 #symbol-stronger {
-  transform: translate(85px, 13px);
+  transform: translate(85px, 20px);
 }
 
 #outer-stronger {
@@ -49,7 +49,7 @@
 
 /* Comparison legend - boths */
 #symbol-both {
-  transform: translate(85px, 35px);
+  transform: translate(85px, 43px);
 }
 
 #outer-both {
@@ -68,7 +68,7 @@
 
 /* Comparison bar */
 #g-compare-bar {
-  transform: translate(0px, 70px);
+  transform: translate(0px, 80px);
   fill: gray;
 }
 
@@ -113,4 +113,18 @@
   stroke-width: 0.4px;
   fill: lightgray;
   font-size: 13px;
+}
+
+/* Edge option */
+#g-compare-edge-option {
+  transform: translate(0px, 175px);
+}
+
+.compare-edge-option-text {
+  fill: gray;
+  font-size: 13px;
+}
+
+#compare-option-text-2 {
+  transform: translate(180px, 0px);
 }
