@@ -25,7 +25,7 @@ import {
 
 export var selected_attack_info = {
   'attack_type': 'pgd',
-  'attack_strength': 0.05
+  'attack_strength': 0.15
 }
 
 var strength_bar_scale = {}
