@@ -843,8 +843,12 @@ function draw_neurons() {
     turn_on_node_feature_vis(neuron)
 
     // Show feature vis of connected neurons
-    turn_on_connected_node_feature_vis(neuron)
-
+    if (comp_attack['on']) {
+      turn_on_connected_node_feature_vis(neuron, highlighted_edges_in_comparison_mode)
+    } else {
+      turn_on_connected_node_feature_vis(neuron, highlighted_edges)
+    }
+    
     // Flowline edges
     flow_edges()
 
@@ -1179,31 +1183,42 @@ function draw_neurons() {
 
     function back_to_previous_fv_display() {
       turn_off_node_feature_vis(neuron)
-      turn_off_connected_node_feature_vis(neuron)
+      if (comp_attack['on']) {
+        turn_off_connected_node_feature_vis(neuron, highlighted_edges_in_comparison_mode)
+      } else {
+        turn_off_connected_node_feature_vis(neuron, highlighted_edges)
+      }
     }
 
     function back_to_previous_fv_opacity() {
+      var strength = selected_attack_info['attack_strength']
+      if (comp_attack['on']) {
+        strength = comp_attack[comp_attack['edge-show']]
+      }
+
       d3.select('#fv-' + neuron)
         .style('opacity', function(neuron) {
           if (highlight_pathways['neurons']['selected'] == 'activated') {
-            if (is_most_activated(neuron, selected_attack_info['attack_strength'])) {
+            if (is_most_activated(neuron, strength)) {
               return node_opacity['activated']
             } 
           } else if (highlight_pathways['neurons']['selected'] == 'excited') {
-            if (is_most_excited(neuron, selected_attack_info['attack_strength'])) {
+            if (is_most_excited(neuron, strength)) {
               return node_opacity['activated']
             } 
           } else if (highlight_pathways['neurons']['selected'] == 'inhibited') {
-            if (is_most_inhibited(neuron, selected_attack_info['attack_strength'])) {
+            if (is_most_inhibited(neuron, strength)) {
               return node_opacity['activated']
             } 
           } else if (highlight_pathways['neurons']['selected'] == 'changed') {
-            if (is_most_changed(neuron, selected_attack_info['attack_strength'])) {
+            if (is_most_changed(neuron, strength)) {
               return node_opacity['activated']
             } 
           }
           return node_opacity['fv-deactivated']
         })
+
+      
     }
 
     function back_to_previous_edges() {
@@ -1251,7 +1266,7 @@ function draw_neurons() {
       .style('display', 'none')
   }
 
-  function turn_on_connected_node_feature_vis(neuron) {
+  function turn_on_connected_node_feature_vis(neuron, highlighted_edges) {
     
     // Show next layer's connected neurons' feature vis
     var layer = neuron.split('-')[0]
@@ -1290,7 +1305,7 @@ function draw_neurons() {
     
   }
 
-  function turn_off_connected_node_feature_vis(neuron) {
+  function turn_off_connected_node_feature_vis(neuron, highlighted_edges) {
     
     // Show next layer's connected neurons' feature vis
     var layer = neuron.split('-')[0]
