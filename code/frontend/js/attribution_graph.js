@@ -1747,11 +1747,13 @@ export function update_graph_by_filter_graph() {
 
   function rearrange_layers(node_transforms) {
     layers.forEach(layer => {
-      var node_x_min = d3.min(Object.values(node_transforms[layer]))
-      d3.select('#layer-' + layer)
-        .transition()
-        .duration(1500)
-        .attr('transform', 'translate(' + (node_x_min - 150) + ',0)')
+      if (layer in node_transforms) {
+        var node_x_min = d3.min(Object.values(node_transforms[layer]))
+        d3.select('#layer-' + layer)
+          .transition()
+          .duration(1500)
+          .attr('transform', 'translate(' + (node_x_min - 150) + ',0)')
+      }
     })
   }
 
