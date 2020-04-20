@@ -19,7 +19,8 @@ import {
 
 import { 
   go_comparison_mode,
-  go_out_from_comparison_mode
+  go_out_from_comparison_mode,
+  update_edges_display_in_comparison_mode
 } from './attribution_graph.js'
 
 import {
@@ -577,8 +578,8 @@ function add_edge_option() {
       // XXXXXXXXXXXXXXXX
       
       gen_basic_bg(2)
-      add_item(0, 'weaker')
-      add_item(1, 'stronger')
+      add_item(0, 'weak')
+      add_item(1, 'strong')
 
       function gen_basic_bg(num_item) {
         d3.select('#g-compare-edge-option')
@@ -630,7 +631,7 @@ function add_edge_option() {
             .append('text')
             .attr('id', gen_item_component_id('text'))
             .attr('class', gen_item_component_class('text'))
-            .text(item)
+            .text(item + 'er')
         }
 
         function gen_item_component_class(component) {
@@ -662,18 +663,11 @@ function add_edge_option() {
             is_disabled = is_disabled.includes('disabled')
           }
           if (!is_disabled) {
-            d3.select('#edge-compare-dropdown-text').text(item)
+            d3.select('#edge-compare-dropdown-text').text(item + 'er')
             d3.select('#g-compare-edge-dropdown-menu').style('display', 'none')
             comp_attack['edge-show'] = item
-            // XXXX draw edge of selected 
+            update_edges_display_in_comparison_mode()
           }
-
-          // d3.select('#highlight-option-' + group_id + '-text').text(item)
-          // d3.select('#g-dropdown-' + group_id).style('display', 'none')
-          // highlight_pathways['neurons']['selected'] = item
-          // highlight_pathways['connections']['selected'] = item
-          // update_node_opacity()
-          // update_edges_display()
         }
       }
     }
