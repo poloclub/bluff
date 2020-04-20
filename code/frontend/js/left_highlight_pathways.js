@@ -11,16 +11,17 @@ import {
 
 import {
   update_node_opacity,
-  update_graph_by_filter_graph,
   go_comparison_mode,
   update_edges_display
 } from './attribution_graph.js'
 
 import {
-  gen_pathways_option_g,
   write_mode_option_title,
-  filter_pathways
 } from './left_filter_pathways.js'
+
+import {
+  comp_attack
+} from './left_attack_compare.js'
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -263,8 +264,12 @@ function gen_dropdown(group_id, parent_id, styler) {
         d3.select('#g-dropdown-' + group_id).style('display', 'none')
         highlight_pathways['neurons']['selected'] = item
         highlight_pathways['connections']['selected'] = item
-        update_node_opacity()
-        update_edges_display()
+        if (comp_attack['on']) {
+          go_comparison_mode()
+        } else {
+          update_node_opacity()
+          update_edges_display()
+        }
       }
     }
     
@@ -406,8 +411,12 @@ function gen_slider(group_id, parent_id, styler) {
         d3.select('#' + slider_id('front-rect')).style('width', mouse_x)
     
         // Update attribution graph
-        update_node_opacity()
-        update_edges_display()
+        if (comp_attack['on']) {
+          go_comparison_mode()
+        } else {
+          update_node_opacity()
+          update_edges_display()
+        }
       }
     }
 
