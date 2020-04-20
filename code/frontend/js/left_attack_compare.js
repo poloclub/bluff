@@ -1,6 +1,7 @@
 import {
   icons,
-  filter_bar
+  filter_bar,
+  compare_style
 } from './style.js'
 
 import {
@@ -33,7 +34,8 @@ import {
 export var comp_attack = {
   'on': false,
   'weak': 0.05,
-  'strong': 0.45
+  'strong': 0.45,
+  'edge-show': 'weak'
 }
 
 var bar_length_scale_cmp = {} 
@@ -152,6 +154,7 @@ function turn_on_comparison_mode() {
   // Option on
   d3.select('#g-compare-contents').classed('disabled', false).style('opacity', 1)
 
+  // Go into comparison mode
   go_comparison_mode()
 }
 
@@ -164,8 +167,8 @@ function turn_off_comparison_mode() {
   // Option off
   d3.select('#g-compare-contents').classed('disabled', true).style('opacity', 0.3)
 
+  // Go out from the comparison mode
   go_out_from_comparison_mode()
-  // update_node_opacity()
   
 }
 
@@ -510,12 +513,15 @@ function add_edge_option() {
   }
 
   function add_dropdown_menu() {
+
+    // XXXXXXXXXX
     
     gen_g_compare_edge_dropdown()
     gen_edge_dropdown_bg_rect()
     gen_edge_dropdown_val_text()
     gen_edge_dropdown_icon()
     gen_edge_dropdown_line()
+    gen_edge_dropdown_menu()
 
     function gen_g_compare_edge_dropdown() {
       d3.select('#g-compare-edge-option')
@@ -528,9 +534,9 @@ function add_edge_option() {
         .append('rect')
         .attr('id', 'edge-compare-dropdown-bg-rect')
         .style('fill', 'white')
-        .attr('width', 60)
-        .attr('height', 15)
-        .attr('x', 115)
+        .attr('width', compare_style['dropdown-width'])
+        .attr('height', compare_style['dropdown-rect-height'])
+        .attr('x', compare_style['dropdown-x'])
         .attr('y', -11)
     }
 
@@ -539,8 +545,8 @@ function add_edge_option() {
         .append('text')
         .attr('id', 'edge-compare-dropdown-text')
         .attr('class', 'compare-edge-option-text')
-        .text('stronger')
-        .attr('x', 115)
+        .text(comp_attack['edge-show'] + 'er')
+        .attr('x', compare_style['dropdown-x'])
     }
 
     function gen_edge_dropdown_icon() {
@@ -549,7 +555,7 @@ function add_edge_option() {
         .attr('id', 'edge-compare-dropdown-icon')
         .attr('font-family', 'FontAwesome')
         .text(icons['caret-down'])
-        .attr('x', 165)
+        .attr('x', compare_style['dropdown-x'] + compare_style['dropdown-width'] - 10)
         .attr('y', 2)
         .style('fill', 'gray')
     }
@@ -558,12 +564,118 @@ function add_edge_option() {
       d3.select('#g-compare-edge-dropdown')
         .append('line')
         .attr('id', 'edge-compare-dropdown-line')
-        .attr('x1', 115)
-        .attr('x2', 175)
+        .attr('x1', compare_style['dropdown-x'])
+        .attr('x2', compare_style['dropdown-x'] + compare_style['dropdown-width'])
         .attr('y1', 2)
         .attr('y2', 2)
         .style('stroke', 'gray')
         .style('stroke-width', 1)
+    }
+
+    function gen_edge_dropdown_menu() {
+
+      // XXXXXXXXXXXXXXXX
+      
+      gen_basic_bg(2)
+      add_item(0, 'weaker')
+      add_item(1, 'stronger')
+
+      function gen_basic_bg(num_item) {
+        d3.select('#g-compare-edge-option')
+          .append('g')
+          .attr('id', 'g-compare-edge-dropdown-menu')
+          .attr('transform', 'translate(' + compare_style['dropdown-x'] + ',7)')
+
+        d3.select('#g-compare-edge-dropdown-menu')
+          .append('rect')
+          .attr('id', 'compare-edge-dropdown-rect')
+          .attr('class', 'dropdown-menu-bg-rect')
+          .attr('width', compare_style['dropdown-width'])
+          .attr('height', dropdown_menu_total_height(num_item))
+
+        function dropdown_menu_total_height(num_item) {
+          return num_item * compare_style['item-height'] + compare_style['dropdown-top'] + compare_style['dropdown-bottom']
+        }
+      }
+
+      function add_item(i, item) {
+        d3.select('#g-compare-edge-dropdown-menu')
+          .append('g')
+          .attr('id', 'g-compare-edge-item-' + item)
+          .attr('transform', g_item_transform(i))
+          .on('mouseover', function() { mouseover_item() })
+          .on('click', function() { click_item() })
+
+        gen_item_rect()
+        gen_item_text()
+
+        function g_item_transform(i) {
+          var x = 0
+          var y = compare_style['dropdown-top'] + i * compare_style['item-height']
+          return 'translate(' + x + ',' + y + ')'
+        }
+
+        function gen_item_rect() {
+          d3.select('#g-compare-edge-item-' + item)
+            .append('rect')
+            .attr('id', gen_item_component_id('rect'))
+            .attr('class', gen_item_component_class('rect'))
+            .attr('width', compare_style['dropdown-width'])
+            .attr('height', compare_style['item-height'])
+            .style('fill', 'white')
+        }
+
+        function gen_item_text() {
+          d3.select('#g-compare-edge-item-' + item)
+            .append('text')
+            .attr('id', gen_item_component_id('text'))
+            .attr('class', gen_item_component_class('text'))
+            .text(item)
+        }
+
+        function gen_item_component_class(component) {
+          return 'compare-edge-item-' + component
+        }
+  
+        function gen_item_component_id(component) {
+          return ['compare-edge-item', item, component].join('-')
+        }
+
+        function mouseover_item() {
+          // XXXX
+          var is_disabled = d3.select('#g-compare-contents').attr('class')
+          if (is_disabled) {
+            is_disabled = is_disabled.includes('disabled')
+          }
+          if (is_disabled) {
+            d3.select('#g-compare-edge-item-' + item).style('cursor', 'default')
+          } else {
+            d3.select('#g-compare-edge-item-' + item).style('cursor', 'pointer')
+            d3.selectAll('.compare-edge-item-rect').style('fill', 'white')
+            d3.select('#' + gen_item_component_id('rect')).style('fill', 'lightgray')
+          }
+        }
+
+        function click_item() {
+          var is_disabled = d3.select('#g-compare-contents').attr('class')
+          if (is_disabled) {
+            is_disabled = is_disabled.includes('disabled')
+          }
+          if (!is_disabled) {
+            d3.select('#edge-compare-dropdown-text').text(item)
+            d3.select('#g-compare-edge-dropdown-menu').style('display', 'none')
+            comp_attack['edge-show'] = item
+            // XXXX draw edge of selected 
+          }
+
+          // d3.select('#highlight-option-' + group_id + '-text').text(item)
+          // d3.select('#g-dropdown-' + group_id).style('display', 'none')
+          // highlight_pathways['neurons']['selected'] = item
+          // highlight_pathways['connections']['selected'] = item
+          // update_node_opacity()
+          // update_edges_display()
+        }
+      }
     }
     
   }

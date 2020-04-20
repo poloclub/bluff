@@ -128,3 +128,9 @@
 #compare-option-text-2 {
   transform: translate(180px, 0px);
 }
+
+.compare-edge-item-text {
+  font-size: 13px;
+  transform: translate(7px, 11px);
+  fill: gray;
+}

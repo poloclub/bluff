@@ -121,7 +121,16 @@ export var highlight_pathways_style = {
   'connections-changed-icon-x': 58,
   // Most what connections dropdown
   'connections-what-dropdown-bg-rect-height': 70,
-  'connections-what-rect-width': 69,
+  'connections-what-rect-width': 69
+}
+
+export var compare_style = {
+  'dropdown-width': 60,
+  'dropdown-rect-height': 15,
+  'dropdown-x': 115,
+  'dropdown-top': 5,
+  'dropdown-bottom': 5,
+  'item-height': 15
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
