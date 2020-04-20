@@ -1822,6 +1822,8 @@ export function go_comparison_mode() {
     off_all_node()
 
     update_node_compare_mode(highlight_pathways['neurons']['selected'])
+
+    update_edges_display_in_comparison_mode()
     
     function update_node_compare_mode(filter_method) {
       
@@ -2096,7 +2098,7 @@ export function update_edges_display() {
   var highlighted_neurons = get_highlighted_neurons()
 
   // Get currently highligtable edges
-  var potentially_highlighted_edges = get_highlightable_edges(highlighted_neurons)
+  var potentially_highlighted_edges = get_highlightable_edges(highlighted_neurons, selected_attack_info['attack_strength'])
 
   // Initialized whether edges be highlighted
   highlighted_edges = {}
@@ -2105,98 +2107,19 @@ export function update_edges_display() {
   // Highlight edges based on the selected option
   var most_option = highlight_pathways['connections']['selected']
   if (most_option == 'activated') {
-    get_most_activated_highlightable_edges()
+    potentially_highlighted_edges = get_most_activated_highlightable_edges(potentially_highlighted_edges)
   } else if (most_option == 'changed') {
-    get_most_changed_highlightable_edges()
+    potentially_highlighted_edges = get_most_changed_highlightable_edges(potentially_highlighted_edges)
   } else if (most_option == 'excited') {
-    get_most_excited_highlightable_edges()
+    potentially_highlighted_edges = get_most_excited_highlightable_edges(potentially_highlighted_edges)
   } else if (most_option == 'inhibited') {
-    get_most_inhibited_highlightable_edges()
+    potentially_highlighted_edges = get_most_inhibited_highlightable_edges(potentially_highlighted_edges)
   } else {
     console.log('ERROR: Unknown most_option:', most_option)
   }
 
   get_edges_to_highlight()
   highlight_top_edges()
-
-  function get_most_activated_highlightable_edges() {
-    // Sort the highlightable edges
-    for (var layer in potentially_highlighted_edges) {
-      var sorted_edges = potentially_highlighted_edges[layer].sort(function(a, b) {
-        return b['inf'] - a['inf'] 
-      })
-      potentially_highlighted_edges[layer] = sorted_edges
-    }
-  }
-
-  function get_most_excited_highlightable_edges() {
-    
-    // Sort the highlightable edges
-    layers.slice(1).forEach(layer => {
-      var sorted_edges = potentially_highlighted_edges[layer].sort(function(edge_1, edge_2) {
-        // Get delta inf of edge_1
-        var delta_inf_1 = edge_1['inf'] - get_benign_edge_inf(edge_1['curr'], edge_1['next'])
-        
-        // Get delta inf of edge_2
-        var delta_inf_2 = edge_2['inf'] - get_benign_edge_inf(edge_2['curr'], edge_2['next'])
-
-        return delta_inf_2 - delta_inf_1
-      })
-      potentially_highlighted_edges[layer] = sorted_edges
-    })
-
-  }
-
-  function get_most_inhibited_highlightable_edges() {
-    // Sort the highlightable edges
-    layers.slice(1).forEach(layer => {
-      var sorted_edges = potentially_highlighted_edges[layer].sort(function(edge_1, edge_2) {
-        // Get delta inf of edge_1
-        var delta_inf_1 = edge_1['inf'] - get_benign_edge_inf(edge_1['curr'], edge_1['next'])
-
-        // Get delta inf of edge_2
-        var delta_inf_2 = edge_2['inf'] - get_benign_edge_inf(edge_2['curr'], edge_2['next'])
-
-        return delta_inf_1 - delta_inf_2
-      })
-      potentially_highlighted_edges[layer] = sorted_edges
-    })
-  }
-
-  function get_most_changed_highlightable_edges() {
-    
-    // Sort the highlightable edges
-    layers.slice(1).forEach(layer => {
-      var sorted_edges = potentially_highlighted_edges[layer].sort(function(edge_1, edge_2) {
-        // Get absolute delta inf of edge_1
-        var delta_inf_1 = Math.abs(edge_1['inf'] - get_benign_edge_inf(edge_1['curr'], edge_1['next']))
-
-        // Get delta inf of edge_2
-        var delta_inf_2 = Math.abs(edge_2['inf'] - get_benign_edge_inf(edge_2['curr'], edge_2['next']))
-
-        return delta_inf_2 - delta_inf_1
-      })
-      potentially_highlighted_edges[layer] = sorted_edges
-    })
-
-  }
-
-  function get_benign_edge_inf(curr, next) {
-    var layer = curr.split('-')[0]
-    if (!(layer in benign_edge_data)) {
-      return 0
-    }
-
-    if (!(curr in benign_edge_data[layer])) {
-      return 0
-    }
-
-    if (!(next in benign_edge_data[layer][curr])) {
-      return 0
-    }
-
-    return  benign_edge_data[layer][curr][next]['inf']
-  }
 
   function get_edges_to_highlight() {
     for (var layer in potentially_highlighted_edges) {
@@ -2216,20 +2139,150 @@ export function update_edges_display() {
   }
 
 }
-  
-export function update_edges_display_in_comparison_mode() {
-  // XXXXXXXXXXXXXXXXXX
-  highlighted_edges_in_comparison_mode = {}
 
+function get_most_activated_highlightable_edges(potentially_highlighted_edges) {
+  // Sort the highlightable edges
+  for (var layer in potentially_highlighted_edges) {
+    var sorted_edges = potentially_highlighted_edges[layer].sort(function(a, b) {
+      return b['inf'] - a['inf'] 
+    })
+    potentially_highlighted_edges[layer] = sorted_edges
+  }
+  return potentially_highlighted_edges
+}
+
+function get_most_excited_highlightable_edges(potentially_highlighted_edges) {
+  
+  // Sort the highlightable edges
+  layers.slice(1).forEach(layer => {
+    var sorted_edges = potentially_highlighted_edges[layer].sort(function(edge_1, edge_2) {
+      // Get delta inf of edge_1
+      var delta_inf_1 = edge_1['inf'] - get_benign_edge_inf(edge_1['curr'], edge_1['next'])
+      
+      // Get delta inf of edge_2
+      var delta_inf_2 = edge_2['inf'] - get_benign_edge_inf(edge_2['curr'], edge_2['next'])
+
+      return delta_inf_2 - delta_inf_1
+    })
+    potentially_highlighted_edges[layer] = sorted_edges
+  })
+  return potentially_highlighted_edges
+}
+
+function get_most_inhibited_highlightable_edges(potentially_highlighted_edges) {
+  // Sort the highlightable edges
+  layers.slice(1).forEach(layer => {
+    var sorted_edges = potentially_highlighted_edges[layer].sort(function(edge_1, edge_2) {
+      // Get delta inf of edge_1
+      var delta_inf_1 = edge_1['inf'] - get_benign_edge_inf(edge_1['curr'], edge_1['next'])
+
+      // Get delta inf of edge_2
+      var delta_inf_2 = edge_2['inf'] - get_benign_edge_inf(edge_2['curr'], edge_2['next'])
+
+      return delta_inf_1 - delta_inf_2
+    })
+    potentially_highlighted_edges[layer] = sorted_edges
+  })
+  return potentially_highlighted_edges
+}
+
+function get_most_changed_highlightable_edges(potentially_highlighted_edges) {
+  
+  // Sort the highlightable edges
+  layers.slice(1).forEach(layer => {
+    var sorted_edges = potentially_highlighted_edges[layer].sort(function(edge_1, edge_2) {
+      // Get absolute delta inf of edge_1
+      var delta_inf_1 = Math.abs(edge_1['inf'] - get_benign_edge_inf(edge_1['curr'], edge_1['next']))
+
+      // Get delta inf of edge_2
+      var delta_inf_2 = Math.abs(edge_2['inf'] - get_benign_edge_inf(edge_2['curr'], edge_2['next']))
+
+      return delta_inf_2 - delta_inf_1
+    })
+    potentially_highlighted_edges[layer] = sorted_edges
+  })
+  return potentially_highlighted_edges
+}
+  
+function get_benign_edge_inf(curr, next) {
+  var layer = curr.split('-')[0]
+  if (!(layer in benign_edge_data)) {
+    return 0
+  }
+
+  if (!(curr in benign_edge_data[layer])) {
+    return 0
+  }
+
+  if (!(next in benign_edge_data[layer][curr])) {
+    return 0
+  }
+
+  return  benign_edge_data[layer][curr][next]['inf']
+}
+
+export function update_edges_display_in_comparison_mode() {
+  
+  // Get currently highlighted neurons
   var highlighted_neurons = get_highlighted_neurons_in_comparison_mode()
-  console.log(highlighted_neurons)
+
+  // Get currently highlightable edges
+  var highlightable_edges = get_highlightable_edges(highlighted_neurons, comp_attack[comp_attack['edge-show']])
+
+  // Initialize whetheer edges to be highlighted
+  highlighted_edges_in_comparison_mode = {}
+  d3.selectAll('.edge').classed('edge-shown', false).style('display', 'none')
+
+  // Highlight edges based on the selected option
+  var most_option = highlight_pathways['connections']['selected']
+  if (most_option == 'activated') {
+    highlightable_edges = get_most_activated_highlightable_edges(highlightable_edges)
+  } else if (most_option == 'changed') {
+    highlightable_edges = get_most_changed_highlightable_edges(highlightable_edges)
+  } else if (most_option == 'excited') {
+    highlightable_edges = get_most_excited_highlightable_edges(highlightable_edges)
+  } else if (most_option == 'inhibited') {
+    highlightable_edges = get_most_inhibited_highlightable_edges(highlightable_edges)
+  } else {
+    console.log('ERROR: Unknown most_option:', most_option)
+  }
+
+  get_edges_to_highlight()
+  highlight_top_edges()
+
+  function get_edges_to_highlight() {
+    for (var layer in highlightable_edges) {
+      var all_edges = highlightable_edges[layer]
+      var num_edges = Math.round(all_edges.length * highlight_pathways['connections']['top-k'] / 100)
+      highlighted_edges_in_comparison_mode[layer] = all_edges.slice(0, num_edges)
+    }
+  }
+
+  function highlight_top_edges() {
+    for (var layer in highlighted_edges_in_comparison_mode) {
+      highlighted_edges_in_comparison_mode[layer].forEach(edge_info => {
+        var edge_id = ['edge', edge_info['curr'], edge_info['next']].join('-')
+        d3.select('#' + edge_id).classed('edge-shown', true).style('display', 'block')
+      })
+    }
+  }
+
 
   function get_highlighted_neurons_in_comparison_mode() {
     var node_rects = document.getElementsByClassName('node')
     var neurons = Array.from(node_rects).map(x => x.id.split('node-')[1])
-    var highlighted_neurons = neurons.filter(function(neuron) {
+    var highlighted_neurons_all_layers = neurons.filter(function(neuron) {
       return is_highlighted_in_comparisoin_mode(neuron)
     })
+    var highlighted_neurons = {}
+    highlighted_neurons_all_layers.forEach(neuron => {
+      var layer = neuron.split('-')[0]
+      if (!(layer in highlighted_neurons)) {
+        highlighted_neurons[layer] = []
+      }
+      highlighted_neurons[layer].push(neuron)
+    })
+
     return highlighted_neurons
   }
 
@@ -2307,13 +2360,14 @@ function get_highlighted_neurons() {
   return highlighted_neurons
 }
 
-function get_highlightable_edges(highlighted_neurons) {
+function get_highlightable_edges(highlighted_neurons, strength) {
   var no_highlighted_neurons = Object.keys(highlighted_neurons).length === 0
   var potentially_highlighted_edges = {}
   layers.slice(1).forEach(layer => {
     potentially_highlighted_edges[layer] = []
     if (!no_highlighted_neurons) {
-      edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
+      // edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
+      edge_data[strength][layer].forEach(edge_info => {
         var curr = edge_info['curr']
         var next = edge_info['next']
         var inf = edge_info['inf']
