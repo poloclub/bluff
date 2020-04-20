@@ -1,4 +1,4 @@
-## Bluff: Interactively Deciphering Adversarial Attacks on Deep NeuralNetworks
+## Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks
 
 ### Motivation
 
