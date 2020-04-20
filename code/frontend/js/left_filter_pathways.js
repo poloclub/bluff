@@ -126,6 +126,14 @@ function click_filter_option(option) {
   update_filter_bottons()
   update_graph_by_filter_graph()
 
+  if (option == 'selected' || option == 'highlighted') {
+    d3.select('#g-compare-contents').classed('disabled', true).style('opacity', 0.3)
+    d3.select('#compare-on-off-icon').classed('disabled', true).style('opacity', 0.3)
+  } else if (option == 'all') {
+    d3.select('#g-compare-contents').classed('disabled', false).style('opacity', 1)
+    d3.select('#compare-on-off-icon').classed('disabled', false).style('opacity', 1)
+  }
+
 }
 
 function update_filter_bottons() {

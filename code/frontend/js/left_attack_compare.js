@@ -77,17 +77,35 @@ export function add_on_off_icon(option, turn_on_function, turn_off_function) {
     .attr('id', option + '-on-off-icon')
     .attr('font-family', 'FontAwesome')
     .text(icons['toggle-off'])
-    .on('mouseover', function() { this.style.cursor = 'pointer' })
-    .on('click', function() { return toggle_on_off() })
+    .on('mouseover', function() { mouseover_on_off_icon() })
+    .on('click', function() { toggle_on_off() })
 
   function toggle_on_off() {
-    var icon = d3.select('#' + option + '-on-off-icon').text()
-    if (icon == icons['toggle-off']) {
-      turn_on_icon()
-      turn_on_function()
+    var is_disabled = d3.select('#' + option + '-on-off-icon').attr('class')
+    if (is_disabled) {
+      is_disabled = is_disabled.includes('disabled')
+    }
+    if (!is_disabled) {
+      var icon = d3.select('#' + option + '-on-off-icon').text()
+      if (icon == icons['toggle-off']) {
+        turn_on_icon()
+        turn_on_function()
+      } else {
+        turn_off_icon()
+        turn_off_function()
+      }
+    }
+  }
+
+  function mouseover_on_off_icon() {
+    var is_disabled = d3.select('#' + option + '-on-off-icon').attr('class')
+    if (is_disabled) {
+      is_disabled = is_disabled.includes('disabled')
+    }
+    if (is_disabled) {
+      d3.select('#' + option + '-on-off-icon').style('cursor', 'default')
     } else {
-      turn_off_icon()
-      turn_off_function()
+      d3.select('#' + option + '-on-off-icon').style('cursor', 'pointer')
     }
   }
 
@@ -526,7 +544,6 @@ function add_edge_option() {
     gen_edge_dropdown_menu()
 
     function gen_g_compare_edge_dropdown() {
-      // XXXXX
       d3.select('#g-compare-edge-option')
         .append('g')
         .attr('id', 'g-compare-edge-dropdown')
