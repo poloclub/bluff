@@ -14,7 +14,8 @@ import {
 } from './left_attack_control.js'
 
 import {
-  write_mode_option_title
+  write_mode_option_title,
+  filter_pathways
 } from './left_filter_pathways.js'
 
 import { 
@@ -163,7 +164,9 @@ function turn_off_comparison_mode() {
   comp_attack['on'] = false
 
   // Attack strength on
-  d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
+  if (filter_pathways['filter'] == 'all') {
+    d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
+  }
 
   // Option off
   d3.select('#g-compare-contents').classed('disabled', true).style('opacity', 0.3)

@@ -1571,7 +1571,9 @@ function is_most_changed(neuron, strength) {
 export function update_graph_by_filter_graph() {
 
   if (filter_pathways['filter'] == 'all') {
-    d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
+    if (!comp_attack['on']) {
+      d3.select('#g-strength-bar').classed('disabled', false).style('opacity', 1)
+    }
     d3.select('#g-highlight-option-contents').classed('disabled', false).style('opacity', 1)
     rearrange_all_neurons()
     rearrange_all_edges()
