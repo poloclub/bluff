@@ -515,8 +515,6 @@ function add_edge_option() {
 
   function add_dropdown_menu() {
 
-    // XXXXXXXXXX
-    
     gen_g_compare_edge_dropdown()
     gen_edge_dropdown_bg_rect()
     gen_edge_dropdown_val_text()
@@ -525,9 +523,12 @@ function add_edge_option() {
     gen_edge_dropdown_menu()
 
     function gen_g_compare_edge_dropdown() {
+      // XXXXX
       d3.select('#g-compare-edge-option')
         .append('g')
         .attr('id', 'g-compare-edge-dropdown')
+        .on('mouseover', function() { mouseover_compare_edge_dropdown() })
+        .on('click', function() { click_compare_edge_dropdown() })
     }
 
     function gen_edge_dropdown_bg_rect() {
@@ -575,8 +576,6 @@ function add_edge_option() {
 
     function gen_edge_dropdown_menu() {
 
-      // XXXXXXXXXXXXXXXX
-      
       gen_basic_bg(2)
       add_item(0, 'weak')
       add_item(1, 'strong')
@@ -586,6 +585,7 @@ function add_edge_option() {
           .append('g')
           .attr('id', 'g-compare-edge-dropdown-menu')
           .attr('transform', 'translate(' + compare_style['dropdown-x'] + ',7)')
+          .style('display', 'none')
 
         d3.select('#g-compare-edge-dropdown-menu')
           .append('rect')
@@ -643,7 +643,6 @@ function add_edge_option() {
         }
 
         function mouseover_item() {
-          // XXXX
           var is_disabled = d3.select('#g-compare-contents').attr('class')
           if (is_disabled) {
             is_disabled = is_disabled.includes('disabled')
@@ -668,6 +667,33 @@ function add_edge_option() {
             comp_attack['edge-show'] = item
             update_edges_display_in_comparison_mode()
           }
+        }
+      }
+    }
+
+    function mouseover_compare_edge_dropdown() {
+      var is_disabled = d3.select('#g-compare-contents').attr('class')
+      if (is_disabled) {
+        is_disabled = is_disabled.includes('disabled')
+      }
+      if (is_disabled) {
+        d3.select('#g-compare-edge-dropdown').style('cursor', 'default')
+      } else {
+        d3.select('#g-compare-edge-dropdown').style('cursor', 'pointer')
+      }
+    }
+
+    function click_compare_edge_dropdown() {
+      var is_disabled = d3.select('#g-compare-contents').attr('class')
+      if (is_disabled) {
+        is_disabled = is_disabled.includes('disabled')
+      }
+      if (!is_disabled) {
+        var menu_display = d3.select('#g-compare-edge-dropdown-menu').style('display')
+        if (menu_display != 'none') {
+          d3.select('#g-compare-edge-dropdown-menu').style('display', 'none')
+        } else {
+          d3.select('#g-compare-edge-dropdown-menu').style('display', 'block')
         }
       }
     }

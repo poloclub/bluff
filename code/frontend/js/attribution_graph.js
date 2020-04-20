@@ -2381,21 +2381,23 @@ function get_highlightable_edges(highlighted_neurons, strength) {
   layers.slice(1).forEach(layer => {
     potentially_highlighted_edges[layer] = []
     if (!no_highlighted_neurons) {
-      // edge_data[selected_attack_info['attack_strength']][layer].forEach(edge_info => {
       edge_data[strength][layer].forEach(edge_info => {
         var curr = edge_info['curr']
         var next = edge_info['next']
         var inf = edge_info['inf']
         var curr_layer = curr.split('-')[0]
         var next_layer = next.split('-')[0]
-  
-        if (highlighted_neurons[curr_layer].includes(curr) && highlighted_neurons[next_layer].includes(next)) {
-          potentially_highlighted_edges[layer].push({
-            'curr': curr,
-            'next': next,
-            'inf': inf,
-          })
+
+        if ((curr_layer in highlighted_neurons) && (next_layer in highlighted_neurons)) {
+          if (highlighted_neurons[curr_layer].includes(curr) && highlighted_neurons[next_layer].includes(next)) {
+            potentially_highlighted_edges[layer].push({
+              'curr': curr,
+              'next': next,
+              'inf': inf,
+            })
+          }
         }
+        
       })
     }
   })
