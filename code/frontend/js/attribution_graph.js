@@ -1592,14 +1592,19 @@ export function update_graph_by_filter_graph() {
   function get_displayable_neurons(filter_option) {
 
     if (filter_option == 'highlighted') {
-      return get_highlightd_displayable_neurons()
+      return get_highlighted_displayable_neurons()
     } else if (filter_option == 'selected') {
       return get_pinned_displayable_neurons()
     }
 
-    function get_highlightd_displayable_neurons() {
+    function get_highlighted_displayable_neurons() {
       var grouped_highlighted_neurons = {}
-      var highlighted_neurons = get_highlighted_neurons()
+      var highlighted_neurons = {}
+      if (comp_attack['on']) {
+        highlighted_neurons = get_highlighted_neurons_weak_strong()
+      } else {
+        highlighted_neurons = get_highlighted_neurons()
+      }
       for (var layer in highlighted_neurons) {
         grouped_highlighted_neurons[layer] = {}
         highlighted_neurons[layer].forEach(neuron => {
@@ -1611,6 +1616,31 @@ export function update_graph_by_filter_graph() {
         })
       }
       return grouped_highlighted_neurons
+    }
+
+    function get_highlighted_neurons_weak_strong() {
+      var node_rects = document.getElementsByClassName('node')
+      var neurons = Array.from(node_rects).map(x => x.id.split('node-')[1])
+      var highlighted_neurons_all_layers = neurons.filter(function(neuron) {
+        var is_inner_highlighted = parseFloat(d3.select('#inner-node-' + neuron).style('fill-opacity')) == node_opacity['activated']
+        var is_node_highlighted = parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['activated']
+        if (is_inner_highlighted || is_node_highlighted) {
+          return true
+        } else {
+          return false
+        }
+      })
+
+      var highlighted_neurons = {}
+      highlighted_neurons_all_layers.forEach(neuron => {
+        var layer = neuron.split('-')[0]
+        if (!(layer in highlighted_neurons)) {
+          highlighted_neurons[layer] = []
+        }
+        highlighted_neurons[layer].push(neuron)
+      })
+
+      return highlighted_neurons
     }
 
     function get_pinned_displayable_neurons() {
@@ -1723,7 +1753,11 @@ export function update_graph_by_filter_graph() {
       })
 
     if (filter_pathways['filter'] != 'selected') {
-      update_edges_display()
+      if (comp_attack['on']) {
+        update_edges_display_in_comparison_mode()
+      } else {
+        update_edges_display()
+      }
     }
 
     d3.selectAll('.edge-shown')
@@ -1776,8 +1810,14 @@ export function update_graph_by_filter_graph() {
 
   function rearrange_all_edges() {
 
-    update_edges_display()
+    // XXXXXXXXXXX
 
+    if (comp_attack['on']) {
+      update_edges_display_in_comparison_mode()
+    } else {
+      update_edges_display()
+    }
+    
     var ns = node_size[selected_attack_info['attack_type']]
     d3.selectAll('.edge-shown')
       .transition()
@@ -2285,74 +2325,6 @@ export function update_edges_display_in_comparison_mode() {
       })
     }
   }
-
-
-  function get_highlighted_neurons_in_comparison_mode() {
-    var node_rects = document.getElementsByClassName('node')
-    var neurons = Array.from(node_rects).map(x => x.id.split('node-')[1])
-    var highlighted_neurons_all_layers = neurons.filter(function(neuron) {
-      return is_highlighted_in_comparisoin_mode(neuron)
-    })
-    var highlighted_neurons = {}
-    highlighted_neurons_all_layers.forEach(neuron => {
-      var layer = neuron.split('-')[0]
-      if (!(layer in highlighted_neurons)) {
-        highlighted_neurons[layer] = []
-      }
-      highlighted_neurons[layer].push(neuron)
-    })
-
-    return highlighted_neurons
-  }
-
-  function is_highlighted_in_comparisoin_mode(neuron) {
-    if (comp_attack['edge-show'] == 'weak') {
-      return is_highlighted_weak(neuron)
-    } else if (comp_attack['edge-show'] == 'strong') {
-      return is_highlithed_strong(neuron) 
-    }
-
-    function is_highlighted_weak(neuron) {
-      if (is_pinned(neuron)) {
-        var is_not_neither = (parseFloat(d3.select('#fv-' + neuron).style('opacity')) == node_opacity['activated'])
-        var is_not_stronger = d3.select('#inner-pinned-node-' + neuron).style('display') == 'none'
-        if (is_not_neither && is_not_stronger) {
-          return true
-        } else {
-          return false
-        }
-      } else if (!is_pinned(neuron)) {
-        var is_weak = parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['deactivated']
-        is_weak = is_weak && (d3.select('#inner-node-' + neuron).style('display') != 'none')
-        var is_both = parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['activated']
-        is_both = is_weak && (d3.select('#inner-node-' + neuron).style('display') == 'none')
-        if (is_weak || is_both) {
-          return true
-        } else {
-          return false
-        }
-      }
-    }
-
-    function is_highlithed_strong(neuron) {
-      if (is_pinned(neuron)) {
-        var is_strong_or_both = (parseFloat(d3.select('#fv-' + neuron).style('opacity')) == node_opacity['activated'])
-        is_strong_or_both = is_strong_or_both && (d3.select('#outer-node-' + neuron).style('display') == 'none')
-        if (is_strong_or_both) {
-          return true
-        } else {
-          return false
-        }
-      } else if (!is_pinned(neuron)) {
-        var is_strong_or_both = (parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['activated'])
-        if (is_strong_or_both) {
-          return true
-        } else {
-          return false
-        }
-      }
-    }
-  }
 }
 
 function get_highlighted_neurons() {
@@ -2377,6 +2349,73 @@ function get_highlighted_neurons() {
   })
 
   return highlighted_neurons
+}
+
+function get_highlighted_neurons_in_comparison_mode() {
+  var node_rects = document.getElementsByClassName('node')
+  var neurons = Array.from(node_rects).map(x => x.id.split('node-')[1])
+  var highlighted_neurons_all_layers = neurons.filter(function(neuron) {
+    return is_highlighted_in_comparisoin_mode(neuron)
+  })
+  var highlighted_neurons = {}
+  highlighted_neurons_all_layers.forEach(neuron => {
+    var layer = neuron.split('-')[0]
+    if (!(layer in highlighted_neurons)) {
+      highlighted_neurons[layer] = []
+    }
+    highlighted_neurons[layer].push(neuron)
+  })
+
+  return highlighted_neurons
+}
+
+function is_highlighted_in_comparisoin_mode(neuron) {
+  if (comp_attack['edge-show'] == 'weak') {
+    return is_highlighted_weak(neuron)
+  } else if (comp_attack['edge-show'] == 'strong') {
+    return is_highlithed_strong(neuron) 
+  }
+
+  function is_highlighted_weak(neuron) {
+    if (is_pinned(neuron)) {
+      var is_not_neither = (parseFloat(d3.select('#fv-' + neuron).style('opacity')) == node_opacity['activated'])
+      var is_not_stronger = d3.select('#inner-pinned-node-' + neuron).style('display') == 'none'
+      if (is_not_neither && is_not_stronger) {
+        return true
+      } else {
+        return false
+      }
+    } else if (!is_pinned(neuron)) {
+      var is_weak = parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['deactivated']
+      is_weak = is_weak && (d3.select('#inner-node-' + neuron).style('display') != 'none')
+      var is_both = parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['activated']
+      is_both = is_weak && (d3.select('#inner-node-' + neuron).style('display') == 'none')
+      if (is_weak || is_both) {
+        return true
+      } else {
+        return false
+      }
+    }
+  }
+
+  function is_highlithed_strong(neuron) {
+    if (is_pinned(neuron)) {
+      var is_strong_or_both = (parseFloat(d3.select('#fv-' + neuron).style('opacity')) == node_opacity['activated'])
+      is_strong_or_both = is_strong_or_both && (d3.select('#outer-node-' + neuron).style('display') == 'none')
+      if (is_strong_or_both) {
+        return true
+      } else {
+        return false
+      }
+    } else if (!is_pinned(neuron)) {
+      var is_strong_or_both = (parseFloat(d3.select('#node-' + neuron).style('fill-opacity')) == node_opacity['activated'])
+      if (is_strong_or_both) {
+        return true
+      } else {
+        return false
+      }
+    }
+  }
 }
 
 function get_highlightable_edges(highlighted_neurons, strength) {
