@@ -19,7 +19,7 @@ export var top_k = 8
 export var rough_top_k = 8
 
 // Data directory
-export var data_dir = './data' // ../../data/
+export var data_dir = './data' 
 
 // Layer
 export var layers = ['mixed5b', 'mixed5a', 'mixed4e', 'mixed4d', 'mixed4c', 'mixed4b', 'mixed4a', 'mixed3b', 'mixed3a']
