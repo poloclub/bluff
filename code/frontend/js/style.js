@@ -5,7 +5,7 @@
 // Main view sizes
 export var main_view_size = {
   'width': 1600,
-  'height': 1000
+  'height': 2000
 }
 
 // g-main
@@ -203,7 +203,7 @@ export var icons = {
 
 export var node_style = {
   // When filtered
-  'group-lr': 40,
+  'group-lr': 10,
   'neuron-lr': 5
 }
 
@@ -231,8 +231,8 @@ export var node_box_style = {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 export var edge_style = {
-  'min-stroke': 0.1,
-  'max-stroke': 5,
+  'min-stroke': 1,
+  'max-stroke': 7,
   'edge-color': 'lightgray',
   'edge-highlight-color': 'gray',
   'edge-opacity': 0.5,

@@ -15,8 +15,8 @@ export var attack_strengths = {
 }
 
 // Top_k for extracting interesting neurons
-export var top_k = 8
-export var rough_top_k = 8
+export var top_k = 10
+export var rough_top_k = 10
 
 // Data directory
 export var data_dir = './data' 
