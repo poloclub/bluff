@@ -59,7 +59,7 @@ d3.select('#g-ag')
 d3.select('#svg-main')  
   .append('rect')
   .attr('id', 'option-bg')
-  .attr('class', 'main-bg')
+  // .attr('class', 'main-bg')
   
 // Generate svg for attack option
 d3.select('#svg-main')

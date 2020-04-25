@@ -16,6 +16,15 @@ body {
 
 .main-bg {
   fill: white;
+  width: 1600px;
+  height: 2000px;
+  stroke: lightgray;
+  stroke-width: 1px;
+  paint-order: stroke;
+}
+
+#option-bg {
+  fill: white;
   width: 290px;
   height: 1000px;
   stroke: lightgray;
