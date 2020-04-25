@@ -341,9 +341,9 @@ function parse_most_extracted_data() {
         var act_b = activation_data[layer][b][attack_key][act_type]
         var ori_a = activation_data[layer][a]['original'][act_type]
         var ori_b = activation_data[layer][b]['original'][act_type]
-        var excited_a = act_a - ori_a
-        var excited_b = act_b - ori_b
-        return excited_b - excited_a
+        var changed_a = Math.abs(ori_a - act_a)
+        var changed_b = Math.abs(ori_b - act_b)
+        return changed_b - changed_a
       })
     }
   })
@@ -2121,40 +2121,49 @@ function update_rounded_image_filter() {
 function update_edge_stroke_scale() {
   edge_stroke_scale = {}
 
-  var min_inf = 10000
-  var max_inf = 0
+  edge_stroke_scale_most_activated()
 
-  layers.slice(1).forEach(layer => {
-    edge_data[0][layer].forEach(d => {
-      var inf = d['inf']
-      min_inf = d3.min([min_inf, inf])
-      max_inf = d3.max([max_inf, inf])
-    })
-  })
-
-
-  attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+  function edge_stroke_scale_most_activated() {
+    // XXXXXXXXXXXXX
+    var min_inf = {}
+    var max_inf = {}
 
     layers.slice(1).forEach(layer => {
-      edge_data[strength][layer].forEach(d => {
+      min_inf[layer] = 10000
+      min_inf[layer] = 10000
+      edge_data[0][layer].forEach(d => {
         var inf = d['inf']
         min_inf = d3.min([min_inf, inf])
         max_inf = d3.max([max_inf, inf])
       })
     })
-    
-  })
 
-  edge_stroke_scale[0] = d3
-    .scaleLinear()
-    .domain([min_inf, max_inf])
-    .range([edge_style['min-stroke'], edge_style['max-stroke']])
-  attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-    edge_stroke_scale[strength] = d3
+    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+
+      layers.slice(1).forEach(layer => {
+        edge_data[strength][layer].forEach(d => {
+          var inf = d['inf']
+          min_inf = d3.min([min_inf, inf])
+          max_inf = d3.max([max_inf, inf])
+        })
+      })
+      
+    })
+
+    edge_stroke_scale[0] = d3
       .scaleLinear()
       .domain([min_inf, max_inf])
       .range([edge_style['min-stroke'], edge_style['max-stroke']])
-  })
+    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+      edge_stroke_scale[strength] = d3
+        .scaleLinear()
+        .domain([min_inf, max_inf])
+        .range([edge_style['min-stroke'], edge_style['max-stroke']])
+    })
+  }
+
+  
+
 }
 
 export function update_edges(strength) {
