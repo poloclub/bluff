@@ -1,5 +1,4 @@
 import {
-  what_to_see, 
   highlight_pathways_style,
   icons,
   filter_bar
@@ -327,7 +326,7 @@ function gen_slider(group_id, parent_id, styler) {
       .append('rect')
       .attr('id', slider_id('background-rect'))
       .attr('class', 'filter-bar-background filter-bar-rect')
-      .style('width', styler['bar_length'])
+      .attr('width', styler['bar_length'])
 
   }
 
@@ -338,7 +337,7 @@ function gen_slider(group_id, parent_id, styler) {
       .append('rect')
       .attr('id', slider_id('front-rect'))
       .attr('class', 'filter-bar-front filter-bar-rect')
-      .style('width', bar_length_scale(highlight_pathways[group_type]['top-k']))
+      .attr('width', bar_length_scale(highlight_pathways[group_type]['top-k']))
   }
 
   function gen_circle() {
@@ -348,7 +347,7 @@ function gen_slider(group_id, parent_id, styler) {
       .append('circle')
       .attr('id', slider_id('circle'))
       .attr('class', 'filter-bar-circle')
-      .style('cx', bar_length_scale(highlight_pathways[group_type]['top-k']))
+      .attr('cx', bar_length_scale(highlight_pathways[group_type]['top-k']))
       .on('mouseover', function() { mouseover_circle() })
       .call(circle_drag())
   }
@@ -407,8 +406,8 @@ function gen_slider(group_id, parent_id, styler) {
         d3.select('#' + group_id).text(topk_val)
 
         // Position the circle and the front bar
-        d3.select('#' + slider_id('circle')).style('cx', mouse_x)
-        d3.select('#' + slider_id('front-rect')).style('width', mouse_x)
+        d3.select('#' + slider_id('circle')).attr('cx', mouse_x)
+        d3.select('#' + slider_id('front-rect')).attr('width', mouse_x)
     
         // Update attribution graph
         if (comp_attack['on']) {
@@ -438,8 +437,8 @@ function gen_slider(group_id, parent_id, styler) {
         // Sticky movement
         var bar_length_unit = styler['bar_length'] / domains.length
         mouse_x = round_unit(mouse_x, bar_length_unit)
-        d3.select('#' + slider_id('circle')).style('cx', mouse_x)
-        d3.select('#' + slider_id('front-rect')).style('width', mouse_x)
+        d3.select('#' + slider_id('circle')).attr('cx', mouse_x)
+        d3.select('#' + slider_id('front-rect')).attr('width', mouse_x)
       }
     }
   }

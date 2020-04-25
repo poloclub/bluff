@@ -156,22 +156,21 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
       .append('rect')
       .attr('id', 'filter-bar-background-' + filter_type)
       .attr('class', 'filter-bar-background filter-bar-rect')
-      .style('width', filter_bar['bar_length'])
+      .attr('width', filter_bar['bar_length'])
 
     // Add front bar
     d3.select('#g-' + filter_type + '-bar')
       .append('rect')
       .attr('id', 'filter-bar-front-' + filter_type)
       .attr('class', 'filter-bar-front filter-bar-rect')
-      .style('width', bar_length_scale['val_to_len'](default_val))
+      .attr('width', bar_length_scale['val_to_len'](default_val))
 
     // Add circle
     d3.select('#g-' + filter_type + '-bar')
       .append('circle')
       .attr('id', 'filter-bar-circle-' + filter_type)
       .attr('class', 'filter-bar-circle')
-      .style('cx', 20)
-      .style('cx', bar_length_scale['val_to_len'](default_val))
+      .attr('cx', bar_length_scale['val_to_len'](default_val))
       .on('mouseover', function(){ circle_mouseover() })
       .call(gen_control_circle_drag())
 
@@ -238,8 +237,8 @@ function gen_filter_bar(filter_type, bar_length_scale, default_val, domains) {
         } 
           
         // Position the circle and the front bar
-        d3.select('#filter-bar-circle-' + filter_type).style('cx', mouse_x)
-        d3.select('#filter-bar-front-' + filter_type).style('width', mouse_x)
+        d3.select('#filter-bar-circle-' + filter_type).attr('cx', mouse_x)
+        d3.select('#filter-bar-front-' + filter_type).attr('width', mouse_x)
     
         // Update attribution graph
         if (filter_type == 'strength') {

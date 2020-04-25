@@ -222,7 +222,7 @@ function add_compare_strength_bar() {
       d3.select('#g-compare-filter-bar')
         .append('rect')
         .attr('id', 'filter-bar-' + filter_type)
-        .style('width', filter_bar['cmp_bar_length'])
+        .attr('width', filter_bar['cmp_bar_length'])
     }
 
     function gen_pointer(weak_or_strong) {
