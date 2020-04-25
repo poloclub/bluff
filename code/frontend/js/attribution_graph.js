@@ -956,8 +956,8 @@ function draw_neurons() {
         .append('text')
         .attr('class', 'nodebox-annotation')
         .text('Feature Vis')
-        .attr('x', node_box_style['fv-left'] + 1)
-        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 8)
+        .attr('x', node_box_style['fv-left'] + 7)
+        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + + 6.5)
 
       function fv_transform() {
         var x = node_box_style['fv-left']
@@ -985,8 +985,8 @@ function draw_neurons() {
         .append('text')
         .attr('class', 'nodebox-annotation')
         .text('Examples')
-        .attr('x', node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding'] + 3)
-        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 8)
+        .attr('x', node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding'] + 8)
+        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 6.5)
 
       function ex_transform(i, num_examples) {
         var num_unit = num_examples / 2
@@ -1038,6 +1038,16 @@ function draw_neurons() {
           .attr('y2', activation_y(original_act_val))
           .style('stroke', node_color['original'])
 
+        // Add original class annotation
+        d3.select('#' + node_box_id)
+          .append('text')
+          .attr('class', 'annotation-original')
+          .text('Med. act. of ' + class_display_name(selected_class['original']))
+          .style('fill', text_color['original'])
+          .attr('x', start_x + 2)
+          .attr('y', activation_y(original_act_val) - 2)
+
+
         // Add target class activation line
         d3.select('#' + node_box_id)
           .append('line')
@@ -1047,6 +1057,20 @@ function draw_neurons() {
           .attr('y1', activation_y(target_act_val))
           .attr('y2', activation_y(target_act_val))
           .style('stroke', node_color['target'])
+
+        // Add original class annotation
+        d3.select('#' + node_box_id)
+          .append('text')
+          .attr('class', 'annotation-target')
+          .text('Med. act. of ' + class_display_name(selected_class['target']))
+          .style('fill', text_color['target'])
+          .attr('x', start_x + 2)
+          .attr('y', activation_y(target_act_val) - 2)
+
+        function class_display_name(class_name) {
+          var name = class_name.replace(/_/g, ' ')
+          return name[0].toUpperCase() + name.slice(1)
+        }
       }
 
       function draw_lines() {
@@ -1087,7 +1111,6 @@ function draw_neurons() {
             return node_box_id + '-circle-' + i
           })
           .attr('class', function(a, i) { return scatter_dots_class(i) })
-          .attr('r', function(a, i) { return scatter_circle_r(i) })
           .attr('cy', function(a) { return activation_y(a) })
           .attr('cx', function(a, i) { return activation_x(i) })
           .style('fill', function(a, i) { return scatter_circle_color(i) })
@@ -1118,15 +1141,15 @@ function draw_neurons() {
 
         d3.select('#' + node_box_id)
           .append('text')
+          .attr('class', 'axis-annotation')
           .text('Activation')
-          .style('font-size', 5)
           .attr('x', get_start_x() - 3)
           .attr('y', 8)
 
         d3.select('#' + node_box_id)
           .append('text')
           .text('Attack strength')
-          .style('font-size', 5)
+          .attr('class', 'axis-annotation')
           .attr('x', get_start_x() + 49)
           .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] - 2)
 
@@ -1209,9 +1232,9 @@ function draw_neurons() {
           curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
         }
         if (i == curr_strength_idx) {
-          return 'red'
-        } else {
           return 'gray'
+        } else {
+          return 'lightgray'
         }
       }
       
@@ -1223,9 +1246,9 @@ function draw_neurons() {
           curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
         }
         if (i == curr_strength_idx) {
-          return 4
+          return 1
         } else {
-          return 2
+          return 1
         }
       }
       

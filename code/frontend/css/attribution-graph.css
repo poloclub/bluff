@@ -39,7 +39,7 @@
 }
 
 .nodebox-annotation {
-  font-size: 8px;
+  font-size: 6px;
   fill: #AAAAAA;
 }
 
@@ -61,13 +61,38 @@
   transform: translate(0.3px, 0px);
 }
 
+.axis-annotation {
+  font-size: 5px;
+  fill: gray;
+}
+
 .node-box-scatter-line {
   stroke: lightgray;
+  stroke-width: 0.5px;
   fill: none;
 }
 
 .node-box-scatter-circle {
-  fill: gray;
+  fill: lightgray;
+  stroke: white;
+  stroke-width: 0.3px;
+  r: 1px;
+}
+
+.activation-target {
+  stroke-width: 0.5px;
+}
+
+.activation-original {
+  stroke-width: 0.5px;
+}
+
+.annotation-target {
+  font-size: 5px;
+}
+
+.annotation-original {
+  font-size: 5px;
 }
 
 .neuron-id {
