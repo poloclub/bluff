@@ -1158,6 +1158,11 @@ function draw_neurons() {
           .tickSizeInner(3)
           .tickSizeOuter(3)
           .tickPadding(2)
+          .tickFormat(function (d){
+            var str = String(d3.format(',')(d))
+            return str.slice(1)
+          })
+        
 
         var y_axis = d3
           .axisLeft()
