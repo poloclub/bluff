@@ -321,7 +321,13 @@ function parse_most_extracted_data() {
       most_activated_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
         var idx_a = top_neuron_data[layer][attack_key].indexOf(a)
         var idx_b = top_neuron_data[layer][attack_key].indexOf(b)
-        return idx_b - idx_a
+        if (idx_a < 0) {
+          idx_a = 1000
+        }
+        if (idx_b < 0) {
+          idx_b = 1000
+        }
+        return idx_a - idx_b
       })
 
       // Most inhibited extracted data
@@ -339,7 +345,7 @@ function parse_most_extracted_data() {
       })
     }
   })
-
+  console.log(most_activated_extracted_data)
 }
 
 function extract_neurons() {
@@ -1489,6 +1495,7 @@ export function update_node_opacity() {
   }
 
   function update_opacity_most_activated() {
+    // XXXXXXXXXXXX
     if (selected_attack_info['attack_strength'] == 0) {
       d3.selectAll('.node-original')
         .style('fill-opacity', node_opacity['activated'])  
@@ -1588,7 +1595,7 @@ function is_most_activated(neuron, strength) {
     var key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
   }
 
-  var top_neurons_to_highlight = most_activated_extracted_data[layer][key].slice(0, num_highlight)
+  var top_neurons_to_highlight = c[layer][key].slice(0, num_highlight)
   if (top_neurons_to_highlight.includes(neuron)) {
     return true
   } else {
