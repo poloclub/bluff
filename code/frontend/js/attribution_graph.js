@@ -847,14 +847,14 @@ function draw_neurons() {
     d3.select('#g-node-' + neuron).style('cursor', 'pointer')
 
     // Show feature vis
-    turn_on_node_feature_vis(neuron)
+    // turn_on_node_feature_vis(neuron)
 
     // Show feature vis of connected neurons
-    if (comp_attack['on']) {
-      turn_on_connected_node_feature_vis(neuron, highlighted_edges_in_comparison_mode)
-    } else {
-      turn_on_connected_node_feature_vis(neuron, highlighted_edges)
-    }
+    // if (comp_attack['on']) {
+    //   turn_on_connected_node_feature_vis(neuron, highlighted_edges_in_comparison_mode)
+    // } else {
+    //   turn_on_connected_node_feature_vis(neuron, highlighted_edges)
+    // }
     
     // Flowline edges
     flow_edges()
@@ -1036,7 +1036,8 @@ function draw_neurons() {
         d3.select('#' + node_box_id)
           .append('text')
           .attr('class', 'annotation-original')
-          .text('Med. act. of ' + class_display_name(selected_class['original']))
+          // .text('Med. act. of ' + class_display_name(selected_class['original']))
+          .text(class_display_name(selected_class['original']))
           .style('fill', text_color['original'])
           .attr('x', start_x + 2)
           .attr('y', activation_y(original_act_val) - 2)
@@ -1056,9 +1057,10 @@ function draw_neurons() {
         d3.select('#' + node_box_id)
           .append('text')
           .attr('class', 'annotation-target')
-          .text('Med. act. of ' + class_display_name(selected_class['target']))
+          // .text('Med. act. of ' + class_display_name(selected_class['target']))
+          .text(class_display_name(selected_class['target']))
           .style('fill', text_color['target'])
-          .attr('x', start_x + 2)
+          .attr('x', end_x - 20)
           .attr('y', activation_y(target_act_val) - 2)
 
         function class_display_name(class_name) {
