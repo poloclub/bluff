@@ -2124,41 +2124,54 @@ function update_edge_stroke_scale() {
   edge_stroke_scale_most_activated()
 
   function edge_stroke_scale_most_activated() {
-    // XXXXXXXXXXXXX
+
+    // Initialize the stroke scale
+    edge_stroke_scale['activated'] = {}
+    
+    // Get max and min influence value of benign
     var min_inf = {}
     var max_inf = {}
-
     layers.slice(1).forEach(layer => {
       min_inf[layer] = 10000
-      min_inf[layer] = 10000
+      max_inf[layer] = 0
       edge_data[0][layer].forEach(d => {
         var inf = d['inf']
-        min_inf = d3.min([min_inf, inf])
-        max_inf = d3.max([max_inf, inf])
+        min_inf[layer] = d3.min([min_inf[layer], inf])
+        max_inf[layer] = d3.max([max_inf[layer], inf])
       })
     })
 
+    // Get max and min influence value of attacked
     attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-
       layers.slice(1).forEach(layer => {
+        min_inf[layer] = 10000
+        max_inf[layer] = 0
         edge_data[strength][layer].forEach(d => {
           var inf = d['inf']
-          min_inf = d3.min([min_inf, inf])
-          max_inf = d3.max([max_inf, inf])
+          min_inf[layer] = d3.min([min_inf[layer], inf])
+          max_inf[layer] = d3.max([max_inf[layer], inf])
         })
-      })
-      
+      })     
     })
 
-    edge_stroke_scale[0] = d3
-      .scaleLinear()
-      .domain([min_inf, max_inf])
-      .range([edge_style['min-stroke'], edge_style['max-stroke']])
-    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
-      edge_stroke_scale[strength] = d3
+    // Edge stroke of benign
+    edge_stroke_scale['activated'][0] = {}
+    layers.slice(1).forEach(layer => {
+      edge_stroke_scale['activated'][0][layer] = d3
         .scaleLinear()
         .domain([min_inf, max_inf])
         .range([edge_style['min-stroke'], edge_style['max-stroke']])
+    })
+
+    // Edge stroke of attacked
+    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+      edge_stroke_scale['activated'][strength] = {}
+      layers.slice(1).forEach(layer => {
+        edge_stroke_scale['activated'][strength][layer] = d3
+          .scaleLinear()
+          .domain([min_inf, max_inf])
+          .range([edge_style['min-stroke'], edge_style['max-stroke']])
+      })
     })
   }
 
@@ -2183,7 +2196,10 @@ export function update_edges(strength) {
       .append('path')
       .attr('id', function(d) { return get_edge_id(d) })
       .attr('class', function(d) { return get_edge_class(d, layer) })
-      .style('stroke-width', function(d) { return edge_stroke_scale[strength](d['inf']) })
+      .style('stroke-width', function(d) { 
+        var highlight_option = highlight_pathways['neurons']['selected']
+        return edge_stroke_scale[highlight_option][strength][layer](d['inf']) 
+      })
       .style('stroke', edge_style['edge-color'])
       .style('fill', 'none')
       .style('stroke', function(d) { return edge_stroke(d) })
