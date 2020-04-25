@@ -208,18 +208,21 @@ export var node_style = {
 }
 
 export var node_box_style = {
-  'left': 40, 
+  'left': 30, 
   'width': 430, 
-  'height': 85,
-  'fv-left': 10,
+  'height': 60,
+  // Feature vis
+  'fv-left': 3,
   'fv-top': 10,
-  'fv-width': 65,
-  'fv-height': 65,
-  'fv-ex-padding': 10,
+  'fv-width': 40,
+  'fv-height': 40,
+  // Example patches
+  'fv-ex-padding': 3,
   'ex-top': 10,
-  'ex-padding': 5,
-  'ex-width': 30,
-  'ex-height': 30,
+  'ex-padding': 0,
+  'ex-width': 20,
+  'ex-height': 20,
+  // 
   'act-ex-padding': 35,
   'act-plot-top': 10 + 2,
   'act-plot-width': 120 - 2,

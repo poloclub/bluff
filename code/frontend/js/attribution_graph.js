@@ -897,6 +897,7 @@ function draw_neurons() {
     function add_node_box() {
       mk_node_box_g()
       mk_node_box_bg()
+      write_neuron_id()
       draw_node_box_fv()
       draw_examples() 
       draw_activation_plot()
@@ -925,6 +926,20 @@ function draw_neurons() {
         .attr('height', node_box_style['height'])
     }
     
+    function write_neuron_id() {
+      d3.select('#' + node_box_id)
+        .append('text')
+        .attr('id', node_box_id + '-id')
+        .attr('class', 'nodebox-id')
+        .text(function() {
+          var node_id = node_box_id.split('node-box-')[1]
+          return node_id
+        })
+        .attr('x', node_box_style['fv-left'])
+        .attr('y', 8)
+        
+    }
+
     function draw_node_box_fv() {
       d3.select('#' + node_box_id)
         .append('image')
@@ -937,6 +952,13 @@ function draw_neurons() {
         .attr('width', node_box_style['fv-width'])
         .attr('height', node_box_style['fv-height'])
 
+      d3.select('#' + node_box_id)
+        .append('text')
+        .attr('class', 'nodebox-annotation')
+        .text('Feature Vis')
+        .attr('x', node_box_style['fv-left'] + 1)
+        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 8)
+
       function fv_transform() {
         var x = node_box_style['fv-left']
         var y = node_box_style['fv-top']
@@ -945,7 +967,8 @@ function draw_neurons() {
     }
 
     function draw_examples() {
-      for(var i = 0; i < 10; i++) {
+      var num_examples = 4
+      for(var i = 0; i < num_examples; i++) {
         d3.select('#' + node_box_id)
           .append('image')
           .attr('id', node_box_id + '-ex-' + i)
@@ -953,15 +976,23 @@ function draw_neurons() {
           .attr('xlink:href', vis_filename(neuron, 'ex-' + i))
           .attr('x', 0)
           .attr('y', 0)
-          .attr('transform', function() { return ex_transform(i) })
+          .attr('transform', function() { return ex_transform(i, num_examples) })
           .attr('width', node_box_style['ex-width'])
           .attr('height', node_box_style['ex-height'])
       }
 
-      function ex_transform(i) {
+      d3.select('#' + node_box_id)
+        .append('text')
+        .attr('class', 'nodebox-annotation')
+        .text('Examples')
+        .attr('x', node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding'] + 3)
+        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 8)
+
+      function ex_transform(i, num_examples) {
+        var num_unit = num_examples / 2
         var x = node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding']
-        x += (i % 5) * (node_box_style['ex-padding'] + node_box_style['ex-width'])
-        var y = node_box_style['ex-top'] + parseInt(i / 5) * (node_box_style['ex-height'] + node_box_style['ex-padding'])
+        x += (i % num_unit) * (node_box_style['ex-padding'] + node_box_style['ex-width'])
+        var y = node_box_style['ex-top'] + parseInt(i / num_unit) * (node_box_style['ex-height'] + node_box_style['ex-padding'])
         return 'translate(' + x + ',' + y + ')'
       }
     }
@@ -1167,7 +1198,7 @@ function draw_neurons() {
 
     // Turn of node box
     var node_box_id = get_node_box_id(neuron)
-    d3.select('#' + node_box_id).style('display', 'none')
+    // d3.select('#' + node_box_id).style('display', 'none')
 
     // Turn off the neuron id
     d3.select('#neuron-id-' + neuron).style('display', 'none')

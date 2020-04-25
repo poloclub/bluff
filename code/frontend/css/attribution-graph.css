@@ -25,8 +25,18 @@
   fill: white;
   stroke: lightgray;
   stroke-width: 1px;
-  rx: 5;
-  ry: 5;
+  /* rx: 5; */
+  /* ry: 5; */
+}
+
+.nodebox-id {
+  font-size: 8px;
+  fill: gray;
+}
+
+.nodebox-annotation {
+  font-size: 8px;
+  fill: #AAAAAA;
 }
 
 .node-box-scatter-line {
