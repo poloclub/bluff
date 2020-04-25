@@ -226,7 +226,7 @@ export var node_box_style = {
   'act-ex-padding': 20,
   'act-plot-top': 10,
   'act-plot-width': 80,
-  'act-plot-height': 32
+  'act-plot-height': 40
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1004,7 +1004,7 @@ function draw_neurons() {
       var med_acts = get_activation_data()
       
       // Draw scatter plot
-      draw_annotation()
+      // draw_annotation()
       draw_axis()
       draw_class_line()
       draw_lines()
@@ -1115,6 +1115,21 @@ function draw_neurons() {
       }
 
       function draw_axis() {
+
+        d3.select('#' + node_box_id)
+          .append('text')
+          .text('Activation')
+          .style('font-size', 5)
+          .attr('x', get_start_x() - 3)
+          .attr('y', 8)
+
+        d3.select('#' + node_box_id)
+          .append('text')
+          .text('Attack strength')
+          .style('font-size', 5)
+          .attr('x', get_start_x() + 49)
+          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] - 2)
+
         d3.select('#' + node_box_id)
           .append('g')
           .attr('id', node_box_id + '-x-axis')
@@ -1177,6 +1192,7 @@ function draw_neurons() {
         
         d3.select('#' + node_box_id + '-y-axis')
           .call(y_axis)
+
       }
       
       function scatter_dots_class(i) {
