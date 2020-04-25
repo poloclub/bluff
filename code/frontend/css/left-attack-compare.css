@@ -102,7 +102,7 @@
 }
 
 .compare-strength-label-text {
-  font-weight: bolder;
+  /* font-weight: bolder; */
   stroke-width: 0.4px;
   font-size: 13px;
   stroke: gray;

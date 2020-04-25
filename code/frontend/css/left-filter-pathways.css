@@ -1,7 +1,7 @@
 /* Options general */
 .option-title {
   fill: black;
-  font-weight: bolder;
+  /* font-weight: bolder; */
 }
 
 .option-help {
