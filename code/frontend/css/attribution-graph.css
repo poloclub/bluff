@@ -43,6 +43,24 @@
   fill: #AAAAAA;
 }
 
+.node-box-axis path,
+.node-box-axis line {
+  fill: none;
+  stroke: gray;
+  stroke-width: 0.5px;
+}
+.node-box-axis text {
+  fill: gray;
+}
+
+.node-box-x-axis line {
+  transform: translate(0px, 0.3px);
+}
+
+.node-box-y-axis line {
+  transform: translate(0.3px, 0px);
+}
+
 .node-box-scatter-line {
   stroke: lightgray;
   fill: none;
