@@ -16,6 +16,10 @@
   display: inline;
 }
 
+.tick {
+  font-size: 5px;
+}
+
 .node-circle {
   stroke: white;
   stroke-width: 0.7px;

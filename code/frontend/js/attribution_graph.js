@@ -1004,12 +1004,22 @@ function draw_neurons() {
       var med_acts = get_activation_data()
       
       // Draw scatter plot
+      draw_annotation()
       draw_axis()
       draw_class_line()
       draw_lines()
       draw_dots()   
       
       // Functions
+      function draw_annotation() {
+        d3.select('#' + node_box_id)
+          .append('text')
+          .attr('class', 'nodebox-annotation')
+          .text('Activation Changes')
+          .attr('x', get_start_x() + 8)
+          .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 8)
+      }
+
       function draw_class_line() {
         var start_x = get_start_x()
         var end_x = start_x + node_box_style['act-plot-width']
@@ -1091,8 +1101,9 @@ function draw_neurons() {
       }
 
       function get_start_x() {
+        var num_unit = 4 / 2
         var start_x = node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding']
-        start_x += 5 * (node_box_style['ex-padding'] + node_box_style['ex-width']) - node_box_style['ex-padding']
+        start_x += num_unit * (node_box_style['ex-padding'] + node_box_style['ex-width']) - node_box_style['ex-padding']
         start_x += node_box_style['act-ex-padding']
         return start_x
       }
@@ -1144,11 +1155,17 @@ function draw_neurons() {
               return d
             }
           })
+          .tickSizeInner(3)
+          .tickSizeOuter(3)
+          .tickPadding(2)
 
         var y_axis = d3
           .axisLeft()
           .scale(y_scale)
           .ticks(4)
+          .tickSizeInner(3)
+          .tickSizeOuter(3)
+          .tickPadding(2)
 
         d3.select('#' + node_box_id + '-x-axis')
           .call(x_axis)
