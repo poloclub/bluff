@@ -882,15 +882,10 @@ function draw_neurons() {
       }
       // Show node box if it exists
       else {
-        var [node_x, node_y]  = get_translate_coords('g-' + node_id)
 
         d3.select('#' + node_box_id)
           .style('display', 'block')
-          .attr('transform', function() {
-            var x = node_x + node_box_style['left']
-            var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2 + 100
-            return 'translate(' + x + ',' + y +')'
-          })
+          .attr('transform', node_box_transform())
       } 
     }
 
@@ -903,18 +898,20 @@ function draw_neurons() {
       draw_activation_plot()
     }
 
-    function mk_node_box_g() {
+    function node_box_transform() {
       var [node_x, node_y]  = get_translate_coords('g-' + node_id)
+      var x = node_x + node_size[selected_attack_info['attack_type']] + node_box_style['left']
+      var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2
+      return 'translate(' + x + ',' + y +')'
+    }
+
+    function mk_node_box_g() {
       
       d3.select('#g-node')
         .append('g')
         .attr('id', node_box_id)
         .attr('class', 'node-box')
-        .attr('transform', function() {
-          var x = node_x + node_box_style['left']
-          var y = node_y + (node_size[selected_attack_info['attack_type']] - node_box_style['height']) / 2 + 100
-          return 'translate(' + x + ',' + y +')'
-        })
+        .attr('transform', node_box_transform())
     }
 
     function mk_node_box_bg() {
@@ -1004,22 +1001,12 @@ function draw_neurons() {
       var med_acts = get_activation_data()
       
       // Draw scatter plot
-      // draw_annotation()
       draw_axis()
       draw_class_line()
       draw_lines()
       draw_dots()   
       
       // Functions
-      function draw_annotation() {
-        d3.select('#' + node_box_id)
-          .append('text')
-          .attr('class', 'nodebox-annotation')
-          .text('Activation Changes')
-          .attr('x', get_start_x() + 8)
-          .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 8)
-      }
-
       function draw_class_line() {
         var start_x = get_start_x()
         var end_x = start_x + node_box_style['act-plot-width']
@@ -1259,7 +1246,7 @@ function draw_neurons() {
 
     // Turn of node box
     var node_box_id = get_node_box_id(neuron)
-    // d3.select('#' + node_box_id).style('display', 'none')
+    d3.select('#' + node_box_id).style('display', 'none')
 
     // Turn off the neuron id
     d3.select('#neuron-id-' + neuron).style('display', 'none')

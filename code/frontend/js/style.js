@@ -208,8 +208,8 @@ export var node_style = {
 }
 
 export var node_box_style = {
-  'left': 30, 
-  'width': 430, 
+  'left': 15, 
+  'width': 192, 
   'height': 60,
   // Feature vis
   'fv-left': 3,
