@@ -309,9 +309,9 @@ function parse_most_extracted_data() {
 
     // Most activated extracted data
     most_activated_extracted_data[layer]['original'] = Object.keys(neurons).sort(function(a, b) {
-      var idx_a = top_neuron_data[layer]['original'].indexOf(a)
-      var idx_b = top_neuron_data[layer]['original'].indexOf(b)
-      return idx_b - idx_a
+      var act_a = activation_data[layer][a]['original'][act_type]
+      var act_b = activation_data[layer][b]['original'][act_type]
+      return act_b - act_a
     })
 
     // Get most extracted neurons
@@ -319,33 +319,34 @@ function parse_most_extracted_data() {
 
       // Most activated extracted data
       most_activated_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
-        var idx_a = top_neuron_data[layer][attack_key].indexOf(a)
-        var idx_b = top_neuron_data[layer][attack_key].indexOf(b)
-        if (idx_a < 0) {
-          idx_a = 1000
-        }
-        if (idx_b < 0) {
-          idx_b = 1000
-        }
-        return idx_a - idx_b
+        var act_a = activation_data[layer][a][attack_key][act_type]
+        var act_b = activation_data[layer][b][attack_key][act_type]
+        return act_b - act_a
       })
 
       // Most inhibited extracted data
       most_inhibited_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
-        var idx_a = most_inhibited_data[layer][attack_key].indexOf(a)
-        var idx_b = most_inhibited_data[layer][attack_key].indexOf(b)
-        return idx_a - idx_b
+        var act_a = activation_data[layer][a][attack_key][act_type]
+        var act_b = activation_data[layer][b][attack_key][act_type]
+        var ori_a = activation_data[layer][a]['original'][act_type]
+        var ori_b = activation_data[layer][b]['original'][act_type]
+        var inhibited_a = ori_a - act_a
+        var inhibited_b = ori_b - act_b
+        return inhibited_b - inhibited_a
       })
 
       // Most changed extracted data
       most_changed_extracted_data[layer][attack_key] = Object.keys(neurons).sort(function(a, b) {
-        var idx_a = most_changed_data[layer][attack_key].indexOf(a)
-        var idx_b = most_changed_data[layer][attack_key].indexOf(b)
-        return idx_a - idx_b
+        var act_a = activation_data[layer][a][attack_key][act_type]
+        var act_b = activation_data[layer][b][attack_key][act_type]
+        var ori_a = activation_data[layer][a]['original'][act_type]
+        var ori_b = activation_data[layer][b]['original'][act_type]
+        var excited_a = act_a - ori_a
+        var excited_b = act_b - ori_b
+        return excited_b - excited_a
       })
     }
   })
-  console.log(most_activated_extracted_data)
 }
 
 function extract_neurons() {
@@ -1595,7 +1596,7 @@ function is_most_activated(neuron, strength) {
     var key = get_value_key('attacked', selected_attack_info['attack_type'], strength)
   }
 
-  var top_neurons_to_highlight = c[layer][key].slice(0, num_highlight)
+  var top_neurons_to_highlight = most_activated_extracted_data[layer][key].slice(0, num_highlight)
   if (top_neurons_to_highlight.includes(neuron)) {
     return true
   } else {
