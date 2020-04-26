@@ -1659,6 +1659,7 @@ function is_most_changed(neuron, strength) {
 }
 
 export function update_graph_by_filter_graph() {
+  // XXXXXXX
 
   if (filter_pathways['filter'] == 'all') {
     if (!comp_attack['on']) {
@@ -1668,6 +1669,7 @@ export function update_graph_by_filter_graph() {
     rearrange_all_neurons()
     rearrange_all_edges()
     rearrange_layers_full_graph()
+    rearrange_column_title_full_graph()
   } else {
     d3.select('#g-strength-bar').classed('disabled', true).style('opacity', 0.3)
     d3.select('#g-highlight-option-contents').classed('disabled', true).style('opacity', 0.3)
@@ -1676,6 +1678,7 @@ export function update_graph_by_filter_graph() {
     rearrange_neurons(node_transforms)
     rearrange_edges(node_transforms)
     rearrange_layers(node_transforms)
+    rearrange_column_title(node_transforms)
   }
 
   // Functions
@@ -1876,9 +1879,65 @@ export function update_graph_by_filter_graph() {
         d3.select('#layer-' + layer)
           .transition()
           .duration(1500)
-          .attr('transform', 'translate(' + (node_x_min - 150) + ',0)')
+          .attr('transform', 'translate(' + (node_x_min - 130) + ',0)')
       }
     })
+  }
+
+  function rearrange_column_title(node_transforms) {
+    var x_min = 10000
+    var x_max = -1000
+
+    for (var layer in node_transforms) {
+      for (var neuron in node_transforms[layer]) {
+        var x = node_transforms[layer][neuron]
+        x_min = d3.min([x_min, x])
+        x_max = d3.max([x_max, x])
+      }
+    }
+
+    console.log(x_min, x_max, (x_min + x_max) / 2)
+    var x_mid = (x_min + x_max) / 2
+
+    d3.selectAll('.column-title')
+      .style('font-size', 10)
+
+    d3.select('#column-original')
+      .transition()
+      .duration(1500)
+      .attr('transform', function() {
+        var curr_x = parseFloat(d3.select(this).attr('x'))
+        var delta_x = x_mid - curr_x - 160
+        return 'translate(' + delta_x + ',10)'
+      })
+
+    d3.select('#column-original-and-target')
+      .transition()
+      .duration(1500)
+      .attr('transform', function() {
+        var curr_x = parseFloat(d3.select(this).attr('x'))
+        var delta_x = x_mid - curr_x - 80
+        return 'translate(' + delta_x + ',10)'
+      })
+
+    d3.select('#column-target')
+      .transition()
+      .duration(1500)
+      .attr('transform', function() {
+        var curr_x = parseFloat(d3.select(this).attr('x'))
+        var delta_x = x_mid - curr_x - 40
+        return 'translate(' + delta_x + ',10)'
+      })
+      
+    d3.select('#column-attack-only')
+      .transition()
+      .duration(1500)
+      .attr('transform', function() {
+        var curr_x = parseFloat(d3.select(this).attr('x'))
+        var delta_x = x_mid - curr_x + 25
+        return 'translate(' + delta_x + ',10)'
+      })
+      
   }
 
   function rearrange_all_neurons() {
@@ -1899,8 +1958,6 @@ export function update_graph_by_filter_graph() {
   }
 
   function rearrange_all_edges() {
-
-    // XXXXXXXXXXX
 
     if (comp_attack['on']) {
       update_edges_display_in_comparison_mode()
@@ -1941,6 +1998,16 @@ export function update_graph_by_filter_graph() {
       .transition()
       .duration(1500)
       .attr('transform', layer_x())
+  }
+
+  function rearrange_column_title_full_graph() {
+    d3.selectAll('.column-title')
+      .style('font-size', 15)
+    
+    d3.selectAll('.column-title')
+      .transition()
+      .duration(1500)
+      .attr('transform', 'translate(0, 0)')  
   }
 
 }

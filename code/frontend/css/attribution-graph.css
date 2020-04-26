@@ -104,6 +104,7 @@
 
 .layer-text {
   fill: gray;
+  font-size: 10px;
 }
 
 .flowline {
