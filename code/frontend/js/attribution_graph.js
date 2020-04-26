@@ -113,6 +113,7 @@ export function reload_graph() {
       window.most_changed_data = most_changed_data
       window.most_inhibited_extracted_data = most_inhibited_extracted_data
       window.most_changed_extracted_data = most_changed_extracted_data
+      window.benign_edge_data = benign_edge_data
     
       // Generate x, y coordinate info
       gen_x_coords()
@@ -2124,6 +2125,7 @@ function update_edge_stroke_scale() {
   edge_stroke_scale = {}
 
   edge_stroke_scale_most_activated()
+  edge_stroke_scale_most_changed()
 
   function edge_stroke_scale_most_activated() {
 
@@ -2143,7 +2145,18 @@ function update_edge_stroke_scale() {
       })
     })
 
+    // Edge stroke of benign
+    edge_stroke_scale['activated'][0] = {}
+    layers.slice(1).forEach(layer => {
+      edge_stroke_scale['activated'][0][layer] = d3
+        .scaleLinear()
+        .domain([min_inf[layer], max_inf[layer]])
+        .range([edge_style['min-stroke'], edge_style['max-stroke']])
+    })
+
     // Get max and min influence value of attacked
+    min_inf = {}
+    max_inf = {}
     attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
       layers.slice(1).forEach(layer => {
         min_inf[layer] = 10000
@@ -2156,29 +2169,69 @@ function update_edge_stroke_scale() {
       })     
     })
 
-    // Edge stroke of benign
-    edge_stroke_scale['activated'][0] = {}
-    layers.slice(1).forEach(layer => {
-      edge_stroke_scale['activated'][0][layer] = d3
-        .scaleLinear()
-        .domain([min_inf, max_inf])
-        .range([edge_style['min-stroke'], edge_style['max-stroke']])
-    })
-
     // Edge stroke of attacked
     attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
       edge_stroke_scale['activated'][strength] = {}
       layers.slice(1).forEach(layer => {
         edge_stroke_scale['activated'][strength][layer] = d3
           .scaleLinear()
-          .domain([min_inf, max_inf])
+          .domain([min_inf[layer], max_inf[layer]])
           .range([edge_style['min-stroke'], edge_style['max-stroke']])
       })
     })
   }
 
-  
+  function edge_stroke_scale_most_changed() {
 
+    // Initialize the stroke scale
+    edge_stroke_scale['inhibited'] = {}
+    edge_stroke_scale['excited'] = {}
+    edge_stroke_scale['changed'] = {}
+    
+    // Get max changes in influence value of attacked
+    attack_strengths[selected_attack_info['attack_type']].forEach(strength => {
+
+      edge_stroke_scale['inhibited'][strength] = {}
+      edge_stroke_scale['excited'][strength] = {}
+      edge_stroke_scale['changed'][strength] = {}
+
+
+      layers.slice(1).forEach(layer => {
+        var max_inf = {}
+        max_inf['inhibited'] = 0
+        max_inf['excited'] = 0
+        max_inf['changed'] = 0
+
+        edge_data[strength][layer].forEach(d => {
+          var inf = d['inf']
+          var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+          var inf_inhibited = inf_benign - inf
+          var inf_excited = inf - inf_benign
+          var inf_changed = Math.abs(inf_excited)
+          max_inf['inhibited'] = d3.max([max_inf['inhibited'], inf_inhibited])
+          max_inf['excited'] = d3.max([max_inf['excited'], inf_excited])
+          max_inf['changed'] = d3.max([max_inf['changed'], inf_changed])
+          
+        })
+
+        edge_stroke_scale['inhibited'][strength][layer] = d3
+          .scaleLinear()
+          .domain([0, max_inf['inhibited'][layer]])
+          .range([edge_style['min-stroke'], edge_style['max-stroke']])
+
+        edge_stroke_scale['excited'][strength][layer] = d3
+          .scaleLinear()
+          .domain([0, max_inf['excited'][layer]])
+          .range([edge_style['min-stroke'], edge_style['max-stroke']])
+
+        edge_stroke_scale['changed'][strength][layer] = d3
+          .scaleLinear()
+          .domain([0, max_inf['changed'][layer]])
+          .range([edge_style['min-stroke'], edge_style['max-stroke']])
+      })  
+    })
+  }
+  
 }
 
 export function update_edges(strength) {
@@ -2198,16 +2251,32 @@ export function update_edges(strength) {
       .append('path')
       .attr('id', function(d) { return get_edge_id(d) })
       .attr('class', function(d) { return get_edge_class(d, layer) })
-      .style('stroke-width', function(d) { 
-        var highlight_option = highlight_pathways['neurons']['selected']
-        return edge_stroke_scale[highlight_option][strength][layer](d['inf']) 
-      })
-      .style('stroke', edge_style['edge-color'])
       .style('fill', 'none')
       .style('stroke', function(d) { return edge_stroke(d) })
       .attr('d', function(d) { return gen_edge_curve(d) })
       .style('display', 'none')
       .style('opacity', edge_style['edge-opacity'])
+      .style('stroke-width', function(d) { 
+        var highlight_option = highlight_pathways['neurons']['selected']
+
+        if (highlight_option == 'activated') {
+          return edge_stroke_scale[highlight_option][strength][layer](d['inf']) 
+        } else if (highlight_option == 'inhibited') {
+          var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+          var inf_inhibited = inf_benign - d['inf']
+          return edge_stroke_scale[highlight_option][strength][layer](inf_inhibited) 
+        } else if (highlight_option == 'excited') {
+          var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+          var inf_excited = d['inf'] - inf_benign
+          return edge_stroke_scale[highlight_option][strength][layer](inf_excited) 
+        } else if (highlight_option == 'changed') {
+          var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+          var inf_changed = Math.abs(d['inf'] - inf_benign)
+          return edge_stroke_scale[highlight_option][strength][layer](inf_changed) 
+        } else {
+          console.log('ERR, unknown highlighting option:', highlight_option)
+        }
+      })
   })
 
   function get_edge_id(d) {
@@ -2306,7 +2375,32 @@ export function update_edges_display() {
     for (var layer in highlighted_edges) {
       highlighted_edges[layer].forEach(edge_info => {
         var edge_id = ['edge', edge_info['curr'], edge_info['next']].join('-')
-        d3.select('#' + edge_id).classed('edge-shown', true).style('display', 'block')
+        d3.select('#' + edge_id)
+          .classed('edge-shown', true)
+          .style('display', 'block')
+          .style('stroke-width', function(d) { 
+            var highlight_option = highlight_pathways['neurons']['selected']
+            var strength = selected_attack_info['attack_strength']
+
+            if (highlight_option == 'activated') {
+              return edge_stroke_scale[highlight_option][strength][layer](d['inf']) 
+            } else if (highlight_option == 'inhibited') {
+              var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+              var inf_inhibited = inf_benign - d['inf']
+              return edge_stroke_scale[highlight_option][strength][layer](inf_inhibited) 
+            } else if (highlight_option == 'excited') {
+              var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+              var inf_excited = d['inf'] - inf_benign
+              return edge_stroke_scale[highlight_option][strength][layer](inf_excited) 
+            } else if (highlight_option == 'changed') {
+              var inf_benign = get_benign_edge_inf(d['curr'], d['next'])
+              var inf_changed = Math.abs(d['inf'] - inf_benign)
+              return edge_stroke_scale[highlight_option][strength][layer](inf_changed) 
+            } else {
+              console.log('ERR, unknown highlighting option:', highlight_option)
+            }
+            
+          })
       })
     }
   }
@@ -2374,6 +2468,7 @@ function get_most_changed_highlightable_edges(potentially_highlighted_edges) {
     })
     potentially_highlighted_edges[layer] = sorted_edges
   })
+
   return potentially_highlighted_edges
 }
   
