@@ -17,7 +17,7 @@
 }
 
 .tick {
-  font-size: 5px;
+  font-size: 4.5px;
 }
 
 .node-circle {
@@ -37,7 +37,7 @@
 }
 
 .nodebox-annotation {
-  font-size: 6px;
+  font-size: 4.5px;
   fill: #AAAAAA;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .axis-annotation {
-  font-size: 5px;
+  font-size: 4.5px;
   fill: gray;
 }
 
@@ -99,7 +99,7 @@
 }
 
 .annotation-original {
-  font-size: 5px;
+  font-size: 4.5px;
 }
 
 .line-original{
@@ -112,7 +112,7 @@
 }
 
 .annotation-target {
-  font-size: 5px;
+  font-size: 4.5px;
 }
 
 .line-target{

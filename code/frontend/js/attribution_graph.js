@@ -962,8 +962,8 @@ function draw_neurons() {
         .append('text')
         .attr('class', 'nodebox-annotation')
         .text('Feature Vis')
-        .attr('x', node_box_style['fv-left'] + 7)
-        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + + 6.5)
+        .attr('x', node_box_style['fv-left'])
+        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + node_box_style['annotation-tb-padding'])
 
       function fv_transform() {
         var x = node_box_style['fv-left']
@@ -990,9 +990,11 @@ function draw_neurons() {
       d3.select('#' + node_box_id)
         .append('text')
         .attr('class', 'nodebox-annotation')
-        .text('Examples')
-        .attr('x', node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding'] + 8)
-        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + 6.5)
+        .text('Examples from data')
+        .attr('x', node_box_style['fv-left'] + node_box_style['fv-width'] + node_box_style['fv-ex-padding'])
+        .attr('y', node_box_style['fv-top'] + node_box_style['fv-height'] + node_box_style['annotation-tb-padding'])
+
+        
 
       function ex_transform(i, num_examples) {
         var num_unit = num_examples / 2
@@ -1074,13 +1076,32 @@ function draw_neurons() {
           .attr('y2', 9)
 
         // Add target class annotation
-        d3.select('#' + node_box_id)
-          .append('text')
-          .attr('class', 'annotation-target')
-          .text(class_display_name(selected_class['target']))
-          .style('fill', text_color['target'])
-          .attr('x', end_x - 20)
-          .attr('y', 10.5)
+        if (selected_class['target'].includes('black_bear')) {
+          d3.select('#' + node_box_id)
+            .append('text')
+            .attr('class', 'annotation-target')
+            .text('American')
+            .style('fill', text_color['target'])
+            .attr('x', end_x - 20)
+            .attr('y', 6)
+
+          d3.select('#' + node_box_id)
+            .append('text')
+            .attr('class', 'annotation-target')
+            .text('black bear')
+            .style('fill', text_color['target'])
+            .attr('x', end_x - 20)
+            .attr('y', 10.5)
+        } else {
+          d3.select('#' + node_box_id)
+            .append('text')
+            .attr('class', 'annotation-target')
+            .text(class_display_name(selected_class['target']))
+            .style('fill', text_color['target'])
+            .attr('x', end_x - 20)
+            .attr('y', 10.5)
+        }
+        
 
         function class_display_name(class_name) {
           var name = class_name.replace(/_/g, ' ')
@@ -1159,7 +1180,7 @@ function draw_neurons() {
           .append('text')
           .attr('class', 'axis-annotation')
           .text('Median')
-          .attr('x', get_start_x() - 3)
+          .attr('x', get_start_x() - 1)
           .attr('y', 6)
 
         // Y-axis annotation 2
@@ -1167,7 +1188,7 @@ function draw_neurons() {
           .append('text')
           .attr('class', 'axis-annotation')
           .text('activation')
-          .attr('x', get_start_x() - 3)
+          .attr('x', get_start_x() - 1)
           .attr('y', 10.5)
 
         // X-axis annotation
@@ -1288,7 +1309,7 @@ function draw_neurons() {
 
     // Turn of node box
     var node_box_id = get_node_box_id(neuron)
-    // d3.select('#' + node_box_id).style('display', 'none')
+    d3.select('#' + node_box_id).style('display', 'none')
 
     // Turn off the neuron id
     d3.select('#neuron-id-' + neuron).style('display', 'none')

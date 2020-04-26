@@ -217,15 +217,16 @@ export var node_box_style = {
   'height': 60,
   // Feature vis
   'fv-left': 3,
-  'fv-top': 10,
+  'fv-top': 11.5,
   'fv-width': 40,
   'fv-height': 40,
+  'annotation-tb-padding': 6,
   // Example patches
   'fv-ex-padding': 3,
-  'ex-top': 10,
-  'ex-padding': 0,
-  'ex-width': 20,
-  'ex-height': 20,
+  'ex-top': 11.5,
+  'ex-padding': 1,
+  'ex-width': 19.5,
+  'ex-height': 19.5,
   // Activation plot
   'act-ex-padding': 15,
   'act-plot-top': 12,
