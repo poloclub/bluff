@@ -10,7 +10,8 @@ import {
 
 import {
   selected_attack_info,
-  round_unit
+  round_unit,
+  gen_strength_bar_length_scale
 } from './left_attack_control.js'
 
 import {
@@ -18,16 +19,15 @@ import {
   filter_pathways
 } from './left_filter_pathways.js'
 
+import {
+  highlight_pathways
+} from './left_highlight_pathways.js'
+
 import { 
   go_comparison_mode,
   go_out_from_comparison_mode,
   update_edges_display_in_comparison_mode
 } from './attribution_graph.js'
-
-import {
-  gen_strength_bar_length_scale
-} from './left_attack_control.js'
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -516,7 +516,7 @@ function add_compare_strength_bar() {
 
 function add_edge_option() {
   gen_edge_option_g()
-  write_option_text('compare-option-text-1', 'Only show edges for')
+  write_option_text('compare-option-text-1', 'Only show edges most activated by')
   add_dropdown_menu()
   write_option_text('compare-option-text-2', 'attack')
 
@@ -557,7 +557,6 @@ function add_edge_option() {
         .attr('id', 'edge-compare-dropdown-bg-rect')
         .attr('width', compare_style['dropdown-width'])
         .attr('height', compare_style['dropdown-rect-height'])
-        .attr('x', compare_style['dropdown-x'])
         .attr('y', -11)
     }
 
@@ -567,7 +566,6 @@ function add_edge_option() {
         .attr('id', 'edge-compare-dropdown-text')
         .attr('class', 'compare-edge-option-text')
         .text(comp_attack['edge-show'] + 'er')
-        .attr('x', compare_style['dropdown-x'])
     }
 
     function gen_edge_dropdown_icon() {
@@ -576,7 +574,7 @@ function add_edge_option() {
         .attr('id', 'edge-compare-dropdown-icon')
         .attr('font-family', 'FontAwesome')
         .text(icons['caret-down'])
-        .attr('x', compare_style['dropdown-x'] + compare_style['dropdown-width'] - 10)
+        .attr('x', compare_style['dropdown-width'] - 10)
         .attr('y', 2)
         .style('fill', 'gray')
     }
@@ -585,8 +583,8 @@ function add_edge_option() {
       d3.select('#g-compare-edge-dropdown')
         .append('line')
         .attr('id', 'edge-compare-dropdown-line')
-        .attr('x1', compare_style['dropdown-x'])
-        .attr('x2', compare_style['dropdown-x'] + compare_style['dropdown-width'])
+        .attr('x1', 0)
+        .attr('x2', compare_style['dropdown-width'])
         .attr('y1', 2)
         .attr('y2', 2)
         .style('stroke', 'gray')
@@ -603,7 +601,7 @@ function add_edge_option() {
         d3.select('#g-compare-edge-option')
           .append('g')
           .attr('id', 'g-compare-edge-dropdown-menu')
-          .attr('transform', 'translate(' + compare_style['dropdown-x'] + ',7)')
+          .attr('transform', 'translate(0,7)')
           .style('display', 'none')
 
         d3.select('#g-compare-edge-dropdown-menu')
@@ -642,7 +640,7 @@ function add_edge_option() {
             .attr('class', gen_item_component_class('rect'))
             .attr('width', compare_style['dropdown-width'])
             .attr('height', compare_style['item-height'])
-            .style('fill', 'white')
+            .style('fill', compare_style['bg-color'])
         }
 
         function gen_item_text() {
@@ -670,7 +668,7 @@ function add_edge_option() {
             d3.select('#g-compare-edge-item-' + item).style('cursor', 'default')
           } else {
             d3.select('#g-compare-edge-item-' + item).style('cursor', 'pointer')
-            d3.selectAll('.compare-edge-item-rect').style('fill', 'white')
+            d3.selectAll('.compare-edge-item-rect').style('fill', compare_style['bg-color'])
             d3.select('#' + gen_item_component_id('rect')).style('fill', 'lightgray')
           }
         }
@@ -717,5 +715,19 @@ function add_edge_option() {
       }
     }
     
+  }
+}
+
+
+
+export function update_compare_edge_option_text() {
+  d3.select('#compare-option-text-1').text(gen_edge_option_text())
+
+  function gen_edge_option_text() {
+    var txt = 'Only show edges most '
+    var edge_option = highlight_pathways['connections']['selected']
+    txt += edge_option
+    txt += ' by'
+    return txt
   }
 }

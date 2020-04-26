@@ -78,6 +78,7 @@ export var highlight_pathways_style = {
   'menu-top-padding': 5,
   'menu-height': 15, 
   'menu-bottom-padding': 5, 
+  'bg-color': '#fafafa',
   // Most what
   'what-x': 0,
   'what-y': 20,
@@ -130,7 +131,8 @@ export var compare_style = {
   'dropdown-x': 115,
   'dropdown-top': 5,
   'dropdown-bottom': 5,
-  'item-height': 15
+  'item-height': 15,
+  'bg-color': '#fafafa'
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -8,67 +8,9 @@
   transform: translate(130px, 0px);
 }
 
-/* Comparison legend - neither */
-#symbol-neither {
-  transform: translate(0px, 20px);
-}
-
-#outer-neither {
-  fill: lightgray;
-}
-
-#inner-neither {
-  fill: lightgray;
-}
-
-/* Comparison legend - weaker */
-#symbol-weaker {
-  transform: translate(0px, 43px);
-}
-
-#outer-weaker {
-  fill: lightgray;
-}
-
-#inner-weaker {
-  fill: gray;
-}
-
-/* Comparison legend - stronger */
-#symbol-stronger {
-  transform: translate(85px, 20px);
-}
-
-#outer-stronger {
-  fill: gray;
-}
-
-#inner-stronger {
-  fill: lightgray;
-}
-
-/* Comparison legend - boths */
-#symbol-both {
-  transform: translate(85px, 43px);
-}
-
-#outer-both {
-  fill: gray;
-}
-
-#inner-both {
-  fill: gray;
-}
-
-/* compare-legend-text */
-.compare-legend-text {
-  font-size: 13px;
-  fill: gray;
-}
-
 /* Comparison bar */
 #g-compare-bar {
-  transform: translate(0px, 80px);
+  transform: translate(0px, 30px);
   fill: gray;
 }
 
@@ -116,7 +58,15 @@
 
 /* Edge option */
 #g-compare-edge-option {
-  transform: translate(0px, 175px);
+  transform: translate(0px, 130px);
+}
+
+#g-compare-edge-dropdown {
+  transform: translate(0px, 18px);
+}
+
+#g-compare-edge-dropdown-menu {
+  transform: translate(0px, 25px);
 }
 
 .compare-edge-option-text {
@@ -125,7 +75,7 @@
 }
 
 #compare-option-text-2 {
-  transform: translate(180px, 0px);
+  transform: translate(65px, 18px);
 }
 
 .compare-edge-item-text {
@@ -136,4 +86,66 @@
 
 #edge-compare-dropdown-bg-rect {
   fill: var(--option-bg);
+}
+
+/* Comparison legend - general */
+#g-compare-legend {
+  transform: translate(0px, 145px)
+}
+
+.compare-legend-text {
+  font-size: 13px;
+  fill: gray;
+}
+
+/* Comparison legend - neither */
+#symbol-neither {
+  transform: translate(0px, 20px);
+}
+
+#outer-neither {
+  fill: lightgray;
+}
+
+#inner-neither {
+  fill: lightgray;
+}
+
+/* Comparison legend - weaker */
+#symbol-weaker {
+  transform: translate(0px, 43px);
+}
+
+#outer-weaker {
+  fill: lightgray;
+}
+
+#inner-weaker {
+  fill: gray;
+}
+
+/* Comparison legend - stronger */
+#symbol-stronger {
+  transform: translate(85px, 20px);
+}
+
+#outer-stronger {
+  fill: gray;
+}
+
+#inner-stronger {
+  fill: lightgray;
+}
+
+/* Comparison legend - both */
+#symbol-both {
+  transform: translate(85px, 43px);
+}
+
+#outer-both {
+  fill: gray;
+}
+
+#inner-both {
+  fill: gray;
 }

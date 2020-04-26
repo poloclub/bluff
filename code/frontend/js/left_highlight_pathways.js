@@ -22,6 +22,10 @@ import {
   comp_attack
 } from './left_attack_compare.js'
 
+import {
+  update_compare_edge_option_text
+} from './left_attack_compare.js'
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -254,7 +258,7 @@ function gen_dropdown(group_id, parent_id, styler) {
 
       function mouseover_item() {
         d3.select('#g-dropdown-menu-' + group_id + '-' + item).style('cursor', 'pointer')
-        d3.selectAll('.dropdown-item-rect-' + group_id).style('fill', 'white')
+        d3.selectAll('.dropdown-item-rect-' + group_id).style('fill', highlight_pathways_style['bg-color'])
         d3.select('#' + gen_item_component_id('rect')).style('fill', 'lightgray')
       }
 
@@ -263,6 +267,7 @@ function gen_dropdown(group_id, parent_id, styler) {
         d3.select('#g-dropdown-' + group_id).style('display', 'none')
         highlight_pathways['neurons']['selected'] = item
         highlight_pathways['connections']['selected'] = item
+        update_compare_edge_option_text()
         if (comp_attack['on']) {
           go_comparison_mode()
         } else {

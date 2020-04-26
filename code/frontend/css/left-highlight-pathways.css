@@ -69,7 +69,7 @@
 
 /* Dropdown menu */
 .dropdown-menu-bg-rect {
-  fill: white;
+  fill: var(--option-bg);
   stroke-width: 1px;
   stroke: gray;
   paint-order: stroke;
@@ -79,7 +79,7 @@
 }
 
 .dropdown-item-rect {
-  fill: white;
+  fill: var(--option-bg);
 }
 
 .dropdown-item-text {
