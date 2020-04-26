@@ -4,7 +4,8 @@ import {
   rough_top_k,
   attack_types,
   attack_strengths,
-  data_dir
+  data_dir,
+  class_pairs
 } from './constant.js';
 
 import {
@@ -1197,7 +1198,7 @@ function draw_neurons() {
           .text('Attack strength')
           .attr('class', 'axis-annotation')
           .attr('x', get_start_x() + 49)
-          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] + 10)
+          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] + 9.5)
 
         // X-axis g
         d3.select('#' + node_box_id)
@@ -1988,7 +1989,8 @@ export function update_graph_by_filter_graph() {
       .duration(1500)
       .attr('transform', function() {
         var curr_x = parseFloat(d3.select(this).attr('x'))
-        var delta_x = x_mid - curr_x + 25
+        var target_length = selected_class['target'].length
+        var delta_x = x_mid - curr_x + (target_length * 3.5)
         return 'translate(' + delta_x + ',10)'
       })
       
