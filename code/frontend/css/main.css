@@ -14,7 +14,7 @@ body {
 }
 
 #svg-main {
-  width: 1600px;
+  width: 100%;
   height: 1000px;
 }
 
@@ -24,7 +24,7 @@ body {
 
 .main-bg {
   fill: white;
-  width: 1600px;
+  width: 100%;
   height: 2000px;
   stroke: lightgray;
   stroke-width: 1px;
