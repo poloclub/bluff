@@ -641,6 +641,7 @@ function write_layers() {
     .text(function(layer) { return layer })
     .attr('x', layer_x())
     .attr('y', function(layer) { return y_coords[layer] + node_size[selected_attack_info['attack_type']] / 2 + 5})
+    .style('font-size', 15)
 }
 
 function layer_x() {
@@ -1135,14 +1136,25 @@ function draw_neurons() {
       }
 
       function draw_axis() {
+        // XXXXXXXXXXXXXXXXXXXXXXXXX
 
+        // Y-axis annotation 1
         d3.select('#' + node_box_id)
           .append('text')
           .attr('class', 'axis-annotation')
-          .text('Activation')
+          .text('Median')
           .attr('x', get_start_x() - 3)
-          .attr('y', 8)
+          .attr('y', 5)
 
+        // Y-axis annotation 2
+        d3.select('#' + node_box_id)
+          .append('text')
+          .attr('class', 'axis-annotation')
+          .text('activation')
+          .attr('x', get_start_x() - 3)
+          .attr('y', 9.5)
+
+        // X-axis annotation
         d3.select('#' + node_box_id)
           .append('text')
           .text('Attack strength')
@@ -1150,6 +1162,7 @@ function draw_neurons() {
           .attr('x', get_start_x() + 49)
           .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] - 2)
 
+        // X-axis g
         d3.select('#' + node_box_id)
           .append('g')
           .attr('id', node_box_id + '-x-axis')
@@ -1160,6 +1173,7 @@ function draw_neurons() {
             return 'translate(' + x + ',' + y + ')'
           })
 
+        // Y-axis g
         d3.select('#' + node_box_id)
           .append('g')
           .attr('id', node_box_id + '-y-axis')
@@ -1170,18 +1184,21 @@ function draw_neurons() {
             return 'translate(' + x + ',' + y + ')'
           })
 
+        // X-axis scale
         var max_attack_strength = attack_strengths[selected_attack_info['attack_type']].slice(-1)[0]
         var x_scale = d3
           .scaleLinear()
           .domain([0, max_attack_strength])
           .range([0, node_box_style['act-plot-width']])
 
+        // Y-axis scale
         var layer = neuron.split('-')[0]
         var y_scale = d3
           .scaleLinear()
           .domain(activation_range[layer])
           .range([node_box_style['act-plot-height'], 0])
 
+        // X-axis
         var x_axis = d3
           .axisBottom()
           .scale(x_scale)
@@ -1190,26 +1207,36 @@ function draw_neurons() {
               return d
             }
           })
-          .tickSizeInner(3)
-          .tickSizeOuter(3)
+          .tickSizeInner(2)
+          .tickSizeOuter(2)
           .tickPadding(2)
           .tickFormat(function (d){
-            var str = String(d3.format(',')(d))
-            return str.slice(1)
+            if (d == 0) {
+              return ''
+            } else {
+              var str = String(d3.format(',')(d))
+              if (str.length > 3) {
+                return ''
+              } else {
+                return str.slice(1)
+              }
+            }
           })
         
-
+        // Y-axis
         var y_axis = d3
           .axisLeft()
           .scale(y_scale)
-          .ticks(4)
-          .tickSizeInner(3)
-          .tickSizeOuter(3)
+          .ticks(5)
+          .tickSizeInner(2)
+          .tickSizeOuter(2)
           .tickPadding(2)
 
+        // Append x axis
         d3.select('#' + node_box_id + '-x-axis')
           .call(x_axis)
         
+        // Append y axis
         d3.select('#' + node_box_id + '-y-axis')
           .call(y_axis)
 
@@ -1256,7 +1283,7 @@ function draw_neurons() {
 
     // Turn of node box
     var node_box_id = get_node_box_id(neuron)
-    d3.select('#' + node_box_id).style('display', 'none')
+    // d3.select('#' + node_box_id).style('display', 'none')
 
     // Turn off the neuron id
     d3.select('#neuron-id-' + neuron).style('display', 'none')
@@ -1873,6 +1900,8 @@ export function update_graph_by_filter_graph() {
   }
 
   function rearrange_layers(node_transforms) {
+    d3.selectAll('.layer-text').style('font-size', 10)
+
     layers.forEach(layer => {
       if (layer in node_transforms) {
         var node_x_min = d3.min(Object.values(node_transforms[layer]))
@@ -1896,7 +1925,6 @@ export function update_graph_by_filter_graph() {
       }
     }
 
-    console.log(x_min, x_max, (x_min + x_max) / 2)
     var x_mid = (x_min + x_max) / 2
 
     d3.selectAll('.column-title')
@@ -1994,6 +2022,9 @@ export function update_graph_by_filter_graph() {
   }
 
   function rearrange_layers_full_graph() {
+    d3.selectAll('.layer-text')
+      .style('font-size', 15)
+
     d3.selectAll('.layer-text')
       .transition()
       .duration(1500)

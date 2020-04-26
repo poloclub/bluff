@@ -55,8 +55,16 @@
   transform: translate(0px, 0.3px);
 }
 
+.node-box-x-axis text {
+  transform: translate(2px, -2.5px);
+}
+
 .node-box-y-axis line {
   transform: translate(0.3px, 0px);
+}
+
+.node-box-y-axis text {
+  transform: translate(3px, -2.5px);
 }
 
 .axis-annotation {
