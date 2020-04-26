@@ -165,7 +165,7 @@ export var text_color = {
   'target': '#2b83ba', // blue
   'attack-only': '#d7191c', // red
   'original-header': '#abdda4', // green
-  'target-header': '#4ba3da', // green
+  'target-header': '#5fb8ed', // blue
 }
 
 export var node_hue_color = {

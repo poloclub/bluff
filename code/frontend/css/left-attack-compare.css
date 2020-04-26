@@ -102,7 +102,6 @@
 }
 
 .compare-strength-label-text {
-  /* font-weight: bolder; */
   stroke-width: 0.4px;
   font-size: 13px;
   stroke: gray;
@@ -133,4 +132,8 @@
   font-size: 13px;
   transform: translate(7px, 11px);
   fill: gray;
+}
+
+#edge-compare-dropdown-bg-rect {
+  fill: var(--option-bg);
 }

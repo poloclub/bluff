@@ -1,5 +1,6 @@
 #header {
   background-color: var(--header-bg);
+  border-bottom: 1px gray solid;
 }
 
 #main-title {
@@ -8,7 +9,7 @@
   transform: translate(45px, -3px);
   font-size: 40px; 
   padding: 5px;
-  color: var(--title-txt); 
+  color: var(--title-txt);
 }
 
 #sub-title {

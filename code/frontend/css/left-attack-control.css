@@ -7,7 +7,6 @@
   font-size: 15px;
   transform: translate(50px, 30px);
   fill: black;
-  /* font-weight: bolder; */
 }
 
 #attack-option-help {
@@ -23,7 +22,7 @@
 }
 
 #attack-dropdown-box {
-  fill: white;
+  fill: var(--option-bg);
   display: inline-block;
   width: 180px;
   height: 23px;

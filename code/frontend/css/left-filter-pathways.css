@@ -23,7 +23,7 @@
 }
 
 .what-to-see-option-checkbox {
-  fill: white;
+  fill: var(--option-bg);
   stroke: lightgray;
   stroke-width: 1px;
   transform: translate(0px, -3px);

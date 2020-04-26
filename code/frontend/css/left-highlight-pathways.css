@@ -9,7 +9,7 @@
 
 /* Highlight options */
 .highlight-dropdown-rect {
-  fill: white;
+  fill: var(--option-bg);
   transform: translate(0px, -13px);
 }
 

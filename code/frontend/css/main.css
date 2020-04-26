@@ -6,9 +6,11 @@ body {
 }
 
 :root {
-  --header-bg: #112d4e;
+  /* --header-bg: #112d4e; */
+  --header-bg: #142850;
   --header-txt: #f9f7f7;
   --title-txt:  #f9f7f7;
+  --option-bg: #fafafa;
 }
 
 #svg-main {
@@ -30,7 +32,7 @@ body {
 }
 
 #option-bg {
-  fill: white;
+  fill: var(--option-bg);
   width: 290px;
   height: 1000px;
   stroke: lightgray;

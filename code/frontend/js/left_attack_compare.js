@@ -555,7 +555,6 @@ function add_edge_option() {
       d3.select('#g-compare-edge-dropdown')
         .append('rect')
         .attr('id', 'edge-compare-dropdown-bg-rect')
-        .style('fill', 'white')
         .attr('width', compare_style['dropdown-width'])
         .attr('height', compare_style['dropdown-rect-height'])
         .attr('x', compare_style['dropdown-x'])
