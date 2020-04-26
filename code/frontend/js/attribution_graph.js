@@ -137,6 +137,9 @@ export function reload_graph() {
 
       // Go comparison mode if needed
       go_comparison_mode()
+
+      // Filter graph
+      update_graph_by_filter_graph()
     
     })
   }
