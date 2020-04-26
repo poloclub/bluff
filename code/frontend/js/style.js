@@ -163,7 +163,9 @@ export var text_color = {
   'original': '#89bc88', // green
   'original-and-target': '#fdae61', // orange
   'target': '#2b83ba', // blue
-  'attack-only': '#d7191c' // red
+  'attack-only': '#d7191c', // red
+  'original-header': '#abdda4', // green
+  'target-header': '#4ba3da', // green
 }
 
 export var node_hue_color = {

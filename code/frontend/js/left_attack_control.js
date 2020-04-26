@@ -67,9 +67,6 @@ function gen_attack_dropdown() {
     d3.select('#svg-attack-option')
       .append('g')
       .attr('id', 'g-attack-type')
-      // .append('text')
-      // .attr('id', 'attack-dropdown-title')
-      // .text(title)
   }
 
   function create_dropdown_menu() {

@@ -1,39 +1,32 @@
 #header {
-  height: 50px;
-  border-bottom: 1px solid lightgray;
-}
-
-#header-horizontal-line {
-  width: 5000px;
-  transform: translate(0px, 35px);
-  border-color: lightgray;
-  border-width: 0.5px;
+  background-color: var(--header-bg);
 }
 
 #main-title {
   font-weight: bolder;
   display: inline-block;
-  transform: translate(50px, 0px);
-  font-size: 40px;  
+  transform: translate(45px, -3px);
+  font-size: 40px; 
+  padding: 5px;
+  color: var(--title-txt); 
 }
 
 #sub-title {
   display: inline-block;
-  transform: translate(350px, -10px);
-  font-size: 23px;
+  transform: translate(80px, -10px);
+  font-size: 30px;
   color:gray;
 }
 
 .header-sub-title {
   display: inline-block;
   margin-right: 10px;
-  font-size: 20px;
-  color: gray;
+  font-size: 23px;
+  color: var(--header-txt);
   transform: translate(0px, 2px);
 }
 
 .header-option-title {
-  border-bottom: 1px solid gray;
   height: 23px;
   transform: translate(0px, 4px);
 }
@@ -54,8 +47,8 @@
 .class-dropdown-icon {
   display: inline-block;
   float: right;
-  color: gray;
-  font-size: 20px;
+  font-size: 15px;
+  padding-left: 5px;
 } 
 
 .class-dropdown-text {

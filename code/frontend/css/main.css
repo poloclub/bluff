@@ -5,6 +5,12 @@ body {
   font-family: 'Barlow', sans-serif;
 }
 
+:root {
+  --header-bg: #112d4e;
+  --header-txt: #f9f7f7;
+  --title-txt:  #f9f7f7;
+}
+
 #svg-main {
   width: 1600px;
   height: 1000px;
