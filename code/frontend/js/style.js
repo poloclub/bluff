@@ -227,7 +227,7 @@ export var node_box_style = {
   'ex-width': 20,
   'ex-height': 20,
   // Activation plot
-  'act-ex-padding': 20,
+  'act-ex-padding': 15,
   'act-plot-top': 12,
   'act-plot-width': 80,
   'act-plot-height': 36

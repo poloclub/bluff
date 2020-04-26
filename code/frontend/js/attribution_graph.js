@@ -1034,16 +1034,24 @@ function draw_neurons() {
           .attr('y2', activation_y(original_act_val))
           .style('stroke', node_color['original'])
 
+        // Add original class legend line
+        d3.select('#' + node_box_id)
+          .append('line')
+          .attr('class', 'line-original')
+          .style('stroke', text_color['original'])
+          .attr('x1', start_x + 22)
+          .attr('x2', start_x + 26)
+          .attr('y1', 9)
+          .attr('y2', 9)
+
         // Add original class annotation
         d3.select('#' + node_box_id)
           .append('text')
           .attr('class', 'annotation-original')
-          // .text('Med. act. of ' + class_display_name(selected_class['original']))
           .text(class_display_name(selected_class['original']))
           .style('fill', text_color['original'])
-          .attr('x', start_x + 2)
-          .attr('y', activation_y(original_act_val) - 2)
-
+          .attr('x', start_x + 27)
+          .attr('y', 10.5)
 
         // Add target class activation line
         d3.select('#' + node_box_id)
@@ -1055,15 +1063,24 @@ function draw_neurons() {
           .attr('y2', activation_y(target_act_val))
           .style('stroke', node_color['target'])
 
-        // Add original class annotation
+        // Add target class legend line
+        d3.select('#' + node_box_id)
+          .append('line')
+          .attr('class', 'line-target')
+          .style('stroke', text_color['target'])
+          .attr('x1', end_x - 25)
+          .attr('x2', end_x - 21)
+          .attr('y1', 9)
+          .attr('y2', 9)
+
+        // Add target class annotation
         d3.select('#' + node_box_id)
           .append('text')
           .attr('class', 'annotation-target')
-          // .text('Med. act. of ' + class_display_name(selected_class['target']))
           .text(class_display_name(selected_class['target']))
           .style('fill', text_color['target'])
           .attr('x', end_x - 20)
-          .attr('y', activation_y(target_act_val) - 2)
+          .attr('y', 10.5)
 
         function class_display_name(class_name) {
           var name = class_name.replace(/_/g, ' ')
