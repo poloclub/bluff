@@ -1136,7 +1136,6 @@ function draw_neurons() {
       }
 
       function draw_axis() {
-        // XXXXXXXXXXXXXXXXXXXXXXXXX
 
         // Y-axis annotation 1
         d3.select('#' + node_box_id)
@@ -1144,7 +1143,7 @@ function draw_neurons() {
           .attr('class', 'axis-annotation')
           .text('Median')
           .attr('x', get_start_x() - 3)
-          .attr('y', 5)
+          .attr('y', 6)
 
         // Y-axis annotation 2
         d3.select('#' + node_box_id)
@@ -1152,7 +1151,7 @@ function draw_neurons() {
           .attr('class', 'axis-annotation')
           .text('activation')
           .attr('x', get_start_x() - 3)
-          .attr('y', 9.5)
+          .attr('y', 10.5)
 
         // X-axis annotation
         d3.select('#' + node_box_id)
@@ -1160,7 +1159,7 @@ function draw_neurons() {
           .text('Attack strength')
           .attr('class', 'axis-annotation')
           .attr('x', get_start_x() + 49)
-          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] - 2)
+          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] + 10)
 
         // X-axis g
         d3.select('#' + node_box_id)
@@ -1207,12 +1206,13 @@ function draw_neurons() {
               return d
             }
           })
+          .ticks(6)
           .tickSizeInner(2)
           .tickSizeOuter(2)
           .tickPadding(2)
           .tickFormat(function (d){
             if (d == 0) {
-              return ''
+              return '0'
             } else {
               var str = String(d3.format(',')(d))
               if (str.length > 3) {
@@ -1227,7 +1227,7 @@ function draw_neurons() {
         var y_axis = d3
           .axisLeft()
           .scale(y_scale)
-          .ticks(5)
+          .ticks(4)
           .tickSizeInner(2)
           .tickSizeOuter(2)
           .tickPadding(2)
@@ -1256,23 +1256,11 @@ function draw_neurons() {
           curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
         }
         if (i == curr_strength_idx) {
+          var neuron_class = d3.select('#node-' + neuron).attr('class')
+          var neuron_group = neuron_class.split(' ')[1].split('node-')[1]
+          return node_color[neuron_group]
+        } else {
           return 'gray'
-        } else {
-          return 'lightgray'
-        }
-      }
-      
-      function scatter_circle_r(i) {
-        var curr_strength = selected_attack_info['attack_strength']
-        var curr_attack_type = selected_attack_info['attack_type']
-        var curr_strength_idx = 0
-        if (curr_strength > 0) {
-          curr_strength_idx = attack_strengths[curr_attack_type].indexOf(curr_strength) + 1
-        }
-        if (i == curr_strength_idx) {
-          return 1
-        } else {
-          return 1
         }
       }
       

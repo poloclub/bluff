@@ -53,18 +53,30 @@
 
 .node-box-x-axis line {
   transform: translate(0px, 0.3px);
+  stroke: lightgray;
 }
 
 .node-box-x-axis text {
   transform: translate(2px, -2.5px);
+  fill: lightgray
+}
+
+.node-box-x-axis path {
+  stroke: lightgray
 }
 
 .node-box-y-axis line {
   transform: translate(0.3px, 0px);
+  stroke: lightgray;
 }
 
 .node-box-y-axis text {
   transform: translate(3px, -2.5px);
+  fill: lightgray
+}
+
+.node-box-y-axis path {
+  stroke: lightgray
 }
 
 .axis-annotation {
@@ -73,13 +85,14 @@
 }
 
 .node-box-scatter-line {
-  stroke: lightgray;
+  stroke: gray;
   stroke-width: 0.5px;
   fill: none;
+  opacity: 0.7;
 }
 
 .node-box-scatter-circle {
-  fill: lightgray;
+  fill: gray;
   stroke: white;
   stroke-width: 0.3px;
   r: 1px;
@@ -87,10 +100,12 @@
 
 .activation-target {
   stroke-width: 0.5px;
+  opacity: 0.7;
 }
 
 .activation-original {
   stroke-width: 0.5px;
+  opacity: 0.7;
 }
 
 .annotation-target {
