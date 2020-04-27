@@ -1316,7 +1316,10 @@ function draw_neurons() {
     d3.select('#' + node_box_id).style('display', 'none')
 
     // Turn off the neuron id
-    d3.select('#neuron-id-' + neuron).style('display', 'none')
+    if (!is_pinned(neuron)) {
+      d3.select('#neuron-id-' + neuron).style('display', 'none')
+    }
+    
 
     // Set the feature vis
     back_to_previous_fv_opacity()
