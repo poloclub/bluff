@@ -22,14 +22,14 @@
 .header-sub-title {
   display: inline-block;
   margin-right: 10px;
-  font-size: 23px;
+  font-size: 26px;
   color: var(--header-txt);
-  transform: translate(0px, 2px);
+  transform: translate(-6px, 6px);
 }
 
 .header-option-title {
-  height: 23px;
-  transform: translate(0px, 4px);
+  height: 27px;
+  transform: translate(-8px, 8px);
 }
 
 .class-dropdown {
@@ -48,13 +48,13 @@
 .class-dropdown-icon {
   display: inline-block;
   float: right;
-  font-size: 15px;
+  font-size: 20px;
   padding-left: 5px;
 } 
 
 .class-dropdown-text {
   display: inline-block;
-  font-size: 15px;
+  font-size: 21px;
   transform: translate(0px, -5px);
   font-weight: bold;
 }
