@@ -1392,15 +1392,15 @@ function draw_neurons() {
       // Turn off the neuron
       // turn_off_node_feature_vis(neuron)
       unpin_neuron(neuron)
-      d3.select('#node-circle-curr-' + neuron).style('display', 'none')
-      d3.select('#node-circle-next-' + neuron).style('display', 'none')
+      // d3.select('#node-circle-curr-' + neuron).style('display', 'none')
+      // d3.select('#node-circle-next-' + neuron).style('display', 'none')
       d3.select('#neuron-id-' + neuron).style('display', 'none')
     } else {
       // Turn on the neuron
       // turn_on_node_feature_vis(neuron)
       pin_neuron(neuron)
-      d3.select('#node-circle-curr-' + neuron).style('display', 'block')
-      d3.select('#node-circle-next-' + neuron).style('display', 'block')
+      // d3.select('#node-circle-curr-' + neuron).style('display', 'block')
+      // d3.select('#node-circle-next-' + neuron).style('display', 'block')
       d3.select('#neuron-id-' + neuron).style('display', 'block')
     }
   }
