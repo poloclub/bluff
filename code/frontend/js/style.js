@@ -213,7 +213,7 @@ export var node_style = {
 
 export var node_box_style = {
   'left': 15, 
-  'width': 192, 
+  'width': 187, 
   'height': 60,
   // Feature vis
   'fv-left': 3,
@@ -228,9 +228,9 @@ export var node_box_style = {
   'ex-width': 19.5,
   'ex-height': 19.5,
   // Activation plot
-  'act-ex-padding': 15,
-  'act-plot-top': 12,
-  'act-plot-width': 80,
+  'act-ex-padding': 17,
+  'act-plot-top': 12.5,
+  'act-plot-width': 75,
   'act-plot-height': 36
 }
 

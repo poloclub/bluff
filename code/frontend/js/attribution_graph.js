@@ -1045,10 +1045,10 @@ function draw_neurons() {
           .append('line')
           .attr('class', 'line-original')
           .style('stroke', text_color['original'])
-          .attr('x1', start_x + 22)
-          .attr('x2', start_x + 26)
-          .attr('y1', 9)
-          .attr('y2', 9)
+          .attr('x1', start_x + 3)
+          .attr('x2', start_x + 7)
+          .attr('y1', 8)
+          .attr('y2', 8)
 
         // Add original class annotation
         d3.select('#' + node_box_id)
@@ -1056,7 +1056,7 @@ function draw_neurons() {
           .attr('class', 'annotation-original')
           .text(class_display_name(selected_class['original']))
           .style('fill', text_color['original'])
-          .attr('x', start_x + 27)
+          .attr('x', start_x + 8)
           .attr('y', 10.5)
 
         // Add target class activation line
@@ -1074,10 +1074,10 @@ function draw_neurons() {
           .append('line')
           .attr('class', 'line-target')
           .style('stroke', text_color['target'])
-          .attr('x1', end_x - 25)
-          .attr('x2', end_x - 21)
-          .attr('y1', 9)
-          .attr('y2', 9)
+          .attr('x1', end_x - 33)
+          .attr('x2', end_x - 29)
+          .attr('y1', 8)
+          .attr('y2', 8)
 
         // Add target class annotation
         if (selected_class['target'].includes('black_bear')) {
@@ -1086,7 +1086,7 @@ function draw_neurons() {
             .attr('class', 'annotation-target')
             .text('American')
             .style('fill', text_color['target'])
-            .attr('x', end_x - 20)
+            .attr('x', end_x - 27)
             .attr('y', 6)
 
           d3.select('#' + node_box_id)
@@ -1094,7 +1094,7 @@ function draw_neurons() {
             .attr('class', 'annotation-target')
             .text('black bear')
             .style('fill', text_color['target'])
-            .attr('x', end_x - 20)
+            .attr('x', end_x - 27)
             .attr('y', 10.5)
         } else {
           d3.select('#' + node_box_id)
@@ -1102,7 +1102,7 @@ function draw_neurons() {
             .attr('class', 'annotation-target')
             .text(class_display_name(selected_class['target']))
             .style('fill', text_color['target'])
-            .attr('x', end_x - 20)
+            .attr('x', end_x - 27)
             .attr('y', 10.5)
         }
         
@@ -1179,29 +1179,13 @@ function draw_neurons() {
 
       function draw_axis() {
 
-        // Y-axis annotation 1
-        d3.select('#' + node_box_id)
-          .append('text')
-          .attr('class', 'axis-annotation')
-          .text('Median')
-          .attr('x', get_start_x() - 1)
-          .attr('y', 6)
-
-        // Y-axis annotation 2
-        d3.select('#' + node_box_id)
-          .append('text')
-          .attr('class', 'axis-annotation')
-          .text('activation')
-          .attr('x', get_start_x() - 1)
-          .attr('y', 10.5)
-
         // X-axis annotation
         d3.select('#' + node_box_id)
           .append('text')
           .text('Attack strength')
           .attr('class', 'axis-annotation')
-          .attr('x', get_start_x() + 49)
-          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] + 9.5)
+          .attr('x', get_start_x() + 21)
+          .attr('y', node_box_style['act-plot-top'] + node_box_style['act-plot-height'] + 9.6)
 
         // X-axis g
         d3.select('#' + node_box_id)
@@ -1281,6 +1265,22 @@ function draw_neurons() {
         // Append y axis
         d3.select('#' + node_box_id + '-y-axis')
           .call(y_axis)
+
+        // Y-axis annotation 1
+        d3.select('#' + node_box_id)
+          .append('text')
+          .attr('class', 'axis-annotation')
+          .text('Med.')
+          .attr('x', get_start_x() - 12)
+          .attr('y', 6)
+
+        // Y-axis annotation 2
+        d3.select('#' + node_box_id)
+          .append('text')
+          .attr('class', 'axis-annotation')
+          .text('Activ.')
+          .attr('x', get_start_x() - 14)
+          .attr('y', 11)
 
       }
       

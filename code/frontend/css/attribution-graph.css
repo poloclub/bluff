@@ -37,8 +37,8 @@
 }
 
 .nodebox-annotation {
-  font-size: 4.5px;
-  fill: #AAAAAA;
+  font-size: 5.5px;
+  fill: #888888;
 }
 
 .node-box-axis path,
@@ -58,7 +58,7 @@
 
 .node-box-x-axis text {
   transform: translate(2px, -2.5px);
-  fill: lightgray
+  fill: #999999
 }
 
 .node-box-x-axis path {
@@ -72,7 +72,7 @@
 
 .node-box-y-axis text {
   transform: translate(3px, -2.5px);
-  fill: lightgray
+  fill: #999999
 }
 
 .node-box-y-axis path {
@@ -80,8 +80,8 @@
 }
 
 .axis-annotation {
-  font-size: 4.5px;
-  fill: gray;
+  font-size: 5.5px;
+  fill: #777777;
 }
 
 .node-box-scatter-line {
@@ -99,7 +99,7 @@
 }
 
 .annotation-original {
-  font-size: 4.5px;
+  font-size: 5.5px;
 }
 
 .line-original{
@@ -112,7 +112,7 @@
 }
 
 .annotation-target {
-  font-size: 4.5px;
+  font-size: 5.5px;
 }
 
 .line-target{
