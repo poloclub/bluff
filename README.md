@@ -3,15 +3,15 @@
 Bluff is an interactive system for deciphering adversarial attacks on Deep Neural Networks (DNNs). 
 
 - **Live demo:** [https://poloclub.github.io/bluff/][demo]
-- **Code and Data:** [https://github.com/poloclub/bluff](https://github.com/poloclub/bluff)
+- **Code and Data:** [https://github.com/poloclub/bluff][src]
 
 ![https://poloclub.github.io/bluff/](teaser-bluff.png)
 
 ## Live Demo
-For a live demo, visit: https://poloclub.github.io/bluff/
+For a live demo, visit: [https://poloclub.github.io/bluff/][demo]
 
 ## Code and Data
-Code (both frontend and backend) and data are available at [https://github.com/poloclub/bluff](https://github.com/poloclub/bluff).
+Code (both frontend and backend) and data are available at [https://github.com/poloclub/bluff][src].
 
 ## Running Bluff user interface Locally
 1. Download or clone this repository:
@@ -49,3 +49,4 @@ For questions contact [Nilaksh Das][http://nilakshdas.com/] or [Haekyu Park][hae
 
 
 [demo]: https://poloclub.github.io/bluff/
+[src]: https://github.com/poloclub/bluff
