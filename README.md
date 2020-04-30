@@ -31,7 +31,7 @@ Code (both frontend and backend) and data are available at [https://github.com/p
   ```bash
   python -m http.server 8080
   ```
-  You need python 3.
+  To run this command, python 3 is needed.
   
 - Open any web browser and go to `http://localhost:<PORT>`. For example, `http://localhost:8080` if you used port 8080.
 
