@@ -50,7 +50,9 @@ The backend code is in `bluff/code/frontend`.
 - Generate Adversarial Images
   + Please run `gen_adversarial_images.py`. 
 - Compute Neuron Importance
-  + The code for computing neuron importance is in 
+  + Please run `preprocess_scores.py`
+- Compute Propagation of Influence
+  + Please run `edges.py`
 
 ## License
 MIT License. See [`LICENSE.md`](LICENSE.md).
