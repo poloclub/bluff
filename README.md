@@ -24,7 +24,7 @@ Code (both frontend and backend) and data are available at [https://github.com/p
   ```
 
 - Within `bluff` repo, run:
-  ```bash
+  ```
   python -m http.server <PORT>
   ```
   For example,
@@ -42,9 +42,14 @@ This project is written in python 3.7.6. You can install the dependencies by run
 ```
 pip install -r requirements.txt
 ```
+### ImageNet Dataset
+- We used tfrecord [ImageNet](http://www.image-net.org/) Datasete.
+
 ### Code Structure
 The backend code is in `bluff/code/frontend`.
-- Computing Neuron Importance
+- Generate Adversarial Images
+  + Please run `gen_adversarial_images.py`. 
+- Compute Neuron Importance
   + The code for computing neuron importance is in 
 
 ## License
