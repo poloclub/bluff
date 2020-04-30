@@ -613,12 +613,16 @@ function gen_x_coords() {
   }
 
   function keep_unique(lst, items) {
-    items.forEach(item => {
-      if (!(lst.includes(item))) {
-        lst.push(item)
-      }
-    })
-    return lst
+    if (items) {
+      items.forEach(item => {
+        if (!(lst.includes(item))) {
+          lst.push(item)
+        }
+      })
+      return lst
+    } else {
+      return []
+    }
   }
 }
 

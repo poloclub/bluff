@@ -8,10 +8,10 @@ export var class_pairs = {
 }
 
 // Attack
-export var attack_types = ['pgd']
+export var attack_types = ['pgd', 'fgsm']
 export var attack_strengths = {
   'pgd': [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50],
-  // 'fgsm': [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
+  'fgsm': [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 }
 
 // Top_k for extracting interesting neurons
