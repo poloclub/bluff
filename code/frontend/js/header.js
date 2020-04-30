@@ -141,6 +141,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
     dropdown_icon.setAttribute('id', 'class-dropdown-icon-' + original_or_target)
     dropdown_icon.setAttribute('class', 'class-dropdown-icon')
     dropdown_icon.innerHTML = '<i class="fas fa-sort-down"></i>'
+    dropdown_icon.style.transform = 'translate(0px, -4px)'
 
     // Define display value, and show default value
     var display_val = document.createElement('div')
@@ -200,13 +201,13 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       if (dropdown_icon.innerHTML.includes('up')) {
         d3.select('#svg-class-option-box-' + original_or_target).style('display', 'none')
         dropdown_icon.innerHTML = '<i class="fas fa-sort-down"></i>'
-        dropdown_icon.style.transform = 'translate(0px, 0px)'
+        dropdown_icon.style.transform = 'translate(0px, -4px)'
       } 
       // One click -> show options
       else {
         d3.select('#svg-class-option-box-' + original_or_target).style('display', 'block')
         dropdown_icon.innerHTML = '<i class="fas fa-sort-up"></i>'
-        dropdown_icon.style.transform = 'translate(0px, 5px)'
+        dropdown_icon.style.transform = 'translate(0px, 3px)'
 
         // Show only available target class
         if (original_or_target == 'target') { 
@@ -380,7 +381,7 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
       d3.select('#' + 'svg-class-option-box-' + original_or_target).style('display', 'none')
       var dropdown_icon = document.getElementById('class-dropdown-icon-' + original_or_target)
       dropdown_icon.innerHTML = '<i class="fas fa-sort-down"></i>'
-      dropdown_icon.style.transform = 'translate(0px, 0px)'
+      dropdown_icon.style.transform = 'translate(0px, -4px)'
 
       if (original_or_target == 'target') {
         reload_graph()

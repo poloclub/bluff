@@ -29,7 +29,7 @@
 }
 
 .header-option-title {
-  height: 27px;
+  height: 24px;
   transform: translate(-8px, 8px);
 }
 
@@ -55,7 +55,7 @@
 
 .class-dropdown-text {
   display: inline-block;
-  font-size: 21px;
+  font-size: 19px;
   transform: translate(0px, -5px);
   font-weight: bold;
 }
