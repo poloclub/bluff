@@ -5,7 +5,7 @@ Bluff is an interactive system for deciphering adversarial attacks on Deep Neura
 - **Live demo:** [https://poloclub.github.io/bluff/](https://poloclub.github.io/bluff/)
 - **Code and Data:** [https://github.com/poloclub/bluff](https://github.com/poloclub/bluff)
 
-![Bluff overview](teaser-bluff.png)
+![https://poloclub.github.io/bluff/](teaser-bluff.png)
 
 ## Live Demo
 For a live demo, visit: https://poloclub.github.io/bluff/
