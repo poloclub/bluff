@@ -46,7 +46,7 @@ MIT License. See [`LICENSE.md`](LICENSE.md).
 
 
 ## Contact
-For questions contact [Nilaksh Das](http://nilakshdas.com/) or [Haekyu Park](haekyu.github.io).
+For questions contact [Nilaksh Das](http://nilakshdas.com/) or [Haekyu Park](http://haekyu.github.io).
 
 
 [demo]: https://poloclub.github.io/bluff/
