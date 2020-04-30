@@ -103,7 +103,7 @@ function add_code_link() {
   var header = document.getElementById('header-title')
   var source_code_link = document.createElement('div')
   header.appendChild(source_code_link)
-  source_code_link.innerText = '[Source Code]'
+  source_code_link.innerHTML = '<i class="fab fa-github"></i>'
   source_code_link.id = 'source-code-link'
   source_code_link.style.cursor = 'pointer'
   $("#source-code-link").click(function() {

@@ -173,8 +173,13 @@ function gen_attack_dropdown() {
   }
 
   function click_attack_option() {
-    d3.select('#g-attack-dropdown')
-      .style('display', 'block')
+    var display_setting = d3.select('#g-attack-dropdown').style('display')
+    if (display_setting == 'none') {
+      d3.select('#g-attack-dropdown').style('display', 'block')
+    } else {
+      d3.select('#g-attack-dropdown').style('display', 'none')
+    }
+    
   }
 }
 

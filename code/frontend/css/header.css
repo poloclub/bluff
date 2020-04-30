@@ -1,6 +1,7 @@
 #header {
   background-color: var(--header-bg);
   border-bottom: 1px gray solid;
+  width: 100%;
 }
 
 #main-title {
@@ -22,7 +23,7 @@
 .header-sub-title {
   display: inline-block;
   margin-right: 10px;
-  font-size: 26px;
+  font-size: 24px;
   color: var(--header-txt);
   transform: translate(-6px, 6px);
 }
@@ -80,6 +81,8 @@
 
 #source-code-link {
   color: white;
-  transform: translate(130px, -8px);
-  display: inline-block;
+  transform: translate(-10px, 10px);
+  display: inline-flex;
+  float: right;
+  font-size: 40px;
 }
