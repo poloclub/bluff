@@ -1,2 +1,3 @@
-## Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks
+# Bluff
 
+Bluff is an interactive system for deciphering adversarial attacks on Deep Neural Networks (DNNs). 
