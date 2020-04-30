@@ -22,8 +22,8 @@ import {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 export var selected_class = {
-  'original': '-', 
-  'target': '-'
+  'original': 'giant_panda', 
+  'target': 'armadillo'
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +38,8 @@ add_code_link()
 // Generate dropdown menu for selecting classes
 gen_class_dropdown(class_pairs, 'header-subtitle-class-dropdown-original', 'original')
 gen_class_dropdown(class_pairs, 'header-subtitle-class-dropdown-target', 'target')
+
+reload_graph()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Main division
@@ -399,9 +401,9 @@ function gen_class_dropdown(class_pairs, parent_id, original_or_target) {
 
   function get_default_class_name() {
     if (original_or_target == 'original') {
-      return '- - - Select First - - -'
+      return 'GIANT PANDA'
     } else {
-      return '- - - Select Next - - -'
+      return 'ARMADILLO'
     }
   }
 
