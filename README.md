@@ -34,12 +34,18 @@ Code (both frontend and backend) and data are available at [https://github.com/p
   To run this command, python 3 is needed.
   
 - Open any web browser and go to `http://localhost:<PORT>`. For example, `http://localhost:8080` if you used port 8080.
+- You can find the frontend code in `bluff/code/frontend`.
 
 ## Running Bluff backend
+### Requirement
 This project is written in python 3.7.6. You can install the dependencies by running:
 ```
 pip install -r requirements.txt
 ```
+### Code Structure
+The backend code is in `bluff/code/frontend`.
+- Computing Neuron Importance
+  + The code for computing neuron importance is in 
 
 ## License
 MIT License. See [`LICENSE.md`](LICENSE.md).
