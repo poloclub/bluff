@@ -23,5 +23,5 @@ python -m http.server <PORT>
 3. Go to `localhost:<PORT>/code/frontend` in your browser.
 
 ### License
-This code is released under the MIT License (refer to the LICENSE.md[LICENSE.md] for details).
+This code is released under the MIT License (refer to [LICENSE.md](LICENSE.md) for details).
 
