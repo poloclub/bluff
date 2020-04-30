@@ -20,7 +20,7 @@ Code (both frontend and backend) and data are available at [https://github.com/p
 ## Running Bluff user interface Locally
 - Download or clone this repository:
   ```bash
-  git clone https://github.com/fredhohman/summit.git
+  git clone https://github.com/poloclub/bluff.git
   ```
 
 - Within `bluff` repo, run:
