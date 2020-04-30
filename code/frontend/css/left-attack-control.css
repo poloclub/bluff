@@ -29,6 +29,11 @@
   transform: translate(0px, 3px);
 }
 
+#g-attack-dropdown {
+  transform: translate(50px, 70px);
+  font-size: 15px;
+}
+
 #attack-dropdown-text {
   display: inline-block;
   font-size: 15px;
@@ -41,6 +46,39 @@
   font-size: 15px;
   font-weight: bold;
 } 
+
+#g-attack-dropdown-bg {
+  fill: var(--option-bg);
+  display: inline-block;
+  width: 180px;
+  height: 60px;
+  stroke: gray;
+}
+
+.attack-option-rect {
+  width: 178px;
+  height: 25px;
+  fill: beige;
+  fill: var(--option-bg);
+}
+
+/* PGD */
+#text-pgd {
+  transform: translate(10px, 23px);
+}
+
+#bg-pgd {
+  transform: translate(1px, 5px);
+}
+
+/* FGSM */
+#text-fgsm {
+  transform: translate(10px, 48px);
+}
+
+#bg-fgsm {
+  transform: translate(1px, 30px)
+}
 
 /* Attack strength */
 #g-strength-bar {

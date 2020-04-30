@@ -16,7 +16,8 @@ import {
 import { 
   update_node_opacity,
   update_scatter_circle,
-  update_edges_display
+  update_edges_display,
+  reload_graph
 } from './attribution_graph.js';
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -30,12 +31,14 @@ export var selected_attack_info = {
 
 var strength_bar_scale = {}
 
+// TODO move this to style.js
+var bg_color = '#fafafa'
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Generate attack options
 //////////////////////////////////////////////////////////////////////////////////////////
 
 write_attack_option_title('ADVERSARIAL ATTACK')
-gen_attack_dropdown()
 strength_bar_scale = gen_strength_bar_length_scale(filter_bar['bar_length'])
 gen_filter_bar(
   'strength', 
@@ -43,6 +46,7 @@ gen_filter_bar(
   selected_attack_info['attack_strength'],
   attack_strengths[selected_attack_info['attack_type']]
 )
+gen_attack_dropdown()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Main division
@@ -53,6 +57,8 @@ function write_attack_option_title(title) {
     .append('text')
     .attr('id', 'attack-option-title')
     .text(title)
+
+    
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +68,15 @@ function write_attack_option_title(title) {
 function gen_attack_dropdown() {
   create_dropdown_title('Method')
   create_dropdown_menu()
+  gen_option_box()
 
   function create_dropdown_title(title) {
     d3.select('#svg-attack-option')
       .append('g')
       .attr('id', 'g-attack-type')
+      .on('click', function() { click_attack_option() })
+      .on('mouseover', function() { this.style.cursor = 'pointer'})
+
   }
 
   function create_dropdown_menu() {
@@ -92,7 +102,6 @@ function gen_attack_dropdown() {
       .attr('y1', how_to_attack['method-line-y'])
       .attr('y2', how_to_attack['method-line-y'])
       .attr('stroke', 'gray')
-
     // Append selection text
     // TODO: Currently only PGD shown
     d3.select('#g-attack-type')
@@ -100,6 +109,72 @@ function gen_attack_dropdown() {
       .attr('id', 'attack-dropdown-text')
       .text('PGD')
       .attr('transform', 'translate(0,' + how_to_attack['method-val-y'] + ')')
+  }
+
+  function gen_option_box() {
+    // Generate option box
+    d3.select('#svg-attack-option')
+      .append('g')
+      .attr('id', 'g-attack-dropdown')
+      .style('display', 'none')
+      
+    d3.select('#g-attack-dropdown')
+      .append('rect')
+      .attr('id', 'g-attack-dropdown-bg')
+        
+    // PGD
+    d3.select('#g-attack-dropdown')
+      .append('g')
+      .attr('id', 'g-pgd')
+      .on('mouseover', function () { mouseover_item('pgd') })
+      .on('click', function () { click_item('pgd') })
+      
+    d3.select('#g-pgd')
+      .append('rect')
+      .attr('id', 'bg-pgd')
+      .attr('class', 'attack-option-rect')
+
+    d3.select('#g-pgd')
+      .append('text')
+      .attr('id', 'text-pgd')
+      .attr('class', 'attack-option-text')
+      .text('PGD')
+
+    // FGSM
+    d3.select('#g-attack-dropdown')
+      .append('g')
+      .attr('id', 'g-fgsm')
+      .on('mouseover', function () { mouseover_item('fgsm') })
+      .on('click', function () { click_item('fgsm') })
+      
+    d3.select('#g-fgsm')
+      .append('rect')
+      .attr('id', 'bg-fgsm')
+      .attr('class', 'attack-option-rect')
+
+    d3.select('#g-fgsm')
+      .append('text')
+      .attr('id', 'text-fgsm')
+      .attr('class', 'attack-option-text')
+      .text('FGSM')
+  
+  }
+
+  function mouseover_item(method) {
+    d3.selectAll('.attack-option-rect').style('fill', bg_color)
+    d3.select('#bg-' + method).style('fill', 'lightgray').style('cursor', 'pointer')
+  }
+
+  function click_item(method) {
+    d3.select('#attack-dropdown-text').text(method.toUpperCase())
+    selected_attack_info['attack_type'] = method
+    d3.select('#g-attack-dropdown').style('display', 'none')
+    reload_graph()
+  }
+
+  function click_attack_option() {
+    d3.select('#g-attack-dropdown')
+      .style('display', 'block')
   }
 }
 
