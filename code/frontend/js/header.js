@@ -33,6 +33,7 @@ export var selected_class = {
 // Generate header template
 draw_title('Bluff')
 draw_subtitle()
+add_code_link()
 
 // Generate dropdown menu for selecting classes
 gen_class_dropdown(class_pairs, 'header-subtitle-class-dropdown-original', 'original')
@@ -96,6 +97,19 @@ function draw_subtitle() {
   sub_title_4.style.borderBottomStyle = 'solid'
   sub_title_2.style.color = text_color['original-header']
   sub_title_4.style.color = text_color['target-header']
+}
+
+function add_code_link() {
+  var header = document.getElementById('header-title')
+  var source_code_link = document.createElement('div')
+  header.appendChild(source_code_link)
+  source_code_link.innerText = '[Source Code]'
+  source_code_link.id = 'source-code-link'
+  source_code_link.style.cursor = 'pointer'
+  $("#source-code-link").click(function() {
+    window.location = 'https://github.com/poloclub/bluff'
+    return false;
+  });
 }
 
 
