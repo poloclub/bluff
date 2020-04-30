@@ -150,8 +150,8 @@ def main(argv):
     tf.set_random_seed(FLAGS.seed)
 
     # Directory path
-    tfrecords_dirpath = '/Users/haekyu/data/imagenet-tf-records'
-    attacked_img_dir = '/Users/haekyu/data/massif/attacked/panda-armadillo'
+    tfrecords_dirpath = 'GIVE/FILE/PATH'
+    attacked_img_dir = 'GIVE/FILE/PATH'
 
     # model
     model = InceptionV1Model()
