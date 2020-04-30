@@ -1969,6 +1969,12 @@ export function update_graph_by_filter_graph() {
     d3.selectAll('.column-title')
       .style('font-size', 10)
 
+    // var column_titles = document.getElementsByClassName('column-title')
+    // for (var e in column_titles) {
+    //   console.log(e, column_titles[e])
+    //   column_titles[e].style.fontSize = 10
+    // }
+
     d3.select('#column-original')
       .transition()
       .duration(1500)

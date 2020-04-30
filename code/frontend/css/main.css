@@ -3,6 +3,7 @@
 body {
   margin: 0;
   font-family: 'Barlow', sans-serif;
+  min-width: 1200px;
 }
 
 :root {
