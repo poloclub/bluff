@@ -4,8 +4,9 @@ Bluff is an interactive system for deciphering adversarial attacks on Deep Neura
 
 - **Live demo:** [https://poloclub.github.io/bluff/][demo]
 - **Code and Data:** [https://github.com/poloclub/bluff][src]
+- **Paper:** [https://arxiv.org/pdf/2009.02608.pdf][paper]
 
-**[Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks][demo]** <br />
+**[Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks][paper]** <br />
 Nilaksh Das*, Haekyu Park*, Zijie J. Wang, Fred Hohman, Robert Firstman, Emily Rogers, Duen Horng (Polo) Chau <br />
 \* Both contributed equally
 
