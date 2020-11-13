@@ -69,3 +69,4 @@ For questions contact [Nilaksh Das](http://nilakshdas.com/) or [Haekyu Park](htt
 [demo]: https://poloclub.github.io/bluff/
 [src]: https://github.com/poloclub/bluff
 [video]: https://youtu.be/Ti82TTMGoCI
+[paper]: https://arxiv.org/pdf/2009.02608.pdf]
