@@ -61,6 +61,20 @@ The backend code is in `bluff/code/frontend`.
 - Compute Propagation of Influence
   + Please run `edges.py`
 
+## Citation
+
+```
+@inproceedings{das2020bluff,
+  title={Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks},
+  author={Wang, Zijie J. and Turko, Robert and Shaikh, Omar and Park, Haekyu and Das, Nilaksh and Hohman, Fred and Kahng, Minsuk and Chau, Duen Horng (Polo)},
+  booktitle={IEEE Visualization Conference (VIS)},
+  publisher={IEEE},
+  year={2020},
+  url={https://github.com/poloclub/bluff}
+}
+```
+		
+
 ## License
 MIT License. See [`LICENSE.md`](LICENSE.md).
 
