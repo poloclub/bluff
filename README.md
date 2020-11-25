@@ -9,7 +9,9 @@ Bluff is an interactive system for deciphering adversarial attacks on Deep Neura
 
 
 
-**[Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks][paper]**. Nilaksh Das*, Haekyu Park*, Zijie J. Wang, Fred Hohman, Robert Firstman, Emily Rogers, Duen Horng (Polo) Chau. IEEE Visualization Conference (VIS), 2020.
+**[Bluff: Interactively Deciphering Adversarial Attacks on Deep Neural Networks][paper]**. <br>
+Nilaksh Das*, Haekyu Park*, Zijie J. Wang, Fred Hohman, Robert Firstman, Emily Rogers, Duen Horng (Polo) Chau. <br>
+IEEE Visualization Conference (VIS), 2020. <br>
 \* Both contributed equally
 
 
