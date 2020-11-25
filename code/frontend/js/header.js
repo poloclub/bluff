@@ -34,6 +34,8 @@ export var selected_class = {
 draw_title('Bluff')
 draw_subtitle()
 add_code_link()
+add_pdf_link()
+add_youtube_link()
 
 // Generate dropdown menu for selecting classes
 gen_class_dropdown(class_pairs, 'header-subtitle-class-dropdown-original', 'original')
@@ -107,9 +109,35 @@ function add_code_link() {
   header.appendChild(source_code_link)
   source_code_link.innerHTML = '<i class="fab fa-github"></i>'
   source_code_link.id = 'source-code-link'
-  source_code_link.style.cursor = 'pointer'
+  source_code_link.className = 'header-icon'
   $("#source-code-link").click(function() {
     window.location = 'https://github.com/poloclub/bluff'
+    return false;
+  });
+}
+
+function add_pdf_link() {
+  var header = document.getElementById('header-title')
+  var pdf_link = document.createElement('div')
+  header.appendChild(pdf_link)
+  pdf_link.innerHTML = '<i class="fas fa-file-pdf"></i>'
+  pdf_link.id = 'pdf-link'
+  pdf_link.className = 'header-icon'
+  $("#pdf-link").click(function() {
+    window.location = 'https://arxiv.org/pdf/2009.02608.pdf'
+    return false;
+  });
+}
+
+function add_youtube_link() {
+  var header = document.getElementById('header-title')
+  var youtube_link = document.createElement('div')
+  header.appendChild(youtube_link)
+  youtube_link.innerHTML = '<i class="fab fa-youtube"></i>'
+  youtube_link.id = 'youtube-link'
+  youtube_link.className = 'header-icon'
+  $("#youtube-link").click(function() {
+    window.location = 'https://youtu.be/b6PHyYnassc'
     return false;
   });
 }

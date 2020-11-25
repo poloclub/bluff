@@ -79,10 +79,22 @@
   font-size: 12px;
 }
 
-#source-code-link {
+.header-icon {
   color: white;
-  transform: translate(-10px, 10px);
   display: inline-flex;
   float: right;
   font-size: 40px;
+  cursor: pointer;
+}
+
+#source-code-link {
+  transform: translate(-10px, 10px);
+}
+
+#pdf-link {
+  transform: translate(-20px, 10px);
+}
+
+#youtube-link {
+  transform: translate(-30px, 10px);
 }
