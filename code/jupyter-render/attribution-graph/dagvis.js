@@ -1,3 +1,5 @@
+// import { base64dict } from "../../base64-convert";
+console.log('hi')
 const dataURL = '$dataURL';
 const layerChannelCounts = {
     'mixed3a': 256,
@@ -15,7 +17,7 @@ let rightInner = d3.select('#right-inner')
 let rightInnerOptions = d3.select('#right-inner-options')
 
 // let rightInnerDagWrapper = d3.select('#right-inner-dag-wrapper')
-let rightInnerDagWrapper = d3.select('#$graphdiv')
+let rightInnerDagWrapper = d3.select('#$graph_div_id')
 
 let layers = Object.keys(layerChannelCounts).reverse()
 let isAlreadyClicked = {}
@@ -126,36 +128,6 @@ function newChannelClipPath(layer, channel) {
         .attr('rx', 8)
         .attr('ry', 8)
 }
-
-// dagDefs.append('clipPath')
-//     .attr('id', 'fv-clip-path')
-//     .append('rect')
-//     .attr('x', 0)
-//     .attr('y', 0)
-//     .attr('width', fvWidth)
-//     .attr('height', fvHeight)
-//     .attr('rx', 8)
-//     .attr('ry', 8)
-
-// dagDefs.append('clipPath')
-//     .attr('id', 'de-clip-path')
-//     .append('rect')
-//     .attr('x', 0)
-//     .attr('y', 0)
-//     .attr('width', deWidth)
-//     .attr('height', deHeight)
-//     .attr('rx', 4)
-//     .attr('ry', 4)
-
-// dagDefs.append('clipPath')
-//     .attr('id', 'attr-fv-clip-path')
-//     .append('rect')
-//     .attr('x', 0)
-//     .attr('y', 0)
-//     .attr('width', attrFvWidth)
-//     .attr('height', attrFvHeight)
-//     .attr('rx', 4)
-//     .attr('ry', 4)
 
 // class name
 let rightInnerOptionsClassName = rightInnerOptions
@@ -474,12 +446,14 @@ function dagVIS(selectedClass) {
         }
 
         function drawDatasetExamples(layer, channel, index) {
+            // let base64encode = base64dict[layer + '-' + channel.channel]
             dagG.append('image')
                 .attr('x', 0)
                 .attr('y', 0)
                 .attr('width', deWidth)
                 .attr('height', deHeight)
                 .attr('xlink:href', dataURL + 'data/feature-vis/dataset-p/' + layer + '-' + channel.channel + '-' + 'dataset-p-' + index + fv_type)
+                // .attr('xlink:href', base64encode)
                 .classed('fv-de', true)
                 .attr('transform', rightTranslation(channel.x, channel.y, channel.width, index))
                 .attr('id', layer + '-' + channel.channel + '-dataset-p-' + index)
