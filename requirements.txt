@@ -10,5 +10,5 @@ pillow
 requests
 psycopg2-binary
 scipy
-tensorflow==1.15
+tensorflow==2.11.1
 tqdm
