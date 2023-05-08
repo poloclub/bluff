@@ -1,5 +1,5 @@
 absl-py==0.7.0
-apache-airflow==1.10.9
+apache-airflow==2.6.0
 cleverhans
 h5py
 keras
